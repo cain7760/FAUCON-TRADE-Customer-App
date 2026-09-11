@@ -288,6 +288,9 @@
 .order-help-popper{max-width:320px!important;padding:8px 10px!important;border:1px solid #3b3f46!important;background:#25282d!important;color:#d3d8df!important;font-size:12px!important;line-height:1.55!important;box-shadow:0 8px 22px #0009!important}
 .order-help-popper .el-popper__arrow:before{background:#25282d!important;border-color:#3b3f46!important}
 .asset-value-popper .el-popper__arrow:before{background:#202226!important;border-color:#3b3f46!important}
+/* Element Plus 的默认 tooltip 也必须继承深色交易界面，不能回退成白底。 */
+.el-popper.is-light{border-color:#3b3f46!important;background:#25282d!important;color:#d3d8df!important;box-shadow:0 8px 22px #0009!important}
+.el-popper.is-light .el-popper__arrow:before{border-color:#3b3f46!important;background:#25282d!important}
 .variants-app .direction-chip{font-size:12px!important}
 .variants-app .order-account-block .field-caption{color:#9ba4af}
 .variants-app .order-account-block .el-select__selected-item{color:#e8eaed}
