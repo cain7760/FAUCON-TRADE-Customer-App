@@ -5,7 +5,7 @@ import { money, number } from '../variantData'
 const props = defineProps({ instruments: Array, accounts: Array, symbol: Object, account: Object, quote: Object })
 const emit = defineEmits(['select', 'account-select', 'order'])
 const orderType = ref('limit'), price = ref(props.symbol.price), quantity = ref(0), amount = ref(0), quantityMode = ref('quantity'), fraction = ref(0)
-const symbolMarket = ref('ALL'), search = ref(''), unit = ref('shares'), confirming = ref(false), snapshot = ref(null)
+const symbolMarket = ref('ALL'), search = ref(''), unit = ref('shares'), confirming = ref(false), insufficientFunds = ref(false), snapshot = ref(null)
 const instrumentSelect = ref(null), instrumentPopperWidth = ref(0)
 const quantityInputKey = ref(0)
 const displaySymbolCode = ref(props.symbol.code)
@@ -19,7 +19,7 @@ const lotInvalid = computed(() => quantityMode.value === 'quantity' && unit.valu
 const maxBuy = computed(() => estimatedPrice.value > 0 ? Math.floor(props.account.cash / estimatedPrice.value / 100) * 100 : 0)
 const maxSell = computed(() => Math.max(0, props.symbol.available))
 const commonValid = computed(() => !!displaySymbolCode.value && shares.value > 0 && shares.value % 100 === 0 && (orderType.value === 'market' || price.value > 0))
-const canBuy = computed(() => commonValid.value && shares.value <= maxBuy.value)
+const canBuy = computed(() => commonValid.value)
 const canSell = computed(() => commonValid.value)
 function reset() { quantity.value = 0; amount.value = 0; fraction.value = 0; confirming.value = false }
 function chooseSymbol(code) { if (code) { displaySymbolCode.value = code; emit('select', code) } }
@@ -34,6 +34,7 @@ function size(value) { const q = Math.floor(maxBuy.value * value / 100 / 100) * 
 function stepPrice(direction) { const current = Number(price.value) || 0; price.value = Number((Math.max(0, current + direction * .01)).toFixed(2)) }
 function preview(side) {
   if (!(side === 'buy' ? canBuy.value : canSell.value)) return
+  if (side === 'buy' && estimatedPrice.value * shares.value > props.account.cash) { insufficientFunds.value = true; return }
   snapshot.value = { id: Date.now(), account: props.account.id, code: props.symbol.code, name: props.symbol.name, type: orderType.value, side, quantity: shares.value, price: orderType.value === 'limit' ? price.value : null, estimate: estimatedPrice.value * shares.value, status: '模拟待报' }
   confirming.value = true
 }
@@ -68,4 +69,5 @@ function submit() { emit('order', { ...snapshot.value }); reset() }
     <section class="submit-block"><div class="trade-buttons"><el-button class="buy-action" :disabled="!canBuy" @click="preview('buy')">买入</el-button><el-button class="sell-action" :disabled="!canSell" @click="preview('sell')">卖出</el-button></div><div class="order-totals"><div class="total-item"><span>买入预估(股)</span><b>{{ shares ? number(shares) : '--' }}</b></div><div class="total-item"><div class="total-heading"><span>卖出预估(股)</span><el-tooltip content="在数量下单模式下，为下单股数；在金额下单模式下，为委托金额/持仓均价。金额委托下的卖出，是针对剩余可卖出总名义本金比例的股数卖出，而非实际到账金额。" placement="top" popper-class="order-help-popper"><button type="button" class="total-help" aria-label="卖出预估说明"><el-icon><InfoFilled /></el-icon></button></el-tooltip></div><b>{{ shares ? number(shares) : '--' }}</b></div><div class="total-item"><span>买入金额(CNY)</span><b>{{ shares ? money(shares * (estimatedPrice || 0)) : '--' }}</b></div><div class="total-item"><div class="total-heading"><span>预估卖出金额(CNY)</span><el-tooltip content="卖出金额(预估)=卖出预估(股数)×委托价格。限价模式为预估最大回款金额；市价模式下此值仅供参考，以实际成交情况为准。" placement="top" popper-class="order-help-popper"><button type="button" class="total-help" aria-label="预估卖出金额说明"><el-icon><InfoFilled /></el-icon></button></el-tooltip></div><b>{{ shares ? money(shares * (estimatedPrice || 0)) : '--' }}</b></div></div><div class="total-notional"><div class="total-heading"><span>卖出名义本金(CNY)</span><el-tooltip content="金额模式下的卖出金额是指需要卖出的名义本金，而非实际回款金额。" placement="top" popper-class="order-help-popper"><button type="button" class="total-help" aria-label="卖出名义本金说明"><el-icon><InfoFilled /></el-icon></button></el-tooltip></div><b>{{ shares ? money(shares * (estimatedPrice || 0)) : '--' }}</b></div></section>
   </div>
   <el-dialog v-model="confirming" title="核对模拟委托" width="430px" align-center append-to-body class="variant-confirm"><template v-if="snapshot"><h3 :class="snapshot.side === 'buy' ? 'up' : 'down'">{{ snapshot.side === 'buy' ? '买入' : '卖出' }} · {{ snapshot.name }}</h3><dl><dt>交易账户</dt><dd>{{ snapshot.account }}</dd><dt>标的代码</dt><dd>{{ snapshot.code }}</dd><dt>订单类型</dt><dd>{{ snapshot.type === 'limit' ? '限价单' : '市价单' }}</dd><dt>委托价格</dt><dd>{{ snapshot.type === 'limit' ? money(snapshot.price) + ' CNY' : '以市场价格成交' }}</dd><dt>委托数量</dt><dd>{{ number(snapshot.quantity) }} 股</dd><dt>预计金额</dt><dd>{{ money(snapshot.estimate) }} CNY</dd></dl><p class="dim">只生成模拟记录，不发送真实订单。{{ snapshot.type === 'market' ? '市价最终成交金额可能变化。' : '' }}</p></template><template #footer><el-button @click="confirming = false">返回修改</el-button><el-button type="primary" @click="submit">确认模拟委托</el-button></template></el-dialog>
+  <el-dialog v-model="insufficientFunds" title="可用余额不足" width="380px" align-center append-to-body class="variant-confirm insufficient-funds"><p>本次买入预计需 <b>{{ money(shares * (estimatedPrice || 0)) }} CNY</b>，账户可用余额为 <b>{{ money(account.cash) }} CNY</b>。</p><p class="dim">请降低委托数量或委托价格后重试。</p><template #footer><el-button type="primary" @click="insufficientFunds = false">我知道了</el-button></template></el-dialog>
 </template>
