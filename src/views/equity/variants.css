@@ -329,7 +329,7 @@
 .variants-app .order-filters{display:flex;align-items:center;flex-shrink:0;gap:8px;min-height:48px;padding:8px 12px;border-bottom:1px solid #303338}
 .variants-app .order-filters>.el-input{width:142px}.variants-app .order-filters>.el-select{width:104px}
 .variants-app .order-filters>span{margin-left:auto;color:#818995;font-size:10px;white-space:nowrap}
-.variants-app .export-orders{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid #3b3f46;border-radius:3px;background:#25282d;color:#aeb6c1;cursor:pointer}
+.variants-app .export-orders{display:grid;place-items:center;width:28px;height:28px;margin-left:auto;padding:0;border:1px solid #3b3f46;border-radius:3px;background:#25282d;color:#aeb6c1;cursor:pointer}
 .variants-app .export-orders:hover{border-color:#bb984a;background:#302d25;color:#e1c36f}
 .variants-app .export-orders .el-icon{font-size:14px}
 .variants-app .orders-table{flex:1;min-height:0;--el-table-bg-color:#1e2023;--el-table-tr-bg-color:#1e2023;--el-table-header-bg-color:#25282d;--el-table-border-color:#303338;--el-table-row-hover-bg-color:#292d33;--el-table-text-color:#c8ced7;--el-table-header-text-color:#929ba7}
