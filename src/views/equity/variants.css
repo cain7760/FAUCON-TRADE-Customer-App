@@ -484,3 +484,5 @@
 .variants-app .cp-dialog.el-dialog{width:700px!important;min-width:700px;max-width:none}
 .variants-app .cp-order-summary{padding-top:12px;border-top:0}
 .variants-app .cp-order-summary>div:last-child{border-top:0}
+.variants-app .cp-order-summary{gap:8px 20px}
+.variants-app .cp-order-summary>div:last-child{padding-top:0}
