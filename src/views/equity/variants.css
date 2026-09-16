@@ -89,6 +89,7 @@
 .variants-app .quantity-input-row .is-wan-unit .el-select__selected-item{color:#e1c36f}
 .variants-app .capacity-pair,.variants-app .capacity-pair b,.variants-app .order-totals,.variants-app .order-totals small{font-size:12px!important}
 .variants-app .capacity-pair b{margin-top:4px}
+.variants-app .capacity-help{display:inline-grid;margin-left:3px;vertical-align:-2px}
 .variants-app .order-totals small{margin-top:4px}
 .variants-app .ticket-assets .asset-identity{grid-template-columns:8px minmax(0,1fr) 16px!important}
 .variants-app .ticket-assets .asset-identity b{grid-column:1/-1}
