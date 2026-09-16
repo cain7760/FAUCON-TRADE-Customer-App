@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, CircleClose, InfoFilled } from '@element-plus/icons
 import { money, number } from '../variantData'
 const props = defineProps({ instruments: Array, accounts: Array, symbol: Object, account: Object, quote: Object, paused: Boolean })
 const emit = defineEmits(['select', 'account-select', 'order'])
-const orderType = ref('limit'), price = ref(props.symbol.price), quantity = ref(0), amount = ref(0), quantityMode = ref('quantity'), fraction = ref(0)
+const orderType = ref('limit'), price = ref(), quantity = ref(), amount = ref(), quantityMode = ref('quantity'), fraction = ref(0)
 const symbolMarket = ref('ALL'), search = ref(''), unit = ref('shares'), amountUnit = ref('yuan'), confirming = ref(false), insufficientFunds = ref(false), snapshot = ref(null)
 const instrumentSelect = ref(null), instrumentPopperWidth = ref(0)
 const quantityInputKey = ref(0)
