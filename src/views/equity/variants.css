@@ -487,3 +487,5 @@
 .variants-app .cp-order-summary{gap:8px 20px}
 .variants-app .cp-order-summary>div:last-child{padding-top:0}
 .variants-app .cp-order-summary{padding-top:4px}
+.variants-app .cp-layout{min-height:470px}
+.variants-app .cp-market .book-depths{transform:translateY(12px)}
