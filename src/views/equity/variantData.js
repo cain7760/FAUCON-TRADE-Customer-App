@@ -9,6 +9,7 @@ export const variantRows = positions.map((p, i) => {
   return {
     ...p,
     direction: '多',
+    executionType: i % 4 === 3 ? 'highTouch' : 'lowTouch',
     opening: i === 1 ? 50 : 0,
     value,
     valueWan: value / 10000,

@@ -27,7 +27,7 @@ function submit() {
   const id = Date.now()
   emit('submit', {
     id, orderNo: `WT${id}`, account: props.account.id, code: props.position.code, name: props.position.name,
-    type: orderType.value, side: 'buy', openClose: '开', status: '待报', runStatus: '运行中',
+    executionType: 'lowTouch', type: orderType.value, side: 'buy', openClose: '开', status: '待报', runStatus: '运行中',
     attribute: `${orderType.value === 'limit' ? '限价' : '市价'}·数量`, quantity: quantity.value,
     price: orderType.value === 'limit' ? price.value : null, orderValueNumber: quantity.value,
     orderValue: `${number(quantity.value)} 股`, filledQuantity: 0, filledPrice: null, estimate: estimatedAmount.value,
