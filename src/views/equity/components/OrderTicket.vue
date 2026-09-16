@@ -61,7 +61,6 @@ function submit() { if (props.paused) { confirming.value = false; return }; emit
   <div class="order-form" :class="{ 'is-paused': paused, 'is-manual': !closeMode && executionType === 'highTouch' }">
     <p v-if="paused" class="order-paused-notice">系统中断中，暂不支持下单</p>
     <section v-if="!closeMode" class="execution-type-block">
-      <div class="field-caption"><span>订单类型</span></div>
       <el-radio-group v-model="executionType" class="execution-type"><el-radio-button label="lowTouch">系统单（Low Touch）</el-radio-button><el-radio-button label="highTouch">手工单（High Touch）</el-radio-button></el-radio-group>
     </section>
     <section v-if="!closeMode" class="order-account-block">
