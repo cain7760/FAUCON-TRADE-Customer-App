@@ -20,7 +20,7 @@ function submit(order) { emit('submit', order); close() }
     <div v-if="position && account" class="close-position-layout">
       <section class="close-market"><OrderBook :symbol="position" :ia-ratio="iaRatio" hide-header hide-ticks @quote="quote = $event" /></section>
       <section class="close-order-side ticket-pane">
-        <div class="close-position-metrics"><div><span>持仓股数</span><b>{{ number(position.qty) }} 股</b></div><div><span>持仓市值(万)</span><b>{{ marketValueWan }}</b></div><div><span>可平股数</span><b>{{ number(position.available) }} 股</b></div><div><span>成本价</span><b>{{ money(position.cost) }}</b></div></div>
+        <div class="close-position-metrics"><div><span>持仓股数(股)</span><b>{{ number(position.qty) }}</b></div><div><span>持仓市值(万)</span><b>{{ marketValueWan }}</b></div><div><span>可平股数(股)</span><b>{{ number(position.available) }}</b></div><div><span>成本价(CNY)</span><b>{{ money(position.cost) }}</b></div></div>
         <OrderTicket close-mode :instruments="[]" :accounts="[account]" :symbol="position" :account="account" :quote="quote" :paused="false" @order="submit" />
       </section>
     </div>
