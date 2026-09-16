@@ -8,6 +8,7 @@ import { marketInstruments, variantRows, variants, money, number } from './varia
 import { useTicketDock } from './useTicketDock'
 import OrderTicket from './components/OrderTicket.vue'
 import OrderBook from './components/OrderBook.vue'
+import ClosePositionDialog from './components/ClosePositionDialog.vue'
 import SortHeader from './components/SortHeader.vue'
 import ColumnConfigPopover from './components/ColumnConfigPopover.vue'
 import TradingTable from './components/TradingTable.vue'
@@ -72,6 +73,7 @@ const visibleNav = computed(() => mainNav.slice(0, mainNav.length - overflowNav.
 const workspace = ref(null), accountId = ref('TZS_T0'), showAll = ref(false), query = ref(''), market = ref('ALL'), positionType = ref('ALL')
 const assetsVisible = ref(true), assetsCollapsed = ref(false)
 const tab = ref('positions'), selectedCode = ref('000001'), table = ref(null), quote = ref(null)
+const closePositionVisible = ref(false), closingPosition = ref(null)
 const orderStatusMachine = ['未报', '待报', '已报', '待撤', '待撤［部成］', '部撤', '撤单', '部成', '全成', '被拒绝', '已报待改', '待改［部成］', '改单待审核', '撤单待审核', '新单待审核']
 const orderStatusOptions = orderStatusMachine.map(status => ({ label: status, value: status }))
 const demoOrders = ref(orderStatusMachine.map((status, index) => {
@@ -265,6 +267,12 @@ function acceptOrder(order) {
   tab.value = 'orders'
   publishTransactionMessage({ name: order.name, code: order.code, status: '委托已提交', quantity: order.quantity, quantityLabel: '委托数量', title: '委托提交成功' })
 }
+function openClosePosition(row) { closingPosition.value = row; closePositionVisible.value = true }
+function acceptClosePosition(order) {
+  demoOrders.value.unshift(order)
+  tab.value = 'orders'
+  publishTransactionMessage({ name: order.name, code: order.code, status: '卖出平仓委托已提交', quantity: order.quantity, quantityLabel: '委托数量', title: '平仓委托提交成功' })
+}
 function orderAction(row, action) {
   if (action === '追单') { row.status = '已报'; row.runStatus = '运行中'; publishTransactionMessage({ name: row.name, code: row.code, status: '委托已报', quantity: row.quantity, quantityLabel: '委托数量', title: '追单已提交' }) }
   if (action === '改单') { row.status = '已报待改'; row.runStatus = '运行中'; publishTransactionMessage({ name: row.name, code: row.code, status: '改单申请已提交', quantity: row.quantity, quantityLabel: '委托数量', title: '委托修改申请' }) }
@@ -327,7 +335,7 @@ onBeforeUnmount(() => {
               <el-table-column v-else-if="columnKey === 'account'" prop="account" label="账户" width="76" />
               <el-table-column v-else-if="columnKey === 'market'" prop="market" label="市场" width="58"><template #default="{row}">{{ row.market === 'SZ' ? '深市' : '沪市' }}</template></el-table-column>
             </template>
-            <el-table-column label="操作" width="72" fixed="right" align="center" header-align="center" class-name="operation-column" label-class-name="operation-column"><template #default><div class="row-actions"><button type="button">追</button><button type="button">平</button></div></template></el-table-column>
+            <el-table-column label="操作" width="72" fixed="right" align="center" header-align="center" class-name="operation-column" label-class-name="operation-column"><template #default="{ row }"><div class="row-actions"><button type="button">追</button><button type="button" @click.stop="openClosePosition(row)">平</button></div></template></el-table-column>
             <el-table-column width="22" fixed="right" align="center" header-align="center" class-name="column-config-column" label-class-name="column-config-column"><template #header><ColumnConfigPopover v-model="visibleColumnKeys" :options="columnOptions" :defaults="positionColumnDefaults" /></template></el-table-column>
           </TradingTable><footer class="positions-footer"><span>显示 {{ filtered.length }} / {{ allRows.length }} 条</span></footer>
         </template>
@@ -372,6 +380,7 @@ onBeforeUnmount(() => {
       <div v-if="dragging" class="dock-targets"><div class="dock-target target-left">停靠左侧</div><div class="dock-target target-right">停靠右侧</div><div class="dock-target target-bottom">停靠底部</div><span class="float-instruction">拖至边缘停靠 · 放在中间悬浮</span></div>
     </div>
     <footer class="variant-status"><span class="system-status"><i class="status-dot" :class="{ 'is-interrupted': !systemRunning }"/>{{ systemRunning ? '运行中' : '系统中断' }} · 演示环境<button type="button" class="system-status-toggle" @click="toggleSystemStatus">{{ systemRunning ? '切换为中断' : '恢复运行' }}</button></span><span>行情：静态快照</span><span class="status-end">系统版本：方案 V0.2</span></footer>
+    <ClosePositionDialog v-model="closePositionVisible" :position="closingPosition" @submit="acceptClosePosition" />
     <el-dialog v-model="messageCenterVisible" width="760px" align-center class="message-center-dialog" :show-close="false">
       <template #header><header class="message-center-header"><h2>消息中心</h2><div class="message-header-actions"><button type="button" class="message-close-action" aria-label="关闭消息中心" @click="messageCenterVisible=false"><el-icon><Close /></el-icon></button></div></header></template>
       <div class="message-center-layout"><nav class="message-category-tabs" aria-label="消息分类"><button v-for="category in messageCategories" :key="category" :class="{ active: messageCategory === category }" @click="messageCategory=category"><img class="message-category-icon" :src="messageIcon(category)" alt=""><span>{{ category }}</span><i v-if="categoryUnreadCount(category)">{{ categoryUnreadCount(category) }}</i></button></nav>
