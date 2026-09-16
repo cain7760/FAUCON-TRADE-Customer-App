@@ -498,3 +498,13 @@
 .variants-app .cp-market .book-pane{height:auto!important;overflow:visible!important}
 .variants-app .cp-market .book-scroll{overflow:visible!important}
 .variants-app .cp-market{box-sizing:border-box;padding-right:8px}
+.variants-app .chase-order-form{gap:14px}
+.variants-app .chase-order-form .quantity-input-row{gap:0}
+.variants-app .chase-order-form .quantity-input-row>span{display:grid;place-items:center;width:68px;height:36px;border:1px solid #3b3f46;border-left:0;border-radius:0 3px 3px 0;color:#c2c6ce;font-size:14px;font-weight:500}
+.variants-app .chase-order-form .quantity-input-row .el-input-number .el-input__wrapper{height:36px;border-radius:3px 0 0 3px}
+.variants-app .chase-order-form .el-slider{margin-bottom:18px}
+.variants-app .chase-order-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;margin-top:10px;padding-top:4px;color:#8f98a4;font-size:11px}
+.variants-app .chase-order-summary>div{display:flex;flex-direction:column;gap:4px}
+.variants-app .chase-order-summary>div:nth-child(2){align-items:flex-end}
+.variants-app .chase-order-summary>div:last-child{grid-column:1/-1;display:flex;flex-direction:row;align-items:baseline;justify-content:space-between}
+.variants-app .chase-order-summary b{margin:0;color:#c8ced7;font-size:13px;font-weight:500;line-height:1.2}
