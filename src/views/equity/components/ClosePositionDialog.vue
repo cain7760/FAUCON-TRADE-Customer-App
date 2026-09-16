@@ -15,12 +15,12 @@ function submit(order) { emit('submit', order); close() }
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="720px" :teleported="false" :show-close="false" class="close-position-dialog" @update:model-value="emit('update:modelValue', $event)">
-    <template #header><header class="close-position-header"><h2>平仓</h2><button type="button" aria-label="关闭平仓" @click="close"><el-icon><Close /></el-icon></button></header></template>
-    <div v-if="position && account" class="close-position-layout">
-      <section class="close-market"><OrderBook :symbol="position" :ia-ratio="iaRatio" hide-header hide-ticks @quote="quote = $event" /></section>
-      <section class="close-order-side ticket-pane">
-        <div class="close-position-metrics"><div><span>持仓股数(股)</span><b>{{ number(position.qty) }}</b></div><div><span>持仓市值(万)</span><b>{{ marketValueWan }}</b></div><div><span>可平股数(股)</span><b>{{ number(position.available) }}</b></div><div><span>成本价(CNY)</span><b>{{ money(position.cost) }}</b></div></div>
+  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="720px" :teleported="false" :show-close="false" class="cp-dialog" @update:model-value="emit('update:modelValue', $event)">
+    <template #header><header class="cp-header"><h2>平仓</h2><button type="button" aria-label="关闭平仓" @click="close"><el-icon><Close /></el-icon></button></header></template>
+    <div v-if="position && account" class="cp-layout">
+      <section class="cp-market"><OrderBook :symbol="position" :ia-ratio="iaRatio" hide-header hide-ticks @quote="quote = $event" /></section>
+      <section class="cp-order">
+        <div class="cp-metrics"><div><span>持仓股数(股)</span><b>{{ number(position.qty) }}</b></div><div><span>持仓市值(万)</span><b>{{ marketValueWan }}</b></div><div><span>可平股数(股)</span><b>{{ number(position.available) }}</b></div><div><span>成本价(CNY)</span><b>{{ money(position.cost) }}</b></div></div>
         <OrderTicket close-mode :instruments="[]" :accounts="[account]" :symbol="position" :account="account" :quote="quote" :paused="false" @order="submit" />
       </section>
     </div>
