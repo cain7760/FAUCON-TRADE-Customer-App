@@ -15,7 +15,7 @@ function submit(order) { emit('submit', order); close() }
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="680px" :teleported="false" :show-close="false" class="close-position-dialog" @update:model-value="emit('update:modelValue', $event)">
+  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="720px" :teleported="false" :show-close="false" class="close-position-dialog" @update:model-value="emit('update:modelValue', $event)">
     <template #header><header class="close-position-header"><h2>平仓</h2><button type="button" aria-label="关闭平仓" @click="close"><el-icon><Close /></el-icon></button></header></template>
     <div v-if="position && account" class="close-position-layout">
       <section class="close-market"><OrderBook :symbol="position" :ia-ratio="iaRatio" hide-header hide-ticks @quote="quote = $event" /></section>
