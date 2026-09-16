@@ -497,3 +497,4 @@
 .variants-app .cp-layout{column-gap:16px}
 .variants-app .cp-market .book-pane{height:auto!important;overflow:visible!important}
 .variants-app .cp-market .book-scroll{overflow:visible!important}
+.variants-app .cp-market{box-sizing:border-box;padding-right:8px}
