@@ -489,3 +489,6 @@
 .variants-app .cp-order-summary{padding-top:4px}
 .variants-app .cp-layout{min-height:470px}
 .variants-app .cp-market .book-depths{transform:translateY(12px)}
+.variants-app .cp-layout{min-height:454px}
+.variants-app .cp-order .quantity-block .el-slider{margin-bottom:18px}
+.variants-app .cp-order-summary{margin-top:10px}
