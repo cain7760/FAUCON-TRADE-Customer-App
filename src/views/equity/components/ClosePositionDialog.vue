@@ -15,7 +15,7 @@ function submit(order) { emit('submit', order); close() }
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="620px" :teleported="false" :show-close="false" class="close-position-dialog" @update:model-value="emit('update:modelValue', $event)">
+  <el-dialog :model-value="modelValue" top="var(--ft-dialog-top)" width="624px" :teleported="false" :show-close="false" class="close-position-dialog" @update:model-value="emit('update:modelValue', $event)">
     <template #header><header class="close-position-header"><h2>平仓</h2><button type="button" aria-label="关闭平仓" @click="close"><el-icon><Close /></el-icon></button></header></template>
     <div v-if="position && account" class="close-position-layout">
       <section class="close-position-metrics"><header><span>持仓概览</span><small>可平数量以当前可用数量为准</small></header><div><span>持仓股数</span><b>{{ number(position.qty) }} 股</b></div><div><span>持仓市值(万)</span><b>{{ marketValueWan }}</b></div><div><span>可平股数</span><b>{{ number(position.available) }} 股</b></div><div><span>成本价</span><b>{{ money(position.cost) }}</b></div></section>
