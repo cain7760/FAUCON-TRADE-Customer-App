@@ -473,3 +473,11 @@
 .variants-app .cp-layout{grid-template-columns:minmax(0,1fr) 304px}
 .variants-app .cp-metrics{grid-template-columns:repeat(4,max-content);justify-content:space-between;column-gap:0}
 .variants-app .cp-metrics span{white-space:nowrap}
+.variants-app .cp-metrics{justify-content:center;column-gap:32px}
+.variants-app .cp-market .book-quote b{font-size:18px}
+.variants-app .cp-market .book-quote>div{transform:translateY(-4px)}
+.variants-app .cp-order-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;margin-top:14px;padding-top:12px;border-top:1px solid #303338}
+.variants-app .cp-order-summary>div{display:flex;flex-direction:column;gap:4px;align-items:flex-start;color:#8f98a4;font-size:11px;line-height:1.2}
+.variants-app .cp-order-summary>div:nth-child(2){align-items:flex-end}
+.variants-app .cp-order-summary>div:last-child{grid-column:1/-1;display:flex;flex-direction:row;align-items:baseline;justify-content:space-between;padding-top:9px;border-top:1px solid #2c3036}
+.variants-app .cp-order-summary b{margin:0;color:#c8ced7;font-size:13px;line-height:1.2}
