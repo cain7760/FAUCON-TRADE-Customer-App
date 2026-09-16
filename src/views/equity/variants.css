@@ -470,3 +470,6 @@
 .variants-app .cp-layout:before{display:block;right:-10px;left:-10px;background:#25282d}.variants-app .cp-metrics{background:#25282d}.variants-app .cp-market .book-quote{padding-left:22px;background:transparent}
 .variants-app .book-pane.workspace-panel .book-quote b{font-size:20px}
 .variants-app .cp-metrics{column-gap:20px}
+.variants-app .cp-layout{grid-template-columns:minmax(0,1fr) 304px}
+.variants-app .cp-metrics{grid-template-columns:repeat(4,max-content);justify-content:space-between;column-gap:0}
+.variants-app .cp-metrics span{white-space:nowrap}
