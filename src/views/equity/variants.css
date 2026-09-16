@@ -508,3 +508,5 @@
 .variants-app .chase-order-summary>div:nth-child(2){align-items:flex-end}
 .variants-app .chase-order-summary>div:last-child{grid-column:1/-1;display:flex;flex-direction:row;align-items:baseline;justify-content:space-between}
 .variants-app .chase-order-summary b{margin:0;color:#c8ced7;font-size:13px;font-weight:500;line-height:1.2}
+.variants-app .row-actions button{background:#834550}
+.variants-app .row-actions button+button{background:#2c6655}
