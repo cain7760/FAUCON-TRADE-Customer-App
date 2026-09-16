@@ -495,3 +495,5 @@
 .variants-app .cp-order .field-caption,.variants-app .cp-order .field-caption label{font-size:12px!important}
 .variants-app .positions-pane .row-actions button{font-size:12px}
 .variants-app .cp-layout{column-gap:16px}
+.variants-app .cp-market .book-pane{height:auto!important;overflow:visible!important}
+.variants-app .cp-market .book-scroll{overflow:visible!important}
