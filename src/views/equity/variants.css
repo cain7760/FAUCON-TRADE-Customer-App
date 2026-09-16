@@ -253,6 +253,7 @@
 .variants-app .quantity-block .lot-error{display:block;margin-top:4px;color:#f05f66;font-size:11px;line-height:16px;white-space:nowrap}
 .variants-app .quantity-input-row.is-error .el-input__wrapper,.variants-app .quantity-input-row.is-error>.el-select .el-select__wrapper{box-shadow:inset 0 0 0 1px #d84e57!important}
 .variants-app .quantity-input-row.is-error .el-select__selected-item,.variants-app .quantity-input-row.is-error .el-input__inner{color:#f1f3f5}
+.variants-app .amount-input-row.is-large-amount .el-input__inner{color:var(--el-color-primary)}
 .variants-app .order-totals{margin-top:14px;padding-top:0;border-top:0;gap:14px 20px}
 .variants-app .order-totals .total-item,.variants-app .order-totals .total-item:nth-child(even){align-items:stretch;text-align:left}
 .variants-app .order-totals .total-item span,.variants-app .order-totals .total-item b{text-align:left}
