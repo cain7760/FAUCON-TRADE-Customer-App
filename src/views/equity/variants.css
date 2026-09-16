@@ -492,3 +492,4 @@
 .variants-app .cp-layout{min-height:454px}
 .variants-app .cp-order .quantity-block .el-slider{margin-bottom:18px}
 .variants-app .cp-order-summary{margin-top:10px}
+.variants-app .cp-order .field-caption,.variants-app .cp-order .field-caption label{font-size:12px!important}
