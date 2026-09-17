@@ -61,12 +61,12 @@ function submit() { if (props.paused) { confirming.value = false; return }; emit
   <div class="order-form" :class="{ 'is-paused': paused, 'is-manual': !closeMode && executionType === 'highTouch' }">
     <p v-if="paused" class="order-paused-notice">系统中断中，暂不支持下单</p>
     <section v-if="!closeMode" class="order-context-block">
+      <div class="execution-type-block">
+        <el-radio-group v-model="executionType" class="execution-type"><el-radio-button label="lowTouch">系统单</el-radio-button><el-radio-button label="highTouch">手工单</el-radio-button></el-radio-group>
+      </div>
       <div class="order-account-block">
         <div class="field-caption"><span>下单账户</span></div>
         <el-select :model-value="account.id" @update:model-value="id => emit('account-select', id)" aria-label="下单账户" popper-class="variant-popper"><el-option v-for="item in accounts" :key="item.id" :label="`${item.id}·${item.name}`" :value="item.id" /></el-select>
-      </div>
-      <div class="execution-type-block">
-        <el-radio-group v-model="executionType" class="execution-type"><el-radio-button label="lowTouch">系统单</el-radio-button><el-radio-button label="highTouch">手工单</el-radio-button></el-radio-group>
       </div>
     </section>
     <section class="order-type-row"><el-radio-group v-model="orderType" class="order-type"><el-radio-button label="limit">限价</el-radio-button><el-radio-button label="market">市价</el-radio-button></el-radio-group></section>
