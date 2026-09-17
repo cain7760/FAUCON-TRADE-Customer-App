@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
               <el-table-column v-else-if="columnKey === 'orderTime'" prop="orderTime" label="下单时间" width="140"/>
               <el-table-column v-else-if="columnKey === 'market'" prop="market" label="市场" width="48"><template #default="{row}">{{ marketLabel(row.market) }}</template></el-table-column>
             </template>
-            <el-table-column label="操作" width="78" fixed="right" align="center" class-name="operation-column" label-class-name="operation-column"><template #default="{row}"><div class="order-row-actions"><button type="button" title="追单" aria-label="追单" @click="orderAction(row, '追单')">追</button><button type="button" title="改单" aria-label="改单" @click="orderAction(row, '改单')">改</button><button type="button" title="撤单" aria-label="撤单" @click="orderAction(row, '撤单')">撤</button></div></template></el-table-column>
+            <el-table-column label="操作" width="88" fixed="right" align="center" class-name="operation-column" label-class-name="operation-column"><template #default="{row}"><div class="order-row-actions"><button type="button" title="追单" aria-label="追单" @click="orderAction(row, '追单')">追</button><button type="button" title="改单" aria-label="改单" @click="orderAction(row, '改单')">改</button><button type="button" title="撤单" aria-label="撤单" @click="orderAction(row, '撤单')">撤</button></div></template></el-table-column>
             <el-table-column width="22" fixed="right" align="center" header-align="center" class-name="column-config-column" label-class-name="column-config-column"><template #header><ColumnConfigPopover v-model="orderVisibleColumnKeys" :options="orderColumnOptions" :defaults="orderColumnDefaults" /></template></el-table-column>
           </TradingTable>
         </template>
