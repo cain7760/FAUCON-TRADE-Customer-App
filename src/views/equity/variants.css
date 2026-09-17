@@ -522,5 +522,5 @@
 .variants-app .orders-table .order-row-actions{gap:6px;transform:translateX(6px)}
 .variants-app .orders-table .order-row-actions button{width:20px;height:22px;font-size:12px;line-height:20px}
 .variants-app .execution-type{width:100%;background:#26282d;box-shadow:none;overflow:hidden}
-.variants-app .execution-type .el-radio-button.is-active .el-radio-button__inner{background:#353026!important;color:#e1c36f!important;box-shadow:0 0 0 1px #bb984a inset!important}
+.variants-app .execution-type .el-radio-button.is-active .el-radio-button__inner{background:#353026!important;color:#e1c36f!important;box-shadow:none!important}
 .variants-app .execution-type .el-radio-button__inner{font-weight:400!important}
