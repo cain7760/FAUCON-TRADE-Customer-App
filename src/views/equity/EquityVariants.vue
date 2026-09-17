@@ -88,7 +88,7 @@ const demoOrders = ref(orderStatusMachine.map((status, index) => {
     id: `seed-${index + 1}`, orderNo: `WT20260911${String(index + 1).padStart(3, '0')}`,
     account: 'TZS_T0', code: instrument.code, name: instrument.name, executionType: index % 4 === 3 ? 'highTouch' : 'lowTouch', type: price === null ? 'market' : 'limit',
     side: index % 2 ? 'sell' : 'buy', openClose: index % 3 ? '平' : '开', status,
-    runStatus: ['部撤', '撤单', '全成', '被拒绝'].includes(status) ? '已结束' : '运行中',
+    runStatus: status === '被拒绝' ? '异常' : ['部撤', '撤单', '全成'].includes(status) ? '结束' : '正常',
     attribute: `${price === null ? '市价' : '限价'}·数量`, quantity, price,
     orderValueNumber: quantity, orderValue: `${number(quantity)} 股`, filledQuantity,
     filledPrice: filledQuantity ? instrument.price : null, estimate: (price || instrument.price) * quantity,
@@ -230,7 +230,7 @@ function exportPositions() {
 }
 function exportOrders() {
   const header = ['运行状态', '委托状态', '订单类型', '开平', '买卖', '标的代码', '标的名称', '委托类型', '委托价格', '委托数量/金额', '成交数量', '成交均价']
-  const records = orders.value.map(row => [row.runStatus, row.status, row.executionType === 'highTouch' ? '手工单' : '系统单', row.openClose, row.side === 'buy' ? '买' : '卖', row.code, row.name, row.attribute, row.price === null ? '市价' : money(row.price), row.orderValue, row.filledQuantity ? number(row.filledQuantity) : '--', row.filledPrice === null ? '--' : money(row.filledPrice)])
+  const records = orders.value.map(row => [row.runStatus, orderStatusLabel(row.status), row.executionType === 'highTouch' ? '手工单' : '系统单', row.openClose, row.side === 'buy' ? '买' : '卖', row.code, row.name, row.attribute, row.price === null ? '市价' : money(row.price), row.orderValue, row.filledQuantity ? number(row.filledQuantity) : '--', row.filledPrice === null ? '--' : money(row.filledPrice)])
   const csv = [header, ...records].map(record => record.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n')
   const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })); link.download = '委托记录.csv'; link.click(); URL.revokeObjectURL(link.href)
 }
@@ -249,6 +249,8 @@ function orderStatusVisual(status) {
   if (status === '被拒绝') return { tone: 'rejected', icon: CircleClose }
   return { tone: 'review', icon: EditPen }
 }
+function orderStatusLabel(status) { return status.replace('［部成］', '') }
+function runStatusTone(status) { return status === '正常' ? 'is-running' : status === '异常' ? 'is-error' : 'is-ended' }
 watch(accountId, () => { quote.value = null })
 watch(collapsed, async () => { await nextTick(); table.value?.doLayout?.() })
 const accountBalance = computed(() => account.value.id === 'TZS_T0' ? 1000000 : 700000)
@@ -282,9 +284,9 @@ function acceptChaseOrder(order) {
   publishTransactionMessage({ name: order.name, code: order.code, status: '追单买入委托已提交', quantity: order.quantity, quantityLabel: '追单数量', title: '追单提交成功' })
 }
 function orderAction(row, action) {
-  if (action === '追单') { row.status = '已报'; row.runStatus = '运行中'; publishTransactionMessage({ name: row.name, code: row.code, status: '委托已报', quantity: row.quantity, quantityLabel: '委托数量', title: '追单已提交' }) }
-  if (action === '改单') { row.status = '已报待改'; row.runStatus = '运行中'; publishTransactionMessage({ name: row.name, code: row.code, status: '改单申请已提交', quantity: row.quantity, quantityLabel: '委托数量', title: '委托修改申请' }) }
-  if (action === '撤单') { row.status = '撤单'; row.runStatus = '已结束'; publishTransactionMessage({ name: row.name, code: row.code, status: '撤单成功', quantity: row.filledQuantity || null, title: '委托撤单成功' }) }
+  if (action === '追单') { row.status = '已报'; row.runStatus = '正常'; publishTransactionMessage({ name: row.name, code: row.code, status: '委托已报', quantity: row.quantity, quantityLabel: '委托数量', title: '追单已提交' }) }
+  if (action === '改单') { row.status = '已报待改'; row.runStatus = '正常'; publishTransactionMessage({ name: row.name, code: row.code, status: '改单申请已提交', quantity: row.quantity, quantityLabel: '委托数量', title: '委托修改申请' }) }
+  if (action === '撤单') { row.status = '撤单'; row.runStatus = '结束'; publishTransactionMessage({ name: row.name, code: row.code, status: '撤单成功', quantity: row.filledQuantity || null, title: '委托撤单成功' }) }
 }
 function updateViewportWidth() { viewportWidth.value = window.innerWidth }
 onMounted(() => {
@@ -353,14 +355,14 @@ onBeforeUnmount(() => {
             <el-input v-model="orderFilters.symbol" :prefix-icon="Search" placeholder="标的名称 / 代码" aria-label="搜索委托标的" clearable />
             <el-select v-model="orderFilters.side" aria-label="买卖方向筛选" popper-class="variant-popper"><el-option label="买卖方向" value="ALL"/><el-option label="买入" value="buy"/><el-option label="卖出" value="sell"/></el-select>
             <el-select v-model="orderFilters.openClose" aria-label="开平类型筛选" popper-class="variant-popper"><el-option label="开平类型" value="ALL"/><el-option label="开" value="开"/><el-option label="平" value="平"/></el-select>
-            <el-select v-model="orderFilters.status" class="order-status-filter" multiple collapse-tags :max-collapse-tags="1" placeholder="委托状态" aria-label="委托状态筛选" popper-class="variant-popper order-status-popper"><template #header><div class="order-status-filter-actions"><button type="button" @click.stop="selectAllOrderStatuses">全选</button><i></i><button type="button" @click.stop="invertOrderStatuses">反选</button></div></template><el-option v-for="option in orderStatusOptions" :key="option.value" :label="option.label" :value="option.value"><el-checkbox :model-value="orderFilters.status.includes(option.value)" @click.stop @change="toggleOrderStatus(option.value)">{{ option.label }}</el-checkbox></el-option></el-select>
+            <el-select v-model="orderFilters.status" class="order-status-filter" multiple collapse-tags :max-collapse-tags="1" placeholder="委托状态" aria-label="委托状态筛选" popper-class="variant-popper order-status-popper"><template #header><div class="order-status-filter-actions"><button type="button" @click.stop="selectAllOrderStatuses">全选</button><i></i><button type="button" @click.stop="invertOrderStatuses">反选</button></div></template><el-option v-for="option in orderStatusOptions" :key="option.value" :label="orderStatusLabel(option.label)" :value="option.value"><el-checkbox :model-value="orderFilters.status.includes(option.value)" @click.stop @change="toggleOrderStatus(option.value)">{{ orderStatusLabel(option.label) }}</el-checkbox></el-option></el-select>
             <el-button class="filter-query" @click="applyOrderFilters">查询</el-button><el-button link @click="clearOrderFilters">重置</el-button>
             <el-tooltip content="导出当前筛选结果" placement="top"><button class="export-orders" aria-label="导出委托记录" @click="exportOrders"><el-icon><Download /></el-icon></button></el-tooltip>
           </div>
           <TradingTable class="original-fields orders-table" :data="sortedOrders" height="100%" empty-text="暂无委托记录">
             <template v-for="columnKey in orderVisibleColumnKeys" :key="columnKey">
-              <el-table-column v-if="columnKey === 'runStatus'" prop="runStatus" label="运行状态" width="92" class-name="run-status-column" label-class-name="run-status-column"><template #default="{row}"><span class="run-status" :class="row.runStatus === '运行中' ? 'is-running' : 'is-ended'"><el-icon><CircleCheck v-if="row.runStatus === '运行中'" /><CircleClose v-else /></el-icon>{{ row.runStatus }}</span></template></el-table-column>
-              <el-table-column v-else-if="columnKey === 'status'" prop="status" label="委托状态" width="112"><template #default="{row}"><span class="order-status" :class="`is-${orderStatusVisual(row.status).tone}`"><el-icon><component :is="orderStatusVisual(row.status).icon" /></el-icon>{{ row.status }}</span></template></el-table-column>
+              <el-table-column v-if="columnKey === 'runStatus'" prop="runStatus" label="运行状态" width="92" class-name="run-status-column" label-class-name="run-status-column"><template #default="{row}"><span class="run-status" :class="runStatusTone(row.runStatus)">{{ row.runStatus }}</span></template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'status'" prop="status" label="委托状态" width="112"><template #default="{row}"><span class="order-status" :class="`is-${orderStatusVisual(row.status).tone}`"><el-icon><component :is="orderStatusVisual(row.status).icon" /></el-icon>{{ orderStatusLabel(row.status) }}</span></template></el-table-column>
               <el-table-column v-else-if="columnKey === 'executionType'" prop="executionType" label="订单类型" width="76"><template #default="{row}"><span class="execution-type-tag" :class="row.executionType === 'highTouch' ? 'is-high-touch' : 'is-low-touch'">{{ row.executionType === 'highTouch' ? '手工单' : '系统单' }}</span></template></el-table-column>
               <el-table-column v-else-if="columnKey === 'openClose'" prop="openClose" label="开平" width="54" align="left" header-align="left"/>
               <el-table-column v-else-if="columnKey === 'side'" label="买卖" width="54" align="left" header-align="left"><template #default="{row}"><span :class="row.side==='buy'?'up':'down'">{{ row.side==='buy'?'买':'卖' }}</span></template></el-table-column>
