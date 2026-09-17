@@ -382,6 +382,7 @@ onBeforeUnmount(() => {
             <el-tooltip content="导出当前筛选结果" placement="top"><button class="export-orders" aria-label="导出委托记录" @click="exportOrders"><el-icon><Download /></el-icon></button></el-tooltip>
           </div>
           <TradingTable class="original-fields orders-table" :data="sortedOrders" height="100%" empty-text="暂无委托记录">
+            <el-table-column type="index" label="序号" width="48" fixed="left" align="center" header-align="center" />
             <template v-for="columnKey in orderVisibleColumnKeys" :key="columnKey">
               <el-table-column v-if="columnKey === 'code'" prop="code" label="标的代码" width="96"/>
               <el-table-column v-else-if="columnKey === 'name'" prop="name" label="标的名称" width="110"/>
