@@ -122,6 +122,7 @@ const orderColumnOptions = [
   ['canceledValue', '撤单数量/金额'], ['account', '下单账户'], ['frozenMargin', '冻结保证金'], ['executionType', '订单类型'], ['marginRate', '保证金率'],
   ['feedback', '反馈信息'], ['orderNo', '订单编号'], ['orderTime', '下单时间'], ['market', '市场'],
 ]
+const tradeColumnDefaults = ['side', 'openClose', 'code', 'name', 'filledPrice', 'filledQuantity', 'filledAmount', 'filledTime', 'orderTime', 'orderNo', 'tradeNo', 'entrustNo', 'attribute', 'tradeDate', 'account', 'market', 'feedback']
 const { dock, collapsed, dragging, resizing, floating, start, startResize } = useTicketDock(workspace)
 dock.value = variants.find(v => v.id === variant.value).dock
 const account = computed(() => accounts.find(a => a.id === accountId.value))
@@ -147,6 +148,17 @@ const sortedOrders = computed(() => {
   const multiplier = direction === 'ascending' ? 1 : -1
   return [...orders.value].sort((a, b) => ((Number(a[prop]) || 0) - (Number(b[prop]) || 0)) * multiplier)
 })
+const trades = computed(() => demoOrders.value
+  .filter(order => (showAll.value || order.account === accountId.value) && order.filledQuantity > 0 && order.filledPrice !== null)
+  .map((order, index) => ({
+    ...order,
+    id: `${order.id}-trade`,
+    filledAmount: order.filledQuantity * order.filledPrice,
+    filledTime: `${order.orderTime.slice(0, 10)} 10:${String(12 + index).padStart(2, '0')}:${String(18 + index).padStart(2, '0')}`,
+    tradeNo: `CJ${order.orderNo.slice(2)}`,
+    entrustNo: `${order.orderNo}-01`,
+    tradeDate: order.orderTime.slice(0, 10),
+  })))
 const floatStyle = computed(() => dock.value === 'floating' ? { left: `${floating.value.x}px`, top: `${floating.value.y}px`, width:`${floating.value.width}px`, height:`${floating.value.height}px` } : {})
 function chooseVariant(id) { variant.value = id; dock.value = variants.find(v => v.id === id).dock; collapsed.value = false; history.replaceState(null,'',`${location.pathname}?layout=${id}`) }
 function openMessageCenter() { messageCenterVisible.value = true }
@@ -346,7 +358,7 @@ onBeforeUnmount(() => {
     </aside>
     <div ref="workspace" class="variants-workspace" :class="[`dock-${dock}`,{'ticket-collapsed':collapsed,'is-dragging':dragging}]">
       <section class="positions-pane workspace-panel">
-        <header class="positions-tabs"><button :class="{active:tab==='positions'}" @click="tab='positions'">所有持仓<span>({{ allRows.length }})</span></button><button :class="{active:tab==='orders'}" @click="tab='orders'">所有委托<span>({{ orders.length }})</span></button><button :class="{active:tab==='trades'}" @click="tab='trades'">所有成交<span>(0)</span></button><el-switch v-model="showAll" active-text="展示全部账户" size="small" /><button v-if="collapsed" class="workspace-restore-ticket" @click="collapsed=false"><img class="restore-panel-icon" :src="assetUrl('panel-expand.svg')" alt=""><span class="restore-panel-label" style="color:#9ba3af!important;font-size:12px!important">展开下单面板</span></button></header>
+        <header class="positions-tabs"><button :class="{active:tab==='positions'}" @click="tab='positions'">所有持仓<span>({{ allRows.length }})</span></button><button :class="{active:tab==='orders'}" @click="tab='orders'">所有委托<span>({{ orders.length }})</span></button><button :class="{active:tab==='trades'}" @click="tab='trades'">所有成交<span>({{ trades.length }})</span></button><el-switch v-model="showAll" active-text="展示全部账户" size="small" /><button v-if="collapsed" class="workspace-restore-ticket" @click="collapsed=false"><img class="restore-panel-icon" :src="assetUrl('panel-expand.svg')" alt=""><span class="restore-panel-label" style="color:#9ba3af!important;font-size:12px!important">展开下单面板</span></button></header>
         <template v-if="tab==='positions'">
           <div class="position-filters"><el-input v-model="query" :prefix-icon="Search" placeholder="代码 / 名称" aria-label="搜索持仓" clearable /><el-select v-model="market" aria-label="持仓市场" popper-class="variant-popper"><el-option label="全部市场" value="ALL"/><el-option label="深市" value="SZ"/><el-option label="沪市" value="SH"/></el-select><el-select v-model="positionType" aria-label="多空类型筛选" popper-class="variant-popper"><el-option label="全部多空类型" value="ALL"/><el-option label="多头" value="多"/><el-option label="空头" value="空"/></el-select><el-button class="filter-query" @click="applyFilters">查询</el-button><el-button link @click="clearFilters">重置</el-button><el-tooltip content="导出当前持仓" placement="top"><button class="export-positions" aria-label="导出持仓" @click="exportPositions"><el-icon><svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg></el-icon></button></el-tooltip></div>
           <TradingTable ref="table" class="original-fields" :data="sortedRows" height="100%" :fit="false" row-key="id" empty-text="无匹配持仓，请调整或重置筛选">
@@ -410,14 +422,26 @@ onBeforeUnmount(() => {
           </TradingTable>
         </template>
         <template v-else>
-          <TradingTable class="original-fields trades-table" :data="[]" height="100%" :fit="false" empty-text="暂无成交记录">
-            <el-table-column prop="executionType" label="订单类型" width="68"><template #default="{row}"><span class="execution-type-tag" :class="row.executionType === 'highTouch' ? 'is-high-touch' : 'is-low-touch'">{{ row.executionType === 'highTouch' ? '手工单' : '系统单' }}</span></template></el-table-column>
-            <el-table-column prop="side" label="买卖" width="48"><template #default="{row}"><span :class="row.side === 'buy' ? 'up' : 'down'">{{ row.side === 'buy' ? '买' : '卖' }}</span></template></el-table-column>
-            <el-table-column prop="code" label="标的代码" width="68" />
-            <el-table-column prop="name" label="标的名称" width="68" />
-            <el-table-column prop="filledQuantity" label="成交数量" width="76" align="right" header-align="right" />
-            <el-table-column prop="filledPrice" label="成交均价" width="76" align="right" header-align="right" />
-            <el-table-column prop="account" label="账户" width="64" />
+          <TradingTable class="original-fields orders-table trades-table" :data="trades" height="100%" :fit="false" empty-text="暂无成交记录">
+            <template v-for="columnKey in tradeColumnDefaults" :key="columnKey">
+              <el-table-column v-if="columnKey === 'side'" prop="side" label="买卖" width="48" align="center" header-align="center"><template #default="{row}"><span :class="row.side === 'buy' ? 'up' : 'down'">{{ row.side === 'buy' ? '买入' : '卖出' }}</span></template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'openClose'" prop="openClose" label="开平" width="48" align="center" header-align="center"><template #default="{row}">{{ row.openClose === '开' ? '开仓' : '平仓' }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'code'" prop="code" label="标的代码" width="68" />
+              <el-table-column v-else-if="columnKey === 'name'" prop="name" label="标的名称" width="68" />
+              <el-table-column v-else-if="columnKey === 'filledPrice'" prop="filledPrice" label="成交均价" width="76" align="right" header-align="right"><template #default="{row}">{{ money(row.filledPrice) }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'filledQuantity'" prop="filledQuantity" label="成交数量" width="76" align="right" header-align="right"><template #default="{row}">{{ number(row.filledQuantity) }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'filledAmount'" prop="filledAmount" label="成交金额" width="76" align="right" header-align="right"><template #default="{row}">{{ money(row.filledAmount) }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'filledTime'" prop="filledTime" label="成交时间" width="140" />
+              <el-table-column v-else-if="columnKey === 'orderTime'" prop="orderTime" label="下单时间" width="140" />
+              <el-table-column v-else-if="columnKey === 'orderNo'" prop="orderNo" label="订单编号" width="112" />
+              <el-table-column v-else-if="columnKey === 'tradeNo'" prop="tradeNo" label="成交编号" width="112" />
+              <el-table-column v-else-if="columnKey === 'entrustNo'" prop="entrustNo" label="委托编号" width="128" />
+              <el-table-column v-else-if="columnKey === 'attribute'" prop="attribute" label="委托方式" width="64"><template #default="{row}">{{ row.type === 'market' ? '市价单' : '限价单' }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'tradeDate'" prop="tradeDate" label="交易日期" width="90" />
+              <el-table-column v-else-if="columnKey === 'account'" prop="account" label="账户" width="116"><template #default="{row}">{{ accountLabel(row.account) }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'market'" prop="market" label="市场" width="48"><template #default="{row}">{{ marketLabel(row.market) }}</template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'feedback'" prop="feedback" label="反馈信息" width="104" show-overflow-tooltip><template #default="{row}">{{ row.feedback || '--' }}</template></el-table-column>
+            </template>
           </TradingTable>
         </template>
       </section>
