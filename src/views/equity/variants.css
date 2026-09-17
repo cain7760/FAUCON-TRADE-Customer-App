@@ -49,6 +49,7 @@
 .variants-app .position-filters .export-positions{display:grid;place-items:center;width:28px;height:28px;margin-left:auto;padding:0;border:1px solid #3d424b;border-radius:3px;background:#272a2f;color:#9ba4af;cursor:pointer}
 .variants-app .position-filters .export-positions:hover{border-color:#bb984a;color:#e1c36f;background:#353026}
 .variants-app .position-filters .export-positions .el-icon{font-size:14px}
+.variants-app .position-filters .export-positions .export-icon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .variants-app .order-account-block>.el-select{width:100%}
 .variants-app .order-symbol-block .field-caption .symbol-tags{margin:0}
 .variants-app .quantity-input-row{display:flex;align-items:center;gap:7px}
