@@ -451,8 +451,8 @@ onBeforeUnmount(() => {
           <TradingTable class="original-fields orders-table trades-table" :data="trades" height="100%" :fit="false" empty-text="暂无成交记录">
             <el-table-column type="index" label="序号" width="44" align="center" header-align="center" class-name="order-index-column" label-class-name="order-index-column" />
             <template v-for="columnKey in tradeColumnDefaults" :key="columnKey">
-              <el-table-column v-if="columnKey === 'side'" prop="side" label="买卖" width="48" align="right" header-align="right"><template #default="{row}"><span :class="row.side === 'buy' ? 'up' : 'down'">{{ row.side === 'buy' ? '买入' : '卖出' }}</span></template></el-table-column>
-              <el-table-column v-else-if="columnKey === 'openClose'" prop="openClose" label="开平" width="48" align="right" header-align="right"><template #default="{row}">{{ row.openClose === '开' ? '开仓' : '平仓' }}</template></el-table-column>
+              <el-table-column v-if="columnKey === 'side'" prop="side" label="买卖" width="48" align="right" header-align="right" class-name="plain-right-column"><template #default="{row}"><span :class="row.side === 'buy' ? 'up' : 'down'">{{ row.side === 'buy' ? '买入' : '卖出' }}</span></template></el-table-column>
+              <el-table-column v-else-if="columnKey === 'openClose'" prop="openClose" label="开平" width="48" align="right" header-align="right" class-name="plain-right-column"><template #default="{row}">{{ row.openClose === '开' ? '开仓' : '平仓' }}</template></el-table-column>
               <el-table-column v-else-if="columnKey === 'code'" prop="code" label="标的代码" width="68" />
               <el-table-column v-else-if="columnKey === 'name'" prop="name" label="标的名称" width="68" />
               <el-table-column v-else-if="columnKey === 'filledPrice'" prop="filledPrice" label="成交均价" width="76" align="right" header-align="right"><template #default="{row}">{{ money(row.filledPrice) }}</template></el-table-column>
