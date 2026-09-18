@@ -101,6 +101,8 @@ const demoOrders = ref(demoOrderStatuses.map((status, index) => {
 const orderFilters = ref({ orderNo: '', symbol: '', side: 'ALL', openClose: 'ALL', status: [] })
 const appliedPositionFilters = ref({ query: '', market: 'ALL', positionType: 'ALL' })
 const appliedOrderFilters = ref({ orderNo: '', symbol: '', side: 'ALL', openClose: 'ALL', status: [] })
+const tradeFilters = ref({ symbol: '', side: 'ALL', openClose: 'ALL', attribute: 'ALL' })
+const appliedTradeFilters = ref({ symbol: '', side: 'ALL', openClose: 'ALL', attribute: 'ALL' })
 const sortState = ref({ prop: null, direction: null })
 const orderSortState = ref({ prop: null, direction: null })
 const positionColumnDefaults = [
@@ -149,7 +151,6 @@ const sortedOrders = computed(() => {
   return [...orders.value].sort((a, b) => ((Number(a[prop]) || 0) - (Number(b[prop]) || 0)) * multiplier)
 })
 const trades = computed(() => demoOrders.value
-  .filter(order => (showAll.value || order.account === accountId.value) && order.filledQuantity > 0 && order.filledPrice !== null)
   .map((order, index) => ({
     ...order,
     id: `${order.id}-trade`,
@@ -158,7 +159,13 @@ const trades = computed(() => demoOrders.value
     tradeNo: `CJ${order.orderNo.slice(2)}`,
     entrustNo: `${order.orderNo}-01`,
     tradeDate: order.orderTime.slice(0, 10),
-  })))
+  }))
+  .filter(trade => (showAll.value || trade.account === accountId.value)
+    && trade.filledQuantity > 0 && trade.filledPrice !== null
+    && (!appliedTradeFilters.value.symbol || `${trade.code}${trade.name}`.includes(appliedTradeFilters.value.symbol.trim()))
+    && (appliedTradeFilters.value.side === 'ALL' || trade.side === appliedTradeFilters.value.side)
+    && (appliedTradeFilters.value.openClose === 'ALL' || trade.openClose === appliedTradeFilters.value.openClose)
+    && (appliedTradeFilters.value.attribute === 'ALL' || trade.type === appliedTradeFilters.value.attribute)))
 const floatStyle = computed(() => dock.value === 'floating' ? { left: `${floating.value.x}px`, top: `${floating.value.y}px`, width:`${floating.value.width}px`, height:`${floating.value.height}px` } : {})
 function chooseVariant(id) { variant.value = id; dock.value = variants.find(v => v.id === id).dock; collapsed.value = false; history.replaceState(null,'',`${location.pathname}?layout=${id}`) }
 function openMessageCenter() { messageCenterVisible.value = true }
@@ -253,6 +260,8 @@ function toggleAssetsVisible() { assetsVisible.value = !assetsVisible.value; if 
 function applyFilters() { appliedPositionFilters.value = { query: query.value, market: market.value, positionType: positionType.value }; table.value?.setScrollTop?.(0) }
 function applyOrderFilters() { appliedOrderFilters.value = { ...orderFilters.value, status: [...orderFilters.value.status] }; orderSortState.value = { prop: null, direction: null } }
 function clearOrderFilters() { orderFilters.value = { orderNo: '', symbol: '', side: 'ALL', openClose: 'ALL', status: [] }; applyOrderFilters() }
+function applyTradeFilters() { appliedTradeFilters.value = { ...tradeFilters.value } }
+function clearTradeFilters() { tradeFilters.value = { symbol: '', side: 'ALL', openClose: 'ALL', attribute: 'ALL' }; applyTradeFilters() }
 function clearFilters() { query.value = ''; market.value = 'ALL'; positionType.value = 'ALL'; sortState.value = { prop: null, direction: null }; table.value?.clearFilter(); applyFilters() }
 function exportPositions() {
   const header = ['多空', '订单类型', '标的代码', '标的名称', '持仓均价', '最新价', '可用数量', '市值(万)', '总盈亏', '账户', '市场']
@@ -269,6 +278,15 @@ function exportOrders() {
   ])
   const csv = [header, ...records].map(record => record.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n')
   const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })); link.download = '委托记录.csv'; link.click(); URL.revokeObjectURL(link.href)
+}
+function exportTrades() {
+  const header = ['买卖', '开平', '标的代码', '标的名称', '成交均价', '成交数量', '成交金额', '成交时间', '下单时间', '订单编号', '成交编号', '委托编号', '委托方式', '交易日期', '账户', '市场', '反馈信息']
+  const records = trades.value.map(row => [
+    row.side === 'buy' ? '买入' : '卖出', row.openClose === '开' ? '开仓' : '平仓', row.code, row.name, money(row.filledPrice), number(row.filledQuantity), money(row.filledAmount),
+    row.filledTime, row.orderTime, row.orderNo, row.tradeNo, row.entrustNo, row.type === 'market' ? '市价单' : '限价单', row.tradeDate, accountLabel(row.account), marketLabel(row.market), row.feedback || '--',
+  ])
+  const csv = [header, ...records].map(record => record.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n')
+  const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })); link.download = '成交记录.csv'; link.click(); URL.revokeObjectURL(link.href)
 }
 function chooseDock(value) { dock.value = value; if(value === 'floating' && workspace.value) floating.value = {x:Math.max(0, workspace.value.clientWidth-350),y:12,width:340,height:Math.min(650,workspace.value.clientHeight-12)} }
 function toggleSort(prop) { const current = sortState.value; sortState.value = current.prop !== prop || current.direction === null ? { prop, direction: 'ascending' } : current.direction === 'ascending' ? { prop, direction: 'descending' } : { prop: null, direction: null } }
@@ -422,6 +440,14 @@ onBeforeUnmount(() => {
           </TradingTable>
         </template>
         <template v-else>
+          <div class="order-filters">
+            <el-input v-model="tradeFilters.symbol" :prefix-icon="Search" placeholder="标的名称 / 代码" aria-label="搜索成交标的" clearable />
+            <el-select v-model="tradeFilters.side" aria-label="买卖方向筛选" popper-class="variant-popper"><el-option label="买卖方向" value="ALL"/><el-option label="买入" value="buy"/><el-option label="卖出" value="sell"/></el-select>
+            <el-select v-model="tradeFilters.openClose" aria-label="开平类型筛选" popper-class="variant-popper"><el-option label="开平类型" value="ALL"/><el-option label="开仓" value="开"/><el-option label="平仓" value="平"/></el-select>
+            <el-select v-model="tradeFilters.attribute" aria-label="委托方式筛选" popper-class="variant-popper"><el-option label="委托方式" value="ALL"/><el-option label="限价单" value="limit"/><el-option label="市价单" value="market"/></el-select>
+            <el-button class="filter-query" @click="applyTradeFilters">查询</el-button><el-button link @click="clearTradeFilters">重置</el-button>
+            <el-tooltip content="导出当前筛选结果" placement="top"><button class="export-orders" aria-label="导出成交记录" @click="exportTrades"><el-icon><svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg></el-icon></button></el-tooltip>
+          </div>
           <TradingTable class="original-fields orders-table trades-table" :data="trades" height="100%" :fit="false" empty-text="暂无成交记录">
             <el-table-column type="index" label="序号" width="44" align="center" header-align="center" class-name="order-index-column" label-class-name="order-index-column" />
             <template v-for="columnKey in tradeColumnDefaults" :key="columnKey">
