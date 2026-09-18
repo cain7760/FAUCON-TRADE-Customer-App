@@ -36,8 +36,8 @@
 .variants-app .positions-pane .el-table th.is-right .profit-heading{position:static;gap:3px}
 .variants-app .positions-pane .el-table th.is-right .profit-heading>.el-icon{position:static;transform:none;flex:0 0 11px}
 .variants-app .positions-tabs .el-switch__label{font-size:12px;color:#9ba3af!important;font-weight:400}
-.variants-app .position-filters .filter-query{height:28px;padding:0 12px;border-color:#4a4f58;background:#2b2f35;color:#c8ced7;font-size:11px}
-.variants-app .position-filters .filter-query:hover{border-color:#bb984a;color:#e1c36f;background:#353026}
+.variants-app .position-filters .filter-query,.variants-app .order-filters .filter-query{height:28px;padding:0 12px;border-color:#4a4f58;background:#2b2f35;color:#c8ced7;font-size:11px}
+.variants-app .position-filters .filter-query:hover,.variants-app .order-filters .filter-query:hover{border-color:#bb984a;color:#e1c36f;background:#353026}
 .variants-app .positions-pane .el-table th.operation-column .cell{transform:translateX(10px)}
 .variants-app .positions-pane .el-table td.operation-column .row-actions{gap:6px;transform:translateX(10px)}
 .variants-app .positions-pane .el-table td.operation-column .row-actions button{width:18px;height:20px}
