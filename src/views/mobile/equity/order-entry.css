@@ -1,0 +1,116 @@
+/* 手机交易票据：沿用应用令牌，参考图的减/输入/加与双买卖结构。 */
+.equity-order-sheet.van-popup { height: calc(100% - 59px); }
+.order-sheet-heading { display: flex; min-height: 48px; flex-shrink: 0; align-items: center; padding: 0 12px 0 16px; gap: 8px; }
+.order-sheet-heading h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.order-sheet-heading h2:focus { outline: none; }
+.order-sheet-heading > .equity-icon-button:last-child { margin-left: auto; }
+.order-demo-label { color: var(--app-color-text-secondary); font-size: 11px; }
+.order-entry-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 16px; scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+.equity-order-sheet button, .equity-order-sheet input, .equity-order-sheet select, .equity-order-sheet textarea { font: inherit; }
+.equity-order-sheet button { cursor: pointer; touch-action: manipulation; }
+.equity-order-sheet :is(input, select, textarea) { min-width: 0; color: var(--app-color-text); border: 0; border-radius: 2px; background: var(--app-color-control); font-size: 16px; caret-color: var(--app-color-accent); }
+.equity-order-sheet input::placeholder, .equity-order-sheet textarea::placeholder { color: var(--app-color-text-secondary); font-size: 14px; }
+.equity-order-sheet input[type="number"] { appearance: textfield; }
+.equity-order-sheet input::-webkit-inner-spin-button, .equity-order-sheet input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.equity-order-sheet :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.equity-order-sheet ::selection { color: var(--app-color-background); background: var(--app-color-accent); }
+.equity-order-sheet button:disabled { cursor: not-allowed; opacity: .45; }
+.equity-order-sheet button:not(:disabled):active { filter: brightness(.88); }
+.ticket-segment { display: inline-flex; padding: 3px; gap: 3px; border-radius: 3px; background: var(--app-color-control); }
+.ticket-segment button { min-height: 32px; padding: 0 12px; border: 0; border-radius: 2px; color: var(--app-color-text-secondary); background: transparent; font-size: 13px; }
+.ticket-segment button[aria-pressed="true"] { color: #fff; background: var(--app-color-accent); font-weight: 600; }
+.ticket-execution { display: flex; margin-bottom: 8px; }
+.ticket-execution button { flex: 1; }
+.ticket-account { display: flex; align-items: center; min-height: 44px; gap: 12px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--app-color-border); font-size: 12px; color: var(--app-color-text-secondary); }
+.ticket-account > span { flex-shrink: 0; }
+.ticket-account select { flex: 1; min-height: 38px; padding: 0 8px; font-size: 13px; }
+.ticket-field { margin-bottom: 8px; }
+.ticket-caption { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-bottom: 6px; color: var(--app-color-text-secondary); font-size: 12px; }
+.ticket-caption > .ticket-segment, .ticket-symbol-tags { margin-left: auto; }
+.ticket-symbol-tags { display: flex; align-items: center; gap: 8px; font-family: var(--app-font-family-numeric); }
+.ticket-symbol-tags b { color: var(--app-color-accent); font-weight: 400; }
+.ticket-symbol-tags > span, .ticket-lot { padding: 3px 5px; border-radius: 2px; background: var(--app-color-control); font-size: 11px; }
+.ticket-symbol-control { display: flex; min-height: 52px; align-items: center; background: var(--app-color-control); border-radius: 3px; }
+.ticket-symbol-control > button:first-child { flex: 1; min-width: 0; min-height: 52px; padding: 10px 12px; border: 0; background: transparent; color: var(--app-color-text); text-align: left; overflow-wrap: anywhere; }
+.ticket-symbol-control strong { font-size: 19px; font-weight: 600; }
+.ticket-symbol-control .app-numeric { font-size: 14px; color: var(--app-color-text-secondary); }
+.ticket-symbol-control > button:disabled { opacity: 1; }
+.ticket-number-control { display: flex; min-height: 54px; padding: 4px; align-items: stretch; gap: 4px; border: 1px solid transparent; border-radius: 3px; background: var(--app-color-control); }
+.ticket-number-control input { flex: 1; width: 0; text-align: center; font-family: var(--app-font-family-numeric); font-size: 22px; }
+.ticket-number-control > button { display: flex; align-items: center; justify-content: center; width: 44px; flex-shrink: 0; padding: 0; border: 0; border-radius: 2px; background: var(--app-color-card); color: var(--app-color-text-secondary); }
+.ticket-number-control svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+.ticket-quantity-control select { width: 56px; font-size: 13px; }
+.ticket-market-price { display: flex; min-height: 58px; align-items: center; justify-content: center; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 16px; }
+.ticket-percentage-control { display: flex; align-items: center; min-height: 58px; padding: 0 12px; background: var(--app-color-control); }
+.ticket-percentage-control input { width: 0; flex: 1; font-family: var(--app-font-family-numeric); font-size: 22px; text-align: center; }
+.ticket-percentage-control span { font-size: 12px; color: var(--app-color-text-secondary); }
+.ticket-algorithm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--app-color-text-secondary); font-size: 12px; }
+.ticket-algorithm-row > span { flex-shrink: 0; }
+.ticket-algorithm-row button { display: flex; min-width: 0; min-height: 40px; align-items: center; justify-content: flex-end; flex: 1; gap: 6px; padding: 0 8px; border: 0; border-radius: 2px; background: var(--app-color-control); color: var(--app-color-accent); font-size: 13px; }
+.ticket-algorithm-row b { font-size: 15px; font-weight: 400; }
+.ticket-algorithm-description { font-family: var(--app-font-family-numeric); font-size: 12px; }
+.ticket-algorithm-row svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.ticket-fractions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+.ticket-fractions button { min-height: 36px; padding: 0; border: 1px solid transparent; border-radius: 2px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 13px; }
+.ticket-fractions button[aria-pressed="true"] { border-color: var(--app-color-accent); color: var(--app-color-accent); background: var(--app-color-accent-soft); }
+.ticket-estimates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--app-color-border); }
+.ticket-estimates > div { display: flex; flex-wrap: wrap; gap: 4px; justify-content: space-between; font-size: 11px; }
+.ticket-estimates dt { color: var(--app-color-text-secondary); }
+.ticket-estimates dd { margin: 0; font-family: var(--app-font-family-numeric); font-size: 13px; }
+.ticket-error, .ticket-warning, .ticket-help { margin: 8px 0 0; font-size: 12px; line-height: 1.6; }
+.ticket-error { color: var(--app-color-rise); }
+.ticket-warning { color: var(--app-color-accent); }
+.ticket-help { color: var(--app-color-text-secondary); }
+.ticket-number-control.has-error { border-color: var(--app-color-rise); }
+.ticket-note { display: grid; gap: 8px; font-size: 13px; }
+.ticket-note > span { display: flex; justify-content: space-between; color: var(--app-color-text-secondary); }
+.ticket-note textarea { resize: vertical; width: 100%; min-height: 80px; padding: 10px; line-height: 1.5; }
+.ticket-footer { flex-shrink: 0; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); border-top: 1px solid var(--app-color-border); background: var(--app-color-card); }
+.ticket-trade-buttons { display: flex; gap: 12px; }
+.ticket-trade-buttons button { display: flex; min-width: 0; min-height: 68px; flex: 1; flex-direction: column; gap: 4px; align-items: center; justify-content: center; border: 0; border-radius: 3px; color: #fff; }
+.ticket-buy { background: color-mix(in srgb, var(--app-color-buy) 94%, #000); }
+.ticket-sell { background: color-mix(in srgb, var(--app-color-sell) 88%, #000); }
+.ticket-trade-buttons strong { font-size: 20px; font-weight: 600; }
+.ticket-trade-buttons strong span { font-family: var(--app-font-family-numeric); font-size: 18px; }
+.ticket-trade-buttons button > span { font-size: 11px; }
+.ticket-footer > p { margin: 8px 0 0; color: var(--app-color-text-secondary); font-size: 10px; text-align: center; }
+.ticket-footer > .ticket-error { margin: 0 0 8px; color: var(--app-color-rise); font-size: 12px; text-align: left; }
+.ticket-search { width: 100%; min-height: 44px; padding: 0 12px; }
+.ticket-market-tabs { display: flex; margin: 12px 0; }
+.ticket-market-tabs button { flex: 1; }
+.ticket-symbol-option { display: flex; width: 100%; min-height: 62px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--app-color-border); background: transparent; color: var(--app-color-text); text-align: left; }
+.ticket-symbol-option strong { font-size: 15px; font-weight: 500; }
+.ticket-symbol-option small { display: block; margin-top: 4px; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 12px; }
+.ticket-no-results { padding: 40px 0; color: var(--app-color-text-secondary); text-align: center; font-size: 13px; }
+.ticket-algorithm-options { display: grid; gap: 8px; margin-bottom: 24px; }
+.ticket-algorithm-options button { display: flex; min-height: 56px; align-items: center; justify-content: space-between; gap: 16px; padding: 12px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 12px; text-align: left; }
+.ticket-algorithm-options strong { color: var(--app-color-text); font-size: 15px; }
+.ticket-algorithm-options button[aria-pressed="true"] { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); }
+.ticket-algorithm-options button[aria-pressed="true"] strong { color: var(--app-color-accent); }
+.ticket-settings > label { display: block; margin: 20px 0 8px; color: var(--app-color-text-secondary); font-size: 13px; }
+.ticket-settings :is(select, input) { min-height: 44px; padding: 0 12px; }
+.ticket-settings > :is(input, select) { width: 100%; }
+.ticket-duration { display: flex; gap: 20px; }
+.ticket-duration label, .ticket-participation { display: flex; flex: 1; align-items: center; gap: 8px; }
+.ticket-duration select, .ticket-participation input { min-width: 0; flex: 1; }
+.ticket-secondary-actions { display: flex; gap: 12px; }
+.ticket-secondary-actions button, .ticket-no-results button { min-height: 44px; flex: 1; padding: 8px 12px; border: 0; border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text); font-size: 14px; }
+.equity-order-sheet .ticket-primary { background: var(--app-color-accent); color: #fff; font-weight: 600; }
+.ticket-confirm h3 { margin: 18px 0; font-size: 19px; }
+.ticket-confirm h3 small { color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 13px; font-weight: 400; }
+.ticket-confirm dl { margin: 0; }
+.ticket-confirm dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--app-color-border); font-size: 13px; }
+.ticket-confirm dt { flex-shrink: 0; color: var(--app-color-text-secondary); }
+.ticket-confirm dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ticket-complete { display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+.ticket-complete svg { width: 48px; height: 48px; margin: 32px 0 8px; fill: none; stroke: var(--app-color-accent); stroke-width: 1.5; }
+.ticket-complete h3 { font-size: 18px; }
+.ticket-complete p { margin: 6px 0; color: var(--app-color-text-secondary); font-size: 13px; }
+@media (max-width: 360px) {
+  .order-entry-scroll { padding-right: 12px; padding-left: 12px; }
+  .ticket-caption { gap: 4px; }
+  .ticket-caption .ticket-segment button { padding: 0 9px; }
+  .ticket-symbol-control strong { font-size: 17px; }
+  .ticket-algorithm-description { font-size: 11px; }
+  .ticket-estimates { column-gap: 12px; }
+}

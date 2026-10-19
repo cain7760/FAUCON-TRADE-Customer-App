@@ -1,0 +1,122 @@
+/* 与 PC Customer 下单面板共用现有字体文件及回退顺序。 */
+@font-face {
+  font-family: 'D-DIN Exp';
+  src: url('/fonts/D-DINExp.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  /* 与 Customer 权益页 theme.css / theme-tokens.css 对齐；移动端只复用视觉令牌。 */
+  --app-color-stage: #111315;
+  --app-color-background: #111315;
+  --app-color-surface: #17191c;
+  --app-color-card: #1e2023;
+  --app-color-control: #25282d;
+  --app-color-border: #303338;
+  --app-color-frame: #363a40;
+  --app-color-text: #e8eaed;
+  --app-color-text-secondary: #9ca3ae;
+  --app-color-accent: #bb984a;
+  --app-color-accent-soft: #353026;
+  --app-color-rise: #ed858b;
+  --app-color-fall: #65c4a1;
+  --app-color-rise-soft: rgba(237, 133, 139, .12);
+  --app-color-fall-soft: rgba(101, 196, 161, .12);
+  --app-color-buy: #b55f6b;
+  --app-color-sell: #3d9275;
+  --app-font-size-caption: .75rem;
+  --app-font-size-tabbar: .6875rem;
+  --app-font-family-numeric: 'D-DIN Exp', 'DIN Alternate', 'Arial Narrow', sans-serif;
+
+  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--app-color-text);
+  background: var(--app-color-stage);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 全局主题也覆盖挂载到 body 的 Vant 弹层；仅移动入口加载此文件。 */
+:root.van-theme-dark {
+  color-scheme: dark;
+  --van-primary-color: var(--app-color-accent);
+  --van-background: var(--app-color-background);
+  --van-background-2: var(--app-color-surface);
+  --van-background-3: var(--app-color-control);
+  --van-text-color: var(--app-color-text);
+  --van-text-color-2: var(--app-color-text-secondary);
+  --van-border-color: var(--app-color-border);
+  --van-tabbar-height: 62px;
+  --van-tabbar-item-font-size: var(--app-font-size-tabbar);
+  --van-tabbar-item-line-height: 16px;
+  --van-tabbar-item-icon-size: 21px;
+  --van-tabbar-item-icon-margin-bottom: 3px;
+  --van-tabbar-item-text-color: var(--app-color-text-secondary);
+  --van-tabbar-item-active-background: transparent;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
+body { min-height: 100dvh; background: var(--app-color-stage); }
+button { font: inherit; -webkit-tap-highlight-color: transparent; }
+.app-numeric { font-family: var(--app-font-family-numeric); font-variant-numeric: tabular-nums; }
+
+.mobile-tabbar .van-tabbar-item {
+  min-width: 0;
+  min-height: 48px;
+  touch-action: manipulation;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.mobile-tabbar .van-tabbar-item__text { white-space: nowrap; }
+.mobile-tabbar .van-tabbar-item--active { font-weight: 600; }
+.mobile-tabbar .van-tabbar-item:active { opacity: .7; }
+.mobile-tabbar .van-tabbar-item:focus-visible {
+  outline: 2px solid var(--app-color-accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.equity-list-tabs {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  --van-tabs-nav-background: transparent;
+  --van-tab-active-text-color: var(--app-color-text);
+  --van-tab-text-color: var(--app-color-text-secondary);
+  --van-tab-font-size: 13px;
+  --van-tabs-line-height: 40px;
+}
+.equity-list-tabs .van-tabs__wrap { flex-shrink: 0; margin: 0 12px; border: 1px solid var(--app-color-border); border-radius: 3px; background: var(--app-color-surface); }
+.equity-list-tabs .van-tabs__nav { gap: 3px; padding: 3px; }
+.equity-list-tabs .van-tabs__line { display: none; }
+.equity-list-tabs .van-tab { min-width: 0; height: 32px; padding: 0 2px; border: 1px solid transparent; border-radius: 2px; font-weight: 500; }
+.equity-list-tabs .van-tab--active { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); color: #dfc890; font-weight: 700; }
+.equity-tab-title { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.equity-tab-total { min-width: 18px; padding: 0 3px; border-radius: 2px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; line-height: 18px; text-align: center; }
+.equity-list-tabs .van-tab--active .equity-tab-total { background: var(--app-color-accent); color: #fff; font-weight: 400; }
+.equity-list-tabs .van-tab:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.equity-list-tabs .van-tabs__content { min-height: 0; flex: 1; }
+.equity-list-tabs .van-tab__panel { height: 100%; }
+
+/* 浏览器预览的浮层限于手机框；安全区不叠加到外部桌面视口。 */
+.equity-sheet-overlay.van-overlay { position: absolute; }
+.equity-filter-sheet.van-popup { position: absolute; display: flex; max-height: calc(100% - 59px); flex-direction: column; border: 1px solid var(--app-color-border); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--app-color-card); }
+.equity-filter-input.van-field { min-height: 44px; padding: 10px 12px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-control); --van-field-input-text-color: var(--app-color-text); --van-field-placeholder-text-color: var(--app-color-text-secondary); font-size: 16px; }
+.equity-filter-input.van-field::after { display: none; }
+.sheet-actions .van-button { min-height: 46px; flex: 1; border-radius: 4px; font-size: 15px; }
+.sheet-actions .van-button--primary { --van-button-primary-color: #fff; font-weight: 600; }
+.sheet-actions .equity-secondary-button { max-width: 100px; background: var(--app-color-control); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* 可访问性覆盖：包括组件库的动画与过渡。 */
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

@@ -1,0 +1,170 @@
+.equity-page, .equity-workspace, .equity-tab-panel, .equity-detail {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.equity-page { font-size: 14px; line-height: 1.5; }
+/* 入口固定在业务容器内；底部导航负责安全区，列表末尾为悬浮入口留白。 */
+.equity-workspace { --equity-order-clearance: 96px; position: relative; }
+.equity-page button { cursor: pointer; touch-action: manipulation; }
+.equity-page button:focus-visible, .equity-page input:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: 2px; }
+.equity-positive { color: var(--app-color-rise); }
+.equity-negative { color: var(--app-color-fall); }
+.equity-accent { color: var(--app-color-accent); }
+.equity-page-header { display: flex; min-height: 48px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px 4px; }
+.equity-page-header h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: .02em; white-space: nowrap; }
+/* 独立主操作采用圆形，背景直接复用品牌主色，不混入页面底色。 */
+.equity-order-entry {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 5;
+  display: inline-flex;
+  width: 60px;
+  height: 60px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--app-color-accent);
+  color: var(--app-color-text);
+  box-shadow: 0 6px 18px rgb(0 0 0 / .4);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: transform 120ms ease-out;
+}
+.equity-order-entry svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.equity-order-entry:active { transform: scale(.96); }
+.equity-account { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--app-color-text); text-align: right; }
+.equity-account b { font-size: 14px; font-weight: 500; }
+.equity-account svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: var(--app-color-text-secondary); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.equity-account .equity-account-icon { width: 17px; height: 17px; stroke: none; }
+.equity-toolbar { display: flex; flex-shrink: 0; align-items: center; gap: 6px; padding: 8px 12px 0; }
+.equity-quick-search { display: flex; min-width: 0; flex: 1; align-items: center; gap: 6px; }
+.equity-search-field { display: flex; min-width: 0; height: 28px; flex: 1; align-items: center; padding-left: 10px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); }
+.equity-search-field:focus-within { border-color: var(--app-color-accent); }
+.equity-search-field svg { width: 17px; height: 17px; flex-shrink: 0; fill: none; stroke: var(--app-color-text-secondary); stroke-width: 1.5; }
+.equity-search-field input { min-width: 0; width: 100%; height: 100%; padding: 0 9px; border: 0; outline: none; background: none; color: var(--app-color-text); font: inherit; font-size: 16px; }
+.equity-search-field input::placeholder { color: var(--app-color-text-secondary); font-size: 13px; }
+.equity-search-submit { min-width: 52px; height: 28px; padding: 0 10px; border: 1px solid #4a4f58; border-radius: 2px; background: #2b2f35; color: #c8ced7; font-size: 13px; font-weight: 600; }
+.equity-filter-trigger { position: relative; display: flex; min-width: 68px; height: 28px; align-items: center; justify-content: center; gap: 4px; padding: 0 6px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); color: var(--app-color-text-secondary); font-size: 13px; }
+.equity-filter-trigger svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.equity-filter-trigger.is-filtered { border-color: var(--app-color-accent); color: var(--app-color-accent); }
+.equity-filter-trigger i { position: absolute; top: -5px; right: -5px; display: grid; min-width: 16px; height: 16px; place-items: center; border-radius: 8px; background: var(--app-color-accent); color: #fff; font-size: 11px; font-style: normal; }
+.equity-view-toolbar { display: flex; min-height: 36px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; color: var(--app-color-text-secondary); font-size: 10px; }
+.equity-view-switch { display: flex; flex-shrink: 0; gap: 2px; }
+.equity-view-switch button { display: inline-flex; min-width: 42px; min-height: 32px; align-items: center; justify-content: center; gap: 4px; padding: 0 7px; border: 0; background: none; color: var(--app-color-text-secondary); font-size: 12px; white-space: nowrap; }
+.equity-view-switch svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.equity-view-switch button[aria-pressed="true"] { color: var(--app-color-text); font-weight: 600; text-decoration: underline; text-decoration-color: var(--app-color-accent); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.equity-records { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px var(--equity-order-clearance, 12px); scroll-padding-bottom: var(--equity-order-clearance, 12px); scrollbar-width: none; }
+.equity-records::-webkit-scrollbar, .detail-scroll::-webkit-scrollbar { display: none; }
+.equity-record { display: block; width: 100%; margin-bottom: 8px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-card); color: var(--app-color-text); }
+.record-detail-trigger { display: block; width: 100%; padding: 10px 12px 8px; border: 0; border-radius: 4px; background: none; color: inherit; text-align: left; transition: background 160ms ease; }
+.record-detail-trigger:active { background: var(--app-color-border); }
+.record-actions { display: flex; flex-shrink: 0; gap: 8px; }
+.record-action { min-width: 52px; min-height: 44px; padding: 8px 0; border: 0; border-radius: 2px; background: none; font-size: 12px; font-weight: 500; transition: opacity 160ms ease; }
+.record-action > span { display: flex; min-height: 28px; align-items: center; justify-content: center; padding: 0 10px; border-radius: 2px; color: #fff; }
+.record-action:active { opacity: .7; }
+.record-action-chase { color: var(--app-color-rise); }
+.record-action-close { color: var(--app-color-fall); }
+.record-action-chase > span { background: var(--app-color-buy); }
+.record-action-close > span { background: var(--app-color-sell); }
+.record-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.record-instrument { min-width: 0; }
+.record-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
+.record-name { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 16px; font-weight: 700; }
+.record-code { display: block; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.record-currency { margin-left: 5px; font-size: 10px; }
+.record-metadata { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-top: 4px; }
+.record-tag { padding: 0 5px; border-radius: 2px; background: #2b2e33; font-size: 11px; font-weight: 400; line-height: 18px; }
+.record-tag-long { background: var(--app-color-rise-soft); color: var(--app-color-rise); }
+.record-tag-short { background: var(--app-color-fall-soft); color: var(--app-color-fall); }
+.record-currency-tag { color: var(--app-color-text-secondary); }
+.position-card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 8px; margin: 0 12px; border-top: 1px solid var(--app-color-border); }
+.position-account { display: flex; min-width: 0; min-height: 44px; flex: 1; flex-direction: column; justify-content: center; padding: 5px 0; overflow-wrap: anywhere; }
+.record-highlight { min-width: 0; max-width: 55%; flex-shrink: 0; text-align: right; }
+.record-highlight strong { display: block; margin-top: 2px; overflow-wrap: anywhere; font-family: var(--app-font-family-numeric); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 24px; }
+.record-caption { display: block; color: var(--app-color-text-secondary); font-size: 11px; font-weight: 400; line-height: 14px; }
+/* 两列键值对；长金额可换行，不截断交易数值。 */
+.record-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 18px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--app-color-border); }
+.record-metrics > span { display: flex; min-width: 0; min-height: 20px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 6px; }
+.record-value { display: block; margin-left: auto; overflow-wrap: anywhere; font-family: var(--app-font-family-numeric); font-size: 15px; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 20px; text-align: right; }
+.record-position .record-value { font-size: 13px; }
+.record-context { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; color: var(--app-color-text-secondary); font-size: 11px; line-height: 18px; }
+.record-status { padding: 2px 7px; border-radius: 2px; background: var(--app-color-accent-soft); color: #dfc890; font-size: 12px; }
+.record-status.status-alert { background: var(--app-color-rise-soft); color: var(--app-color-rise); }
+.record-status.status-complete { background: var(--app-color-fall-soft); color: var(--app-color-fall); }
+.record-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--app-color-border); font-size: 12px; line-height: 18px; }
+.record-foot > span { min-width: 0; overflow-wrap: anywhere; }
+.record-foot > span:last-child { text-align: right; }
+.record-foot .app-numeric { display: block; font-size: 13px; }
+.record-account { font-size: 11px; }
+.equity-list-end { margin: 18px 0; color: var(--app-color-text-secondary); font-size: 12px; text-align: center; }
+.equity-empty { padding: 24px 16px 70px; color: var(--app-color-text-secondary); text-align: center; }
+.equity-icon-button { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--app-color-text-secondary); }
+.equity-icon-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sheet-handle { width: 32px; height: 4px; flex-shrink: 0; margin: 10px auto 0; border-radius: 2px; background: var(--app-color-frame); }
+.sheet-heading { display: flex; min-height: 54px; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 0 16px; }
+.sheet-heading h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.filter-form { display: flex; min-height: 0; flex-direction: column; }
+.filter-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 16px; }
+.filter-group { min-width: 0; margin: 0 0 22px; padding: 0; border: 0; }
+.filter-group legend, .filter-group > label { display: block; margin-bottom: 10px; padding: 0; color: var(--app-color-text); font-size: 14px; }
+.filter-group small { margin-left: 6px; color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; }
+.filter-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.filter-chip { min-height: 44px; padding: 6px 4px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text-secondary); font: inherit; font-size: 13px; }
+.filter-chip[aria-pressed="true"] { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); color: #dfc890; }
+.account-options { overflow: hidden; border: 1px solid var(--app-color-border); border-radius: 4px; }
+.account-option { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--app-color-border); background: var(--app-color-control); color: var(--app-color-text); font: inherit; text-align: left; }
+.account-option:last-child { border-bottom: 0; }
+.option-check { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1px solid var(--app-color-frame); border-radius: 4px; color: var(--app-color-background); font-size: 13px; }
+.account-option[aria-pressed="true"] .option-check { border-color: var(--app-color-accent); background: var(--app-color-accent); }
+.filter-error { margin: 8px 0 0; color: var(--app-color-rise); font-size: 12px; }
+.status-selection { display: flex; align-items: center; gap: 8px; margin-top: -8px; margin-bottom: 4px; }
+.status-selection button { min-width: 44px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--app-color-accent); font: inherit; font-size: 13px; }
+.status-selection span { margin-left: auto; color: var(--app-color-text-secondary); font-size: 12px; }
+.sheet-actions { display: flex; flex-shrink: 0; gap: 12px; padding: 12px 20px max(20px, env(safe-area-inset-bottom)); border-top: 1px solid var(--app-color-border); }
+.detail-header { display: grid; min-height: 54px; flex-shrink: 0; grid-template-columns: 44px 1fr 44px; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--app-color-border); }
+.detail-header h2 { margin: 0; font-size: 17px; font-weight: 600; text-align: center; }
+.detail-scroll { min-height: 0; flex: 1; overflow-y: auto; padding: 0 14px 20px; scrollbar-width: none; }
+.detail-symbol { padding: 20px 4px; }
+.detail-symbol h3 { display: inline; margin: 0 10px 0 0; font-size: 20px; }
+.detail-symbol > span { color: var(--app-color-text-secondary); font-size: 13px; }
+.detail-symbol small { display: block; margin-top: 5px; color: var(--app-color-text-secondary); font-size: 12px; }
+.detail-section { margin-bottom: 10px; overflow: hidden; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-card); }
+.detail-section > h3 { margin: 0; padding: 14px; border-bottom: 1px solid var(--app-color-border); font-size: 14px; font-weight: 600; }
+.detail-section dl { margin: 0; padding: 0 14px; }
+.detail-field { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--app-color-border); font-size: 13px; }
+.detail-field:last-child { border-bottom: 0; }
+.detail-field dt { flex-shrink: 0; color: var(--app-color-text-secondary); }
+.detail-field dd { display: flex; min-width: 0; align-items: center; justify-content: flex-end; margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; text-align: right; }
+.detail-field-long { align-items: stretch; flex-direction: column; gap: 5px; }
+.detail-field-long dd { display: block; line-height: 1.7; text-align: left; }
+.detail-field .copy-button { min-width: 44px; flex-shrink: 0; margin: -10px -10px -10px 0; color: var(--app-color-accent); }
+.copyable-value { user-select: text; }
+.copy-feedback { flex-shrink: 0; margin: 0; padding: 10px 16px; color: var(--app-color-accent); font-size: 13px; }
+.activity-description { margin: 0; padding: 0 14px 14px; color: var(--app-color-text-secondary); font-size: 12px; }
+.position-action-content { min-height: 0; overflow-y: auto; padding: 0 20px 18px; }
+.position-action-symbol { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 10px 0 16px; }
+.position-action-symbol strong { font-size: 18px; }
+.position-action-symbol span { color: var(--app-color-text-secondary); font-size: 12px; }
+.position-action-summary { margin: 0; }
+.position-action-summary > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 44px; font-size: 13px; }
+.position-action-summary dt { flex-shrink: 0; color: var(--app-color-text-secondary); }
+.position-action-summary dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.position-action-notice { margin: 16px 0 0; padding: 12px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 12px; line-height: 1.7; }
+
+@media (max-width: 360px) {
+  .record-metrics { column-gap: 12px; }
+  .record-metrics > span { display: block; }
+  .record-metrics .record-value { margin-top: 2px; }
+  .record-name { font-size: 15px; }
+  .record-highlight strong { font-size: 18px; }
+}

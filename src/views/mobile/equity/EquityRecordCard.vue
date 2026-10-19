@@ -1,0 +1,72 @@
+<script setup>
+import { formatNumber, price, pnlClass, signedMoney, sideLabel, orderPrice, orderQuantity, fillProgress, accountLabel } from './model.js'
+defineProps({ kind: { type: String, required: true }, record: { type: Object, required: true } })
+defineEmits(['open', 'action'])
+const isChaseActionVisible = false
+</script>
+
+<template>
+  <article class="equity-record" :class="{ 'record-position': kind === 'positions' }">
+  <button type="button" class="record-detail-trigger" :aria-label="`查看${record.name}${kind === 'positions' ? '持仓' : kind === 'orders' ? '订单' : '成交'}详情`" @click="$emit('open', $event)">
+    <span class="record-heading">
+      <span class="record-instrument">
+        <span class="record-identity">
+          <span class="record-name">{{ record.name }}</span>
+          <span v-if="kind === 'positions'" class="record-code">{{ record.code }}.{{ record.market }}</span>
+        </span>
+        <span class="record-metadata">
+          <template v-if="kind === 'positions'">
+            <span class="record-tag" :class="record.direction === '多' ? 'record-tag-long' : 'record-tag-short'">{{ record.direction === '多' ? '做多' : '做空' }}</span>
+            <span class="record-tag record-currency-tag" :aria-label="`币种：${record.currency || '--'}`">{{ record.currency || '--' }}</span>
+          </template>
+          <span v-else class="record-code">{{ record.code }}.{{ record.market }}<span class="record-currency">{{ record.currency }}</span></span>
+        </span>
+      </span>
+      <span v-if="kind === 'positions'" class="record-highlight"><span class="record-caption">总盈亏</span><strong :class="pnlClass(record.totalProfit)">{{ signedMoney(record.totalProfit) }}</strong></span>
+      <span v-else-if="kind === 'orders'" class="record-status" :class="{ 'status-alert': ['被拒绝', '审核拒绝'].includes(record.status), 'status-complete': record.status === '全成' }">{{ record.status }}</span>
+      <span v-else class="record-highlight">
+        <span class="record-caption">成交金额</span>
+        <strong>{{ formatNumber(record.filledAmount) }}</strong>
+      </span>
+    </span>
+
+    <template v-if="kind === 'positions'">
+      <span class="record-metrics">
+        <span><span class="record-caption">持仓均价</span><span class="record-value">{{ price(record.cost, record.market) }}</span></span>
+        <span><span class="record-caption">最新价</span><span class="record-value" :class="pnlClass(record.change)">{{ price(record.price, record.market) }}</span></span>
+        <span><span class="record-caption">期初数量（股）</span><span class="record-value">{{ formatNumber(record.opening, 3, false) }}</span></span>
+        <span><span class="record-caption">持仓数量（股）</span><span class="record-value">{{ formatNumber(record.qty, 3, false) }}</span></span>
+        <span><span class="record-caption">可用数量（股）</span><span class="record-value equity-accent">{{ formatNumber(record.available, 3, false) }}</span></span>
+        <span><span class="record-caption">市值</span><span class="record-value">{{ formatNumber(record.value) }}</span></span>
+        <span><span class="record-caption" title="沿用 Customer 日内实现盈亏口径">实现盈亏</span><span class="record-value" :class="pnlClass(record.dailyRealizedProfit)">{{ signedMoney(record.dailyRealizedProfit) }}</span></span>
+        <span><span class="record-caption">浮动盈亏</span><span class="record-value" :class="pnlClass(record.floatingProfit)">{{ signedMoney(record.floatingProfit) }}</span></span>
+      </span>
+    </template>
+    <template v-else>
+      <span class="record-context"><span :class="record.side === 'buy' ? 'equity-positive' : 'equity-negative'">{{ sideLabel(record) }}</span><span>{{ record.orderType }}</span><span v-if="kind === 'orders'">{{ record.type === 'market' ? '市价单' : '限价单' }}</span></span>
+      <span class="record-metrics">
+        <span><span class="record-caption">{{ kind === 'orders' ? '订单价格' : '成交均价' }}</span><span class="record-value">{{ kind === 'orders' ? orderPrice(record) : price(record.filledPrice, record.market) }}</span></span>
+        <span><span class="record-caption">{{ kind === 'orders' ? '订单数量/金额' : '成交数量（股）' }}</span><span class="record-value">{{ kind === 'orders' ? orderQuantity(record) : formatNumber(record.filledQuantity, 3, false) }}</span></span>
+        <template v-if="kind === 'orders'">
+          <span><span class="record-caption">挂单数量（股）</span><span class="record-value">{{ record.reportQuantity ? formatNumber(record.reportQuantity, 3, false) : '--' }}</span></span>
+          <span><span class="record-caption">已成数量（股）</span><span class="record-value">{{ record.filledQuantity ? formatNumber(record.filledQuantity, 3, false) : '--' }}</span></span>
+          <span><span class="record-caption">成交均价</span><span class="record-value">{{ price(record.filledPrice, record.market) }}</span></span>
+          <span><span class="record-caption">成交进度</span><span class="record-value">{{ fillProgress(record) }}</span></span>
+        </template>
+        <span v-else><span class="record-caption">执行算法</span><span class="record-value">{{ record.algorithm || '--' }}</span></span>
+      </span>
+      <span class="record-foot">
+        <span><span class="record-caption">下单账户</span><span class="record-account">{{ accountLabel(record.account) }}</span></span>
+        <span><span class="record-caption">{{ kind === 'orders' ? '订单时间' : '成交时间' }}</span><span class="app-numeric">{{ (kind === 'orders' ? record.orderTime : record.filledTime) || '--' }}</span></span>
+      </span>
+    </template>
+  </button>
+  <footer v-if="kind === 'positions'" class="position-card-footer">
+    <span class="position-account"><span class="record-caption">下单账户</span><span class="record-account">{{ accountLabel(record.account) }}</span></span>
+    <div v-if="record.direction === '多'" class="record-actions">
+      <button v-if="isChaseActionVisible" type="button" class="record-action record-action-chase" :aria-label="`${record.name}追单`" @click="$emit('action', { action: 'chase', event: $event })"><span>追单</span></button>
+      <button type="button" class="record-action record-action-close" :aria-label="`${record.name}平仓`" @click="$emit('action', { action: 'close', event: $event })"><span>平仓</span></button>
+    </div>
+  </footer>
+  </article>
+</template>
