@@ -90,8 +90,8 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; }
   --van-tab-font-size: 13px;
   --van-tabs-line-height: 40px;
 }
-.equity-list-tabs .van-tabs__wrap { flex-shrink: 0; margin: 0 12px; border: 1px solid var(--app-color-border); border-radius: 3px; background: var(--app-color-surface); }
-.equity-list-tabs .van-tabs__nav { gap: 3px; padding: 3px; }
+.equity-list-tabs .van-tabs__wrap { height: auto; flex-shrink: 0; margin: 0; padding: 0 8px 8px; border: 1px solid var(--app-color-border); border-top: 0; border-radius: 0 0 4px 4px; background: var(--app-color-card); }
+.equity-list-tabs .van-tabs__nav { height: 32px; box-sizing: border-box; gap: 4px; padding: 0; }
 .equity-list-tabs .van-tabs__line { display: none; }
 .equity-list-tabs .van-tab { min-width: 0; height: 32px; padding: 0 2px; border: 1px solid transparent; border-radius: 2px; font-weight: 500; }
 .equity-list-tabs .van-tab--active { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); color: #dfc890; font-weight: 700; }

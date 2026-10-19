@@ -11,20 +11,19 @@ const isChaseActionVisible = false
     <span class="record-heading">
       <span class="record-instrument">
         <span class="record-identity">
+          <span v-if="kind === 'positions'" class="record-tags">
+            <span class="record-tag" :class="record.direction === '多' ? 'record-tag-long' : 'record-tag-short'">{{ record.direction === '多' ? '做多' : '做空' }}</span>
+            <span class="record-tag record-currency-tag" :aria-label="`币种：${record.currency || '--'}`">{{ record.currency || '--' }}</span>
+          </span>
           <span class="record-name">{{ record.name }}</span>
           <span v-if="kind === 'positions'" class="record-code">{{ record.code }}.{{ record.market }}</span>
         </span>
-        <span class="record-metadata">
-          <template v-if="kind === 'positions'">
-            <span class="record-tag" :class="record.direction === '多' ? 'record-tag-long' : 'record-tag-short'">{{ record.direction === '多' ? '做多' : '做空' }}</span>
-            <span class="record-tag record-currency-tag" :aria-label="`币种：${record.currency || '--'}`">{{ record.currency || '--' }}</span>
-          </template>
-          <span v-else class="record-code">{{ record.code }}.{{ record.market }}<span class="record-currency">{{ record.currency }}</span></span>
+        <span v-if="kind !== 'positions'" class="record-metadata">
+          <span class="record-code">{{ record.code }}.{{ record.market }}<span class="record-currency">{{ record.currency }}</span></span>
         </span>
       </span>
-      <span v-if="kind === 'positions'" class="record-highlight"><span class="record-caption">总盈亏</span><strong :class="pnlClass(record.totalProfit)">{{ signedMoney(record.totalProfit) }}</strong></span>
-      <span v-else-if="kind === 'orders'" class="record-status" :class="{ 'status-alert': ['被拒绝', '审核拒绝'].includes(record.status), 'status-complete': record.status === '全成' }">{{ record.status }}</span>
-      <span v-else class="record-highlight">
+      <span v-if="kind === 'orders'" class="record-status" :class="{ 'status-alert': ['被拒绝', '审核拒绝'].includes(record.status), 'status-complete': record.status === '全成' }">{{ record.status }}</span>
+      <span v-else-if="kind === 'trades'" class="record-highlight">
         <span class="record-caption">成交金额</span>
         <strong>{{ formatNumber(record.filledAmount) }}</strong>
       </span>

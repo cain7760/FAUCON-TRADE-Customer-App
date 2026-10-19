@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, useId, watch } from 'vue'
-import { accountLabel, fillProgress, formatNumber, listTabs, orderPrice, orderQuantity, pnlClass, price, sideLabel, signedMoney } from './model.js'
+import { accountLabel, activityText, fillProgress, formatNumber, listTabs, orderPrice, orderQuantity, pnlClass, price, sideLabel } from './model.js'
 
 const props = defineProps({ kind: { type: String, required: true }, records: { type: Array, required: true } })
 const emit = defineEmits(['open', 'action'])
@@ -22,19 +22,19 @@ function collapseActions(event) {
   expandedRecordId.value = null
 }
 const label = computed(() => listTabs.find(tab => tab.key === props.kind)?.label)
+const timeLabel = value => value ? String(value).slice(-8) : '--'
 const columns = computed(() => {
+  // Customer PositionsTable + columnOptions：总盈亏、实现盈亏不属于当前可选表格列。
   if (props.kind === 'positions') return [
     { key: 'index', title: '序号', width: 36, value: (row, index) => index + 1 },
     { key: 'price', title: '持仓均价', secondTitle: '最新价', width: 68, value: row => price(row.cost, row.market), second: row => price(row.price, row.market), secondTone: row => pnlClass(row.change) },
     { key: 'opening', title: '期初数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.opening ?? 0, 3, false) },
-    { key: 'quantity', title: '持仓数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.qty, 3, false) },
+    { key: 'holdingQty', title: '持仓数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.qty, 3, false) },
     { key: 'available', title: '可用数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.available, 3, false), tone: () => 'equity-accent' },
-    { key: 'value', title: '市值', width: 92, value: row => formatNumber(row.value) },
-    { key: 'margin', title: '占用保证金', width: 88, value: row => formatNumber(row.marginOccupied) },
+    { key: 'valueWan', title: '市值', width: 92, value: row => formatNumber(row.value) },
+    { key: 'marginOccupied', title: '占用保证金', width: 88, value: row => formatNumber(row.marginOccupied) },
     { key: 'marginRate', title: '保证金率', width: 64, value: row => row.marginRate == null || !Number.isFinite(Number(row.marginRate)) ? '--' : `${formatNumber(row.marginRate)}%` },
-    { key: 'totalProfit', title: '总盈亏', width: 84, value: row => signedMoney(row.totalProfit), tone: row => pnlClass(row.totalProfit) },
-    { key: 'dailyRealizedProfit', title: '实现盈亏', width: 84, value: row => signedMoney(row.dailyRealizedProfit), tone: row => pnlClass(row.dailyRealizedProfit) },
-    { key: 'floatingProfit', title: '浮动盈亏', width: 84, value: row => signedMoney(row.floatingProfit), tone: row => pnlClass(row.floatingProfit) },
+    { key: 'floatingProfit', title: '浮动盈亏', width: 84, value: row => formatNumber(row.floatingProfit), tone: row => row.floatingProfit >= 0 ? 'equity-positive' : 'equity-negative' },
     { key: 'account', title: '下单账户', width: 120, text: true, value: row => accountLabel(row.account) },
     { key: 'market', title: '市场', width: 44, text: true, value: row => ({ SZ: '深市', SH: '沪市', HK: '港股', US: '美股', A: 'A股' }[row.market] || row.market || '--') },
     { key: 'currency', title: '币种', width: 44, text: true, value: row => row.currency },
@@ -52,14 +52,26 @@ const columns = computed(() => {
     context, account,
     { key: 'time', title: '订单时间', width: 132, value: row => row.orderTime || '--' },
   ]
+  // Customer TradesTable / tradeColumnOptions 的完整业务字段，标的名称与代码仍合并固定。
   return [
-    { key: 'amount', title: '成交金额', width: 120, value: row => formatNumber(row.filledAmount) },
-    { key: 'price', title: '成交均价', width: 72, value: row => price(row.filledPrice, row.market) },
-    { key: 'quantity', title: '成交数量（股）', width: 92, value: row => formatNumber(row.filledQuantity, 3, false) },
-    context,
-    { key: 'algorithm', title: '执行算法', width: 60, text: true, value: row => row.algorithm || '--' },
+    { key: 'index', title: '序号', width: 36, value: (row, index) => index + 1 },
+    { key: 'side', title: '方向', width: 44, text: true, value: row => row.side === 'buy' ? '买' : '卖', tone: row => row.side === 'buy' ? 'equity-positive' : 'equity-negative' },
+    { key: 'filledPrice', title: '成交均价', width: 72, value: row => price(row.filledPrice, row.market) },
+    { key: 'filledQuantity', title: '成交数量', secondTitle: '（股）', width: 92, value: row => formatNumber(row.filledQuantity ?? 0, 3, false) },
+    { key: 'filledAmount', title: '成交金额', width: 120, value: row => formatNumber(row.filledAmount) },
+    { key: 'filledTime', title: '成交时间', width: 76, value: row => timeLabel(row.filledTime) },
+    { key: 'orderTime', title: '订单时间', width: 76, value: row => timeLabel(row.orderTime) },
+    { key: 'tradeNo', title: '成交编号', width: 120, value: row => row.tradeNo || '--' },
+    { key: 'entrustNo', title: '订单编号', width: 144, value: row => row.entrustNo || '--' },
+    { key: 'tradeDate', title: '交易日期', width: 80, value: row => row.tradeDate || '--' },
     account,
-    { key: 'time', title: '成交时间', width: 132, value: row => row.filledTime || '--' },
+    { key: 'market', title: '市场', width: 44, text: true, value: row => row.market === 'HK' ? '港股' : 'A股' },
+    { key: 'currency', title: '币种', width: 44, text: true, value: row => row.currency || (row.market === 'HK' ? 'HKD' : row.market === 'US' ? 'USD' : 'CNY') },
+    { key: 'orderType', title: '订单类型', width: 64, text: true, value: row => row.orderType || '--' },
+    { key: 'algorithm', title: '执行算法', width: 60, text: true, value: row => row.algorithm || '--' },
+    { key: 'orderRemark', title: '下单备注', width: 132, text: true, truncate: true, value: row => row.orderRemark || '--' },
+    { key: 'feedback', title: '订单动态', width: 180, text: true, truncate: true, value: activityText },
+    { key: 'openClose', title: '开平方向', width: 64, text: true, value: row => row.openClose === '开' ? '开仓' : '平仓' },
   ]
 })
 const tableWidth = computed(() => symbolColumnWidth + columns.value.reduce((sum, column) => sum + column.width, 0))
@@ -85,7 +97,7 @@ const tableWidth = computed(() => symbolColumnWidth + columns.value.reduce((sum,
                 <span class="table-symbol-code app-numeric">{{ record.code }}.{{ record.market }}</span>
               </button>
             </th>
-            <td v-for="column in columns" :key="column.key" :class="[column.text ? 'table-text-cell' : 'app-numeric', { 'table-wrap-cell': column.wrap }]">
+            <td v-for="column in columns" :key="column.key" :class="[column.text ? 'table-text-cell' : 'app-numeric', { 'table-wrap-cell': column.wrap, 'table-truncate-cell': column.truncate }]" :title="column.truncate ? column.value(record, index) : undefined">
               <span :class="column.tone?.(record)">{{ column.value(record, index) }}</span>
               <span v-if="column.second" class="table-cell-secondary" :class="[column.secondTone?.(record), { 'app-numeric': column.secondNumeric }]">{{ column.second(record) }}</span>
             </td>
@@ -93,10 +105,9 @@ const tableWidth = computed(() => symbolColumnWidth + columns.value.reduce((sum,
           <tr v-if="kind === 'positions' && expandedRecordId === record.id" :id="`${tableId}-${record.id}-actions`" class="table-actions-row" @keydown.esc.stop.prevent="collapseActions">
             <td :colspan="columns.length + 1">
               <div class="table-expanded-actions" role="group" :aria-label="`${record.name}持仓操作`">
-                <button type="button" class="table-view-detail" :aria-label="`查看${record.name}持仓详情`" @click="$emit('open', { record, index: index + 1, event: $event })">查看详情</button>
                 <div v-if="record.direction === '多'" class="record-actions">
                   <button v-if="isChaseActionVisible" type="button" class="record-action record-action-chase" :aria-label="`${record.name}追单`" @click="$emit('action', { record, action: 'chase', event: $event })"><span>追单</span></button>
-                  <button type="button" class="record-action record-action-close" :aria-label="`${record.name}平仓`" @click="$emit('action', { record, action: 'close', event: $event })"><span>平仓</span></button>
+                  <button type="button" class="record-action record-action-close" :aria-label="`${record.name}平仓`" @click="$emit('action', { record, action: 'close', event: $event })"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M9 12h11m-4-4 4 4-4 4"/></svg>平仓</span></button>
                 </div>
               </div>
             </td>
@@ -133,14 +144,18 @@ thead .table-symbol { z-index: 3; padding: 2px 6px; }
 .table-text-cell { text-align: left; }
 td.table-text-cell { font-size: 10px; }
 td.table-wrap-cell { white-space: normal; overflow-wrap: anywhere; }
+td.table-truncate-cell > span { display: block; overflow: hidden; text-overflow: ellipsis; }
 td .record-tag { font-size: 9px; }
 .is-positions tbody tr:not(.table-actions-row) { cursor: pointer; }
 .is-positions .is-expanded > * { background: var(--app-color-control); }
 .table-detail-trigger[aria-expanded="true"] svg { transform: rotate(90deg); }
 .is-positions .table-actions-row > td { padding: 0; background: var(--app-color-control); }
 /* 展开栏跟随表格可视容器宽度，横向滚动时按钮仍留在当前行下方。 */
-.table-expanded-actions { position: sticky; left: 0; display: flex; width: calc(100cqw - 2px); align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; }
-.table-expanded-actions .record-action { min-width: 64px; font-size: 10px; }
-.table-view-detail { min-height: 44px; padding: 0 8px; border: 0; border-radius: 2px; background: none; color: var(--app-color-accent); font-size: 10px; }
-.table-view-detail:active { opacity: .7; }
+.table-expanded-actions { position: sticky; left: 0; display: flex; width: calc(100cqw - 2px); align-items: center; justify-content: center; gap: 8px; padding: 0 8px; }
+.table-expanded-actions .record-action { display: flex; min-width: 160px; min-height: 44px; align-items: center; padding: 6px 0; border: 0; border-radius: 2px; background: none; font-size: 10px; font-weight: 500; }
+.table-expanded-actions button > span { display: flex; width: 100%; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid transparent; border-radius: 2px; }
+.table-expanded-actions .record-action-close > span { background: color-mix(in srgb, var(--app-color-sell) 88%, #000); }
+.table-expanded-actions svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.table-expanded-actions button:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.table-expanded-actions button:active { opacity: .7; }
 </style>

@@ -13,7 +13,8 @@
 .equity-positive { color: var(--app-color-rise); }
 .equity-negative { color: var(--app-color-fall); }
 .equity-accent { color: var(--app-color-accent); }
-.equity-page-header { display: flex; min-height: 48px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px 4px; }
+/* 标题和紧邻的 Tab 导航共用一张卡片的边框与底色。 */
+.equity-page-header { display: flex; min-height: 56px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 4px 10px; border: 0; background: var(--app-color-card); }
 .equity-page-header h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: .02em; white-space: nowrap; }
 /* 独立主操作采用圆形，背景直接复用品牌主色，不混入页面底色。 */
 .equity-order-entry {
@@ -79,6 +80,8 @@
 .record-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .record-instrument { min-width: 0; }
 .record-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
+.record-position .record-identity { align-items: center; }
+.record-tags { display: inline-flex; flex-shrink: 0; align-items: center; gap: 4px; }
 .record-name { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 16px; font-weight: 700; }
 .record-code { display: block; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .record-currency { margin-left: 5px; font-size: 10px; }

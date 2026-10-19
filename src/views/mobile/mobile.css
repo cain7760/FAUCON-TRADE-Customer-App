@@ -35,6 +35,9 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* 权益页的顶部卡片延伸到状态栏，与标题、Tab 连成同一表面。 */
+.status-bar--equity { background: var(--app-color-card); }
+
 .dynamic-island {
   position: absolute;
   top: 10px;

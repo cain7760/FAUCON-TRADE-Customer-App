@@ -29,7 +29,7 @@ const tabs = [
 <template>
   <div class="mobile-stage">
     <main class="mobile-app" aria-label="猎盈 Customer App">
-      <header class="status-bar" aria-label="系统状态栏" :inert="isEquityOverlayOpen ? true : undefined">
+      <header class="status-bar" :class="{ 'status-bar--equity': activeTab === 'equity' }" aria-label="系统状态栏" :inert="isEquityOverlayOpen ? true : undefined">
         <span class="status-time">9:41</span>
         <span class="dynamic-island" aria-hidden="true"></span>
         <span class="status-indicators" aria-hidden="true">
