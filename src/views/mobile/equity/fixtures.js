@@ -1,3 +1,5 @@
+import { hongKongDemoInstruments } from './hongKongInstruments.js'
+
 // Customer PC 演示持仓口径：只用于界面演示，不代表实时持仓或成交回报。
 // 来源：Customer PC 的 src/views/equity/fixtures.js 与 variantData.js
 export const accounts = [
@@ -19,6 +21,7 @@ const instruments = [
   { code: '600900', name: '长江电力', market: 'SH', cost: 27.85, price: 28.34, change: .53, opening: 17000, todayExecutions: [{ side: 'sell', quantity: 1000, price: 27.93 }] },
   { code: '002594', name: '比亚迪', market: 'SZ', cost: 242.50, price: 245.80, change: 1.42, opening: 1400, pendingSell: 200, todayExecutions: [{ side: 'buy', quantity: 600, price: 242.50 }] },
 ]
+export const orderInstruments = [...instruments, ...hongKongDemoInstruments]
 const cents = value => Math.round(Number(value) * 100)
 export function calculatePositionMetrics(position, isAStock = false) {
   const openingLots = position.openingLots || [{ quantity: position.opening, price: position.cost }]

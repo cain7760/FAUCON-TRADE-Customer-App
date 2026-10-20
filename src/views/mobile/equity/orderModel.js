@@ -1,3 +1,5 @@
+import { orderTypeError } from './orderMarketRules.js'
+
 // 与同级 Customer 端 OrderTicket.vue / orderAlgorithmDefaults.js 的普通权益单口径对齐。
 // 仅供本地演示，不是生产风控或交易服务。
 export const demoOrderCash = { TZS_T0: 945527.41, TZS_T1: 620800 }
@@ -36,6 +38,8 @@ export function orderEstimates(draft, symbol, cash, available) {
 }
 export function orderError(draft, symbol, estimate, side) {
   if (!symbol) return '请先选择下单标的'
+  const typeError = orderTypeError(draft.type, symbol)
+  if (typeError) return typeError
   if (!Number.isFinite(estimate.price) || estimate.price <= 0) return draft.type === 'market' ? '当前标的无参考行情，请使用限价' : '订单价格须大于 0'
   if (draft.type === 'limit' && Math.abs(estimate.price * 100 - Math.round(estimate.price * 100)) > 1e-6) return '订单价格最多保留两位小数'
   if (draft.mode === 'quantity' && !Number.isInteger(Number(draft.value))) return '订单数量请输入整数'
