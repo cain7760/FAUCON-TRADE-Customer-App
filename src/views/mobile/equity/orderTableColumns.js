@@ -4,7 +4,7 @@ import { accountLabel, activityText, fillProgress, formatNumber, orderQuantity, 
 const shares = value => value ? `${formatNumber(value, 3, false)} 股` : '--'
 export const orderTableColumns = [
   { key: 'code', title: '证券代码', width: 72, value: row => row.code },
-  { key: 'status', title: '订单状态', width: 88, text: true, readable: true, value: row => row.status, tone: row => ['record-status', { 'status-alert': ['被拒绝', '审核拒绝'].includes(row.status), 'status-complete': row.status === '全成' }] },
+  { key: 'status', title: '订单状态', width: 88, text: true, readable: true, value: row => row.status, tone: row => ['record-status', { 'status-alert': ['拒单', '异常'].includes(row.status), 'status-complete': row.status === '全成' }] },
   { key: 'side', title: '方向', width: 40, text: true, readable: true, value: row => row.side === 'buy' ? '买' : '卖', tone: row => row.side === 'buy' ? 'equity-positive' : 'equity-negative' },
   { key: 'attribute', title: '订单属性', width: 60, text: true, readable: true, value: row => row.type === 'market' ? '市价单' : '限价单' },
   { key: 'price', title: '订单限价', width: 64, value: row => row.price == null ? '--' : price(row.price, row.market) },

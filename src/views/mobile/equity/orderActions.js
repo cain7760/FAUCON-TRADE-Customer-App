@@ -23,9 +23,9 @@ export function createDemoOrder(snapshot, sequence, now = new Date()) {
 
 // 与 Customer 端的状态门禁一致。仅处理页面内演示订单，不调用交易服务。
 export const remainingQuantity = row => Math.max(0, Number(row.quantity) - Number(row.filledQuantity || 0))
-export const canConvertOrder = row => row.status === '被拒绝' && row.orderType === '系统单'
+export const canConvertOrder = row => row.status === '拒单' && row.orderType === '系统单'
 export function orderActionReason(row, action = '改单') {
-  if (['部撒', '撤单', '全成', '被拒绝', '审核拒绝'].includes(row.status)) return `订单当前为${row.status}，终态订单不可${action}`
+  if (['部撤', '撤单', '全成', '拒单'].includes(row.status)) return `订单当前为${row.status}，终态订单不可${action}`
   if (!['待报', '已报', '部成'].includes(row.status)) return `订单当前为${row.status}，不可${action}`
   return remainingQuantity(row) > 0 ? '' : '订单无可操作数量'
 }
@@ -89,7 +89,7 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
     return '已转为手工单，原订单编号和状态保留。'
   }
   if (action === 'cancel') {
-    row.status = row.filledQuantity > 0 ? '部撒' : '撤单'
+    row.status = row.filledQuantity > 0 ? '部撤' : '撤单'
     row.canceledQuantity = remaining; row.reportQuantity = 0; row.frozenMargin = 0
     appendHistory(row, '撤单', '撤单成功，已成交部分不变', time)
     return '已撤回未成交部分，已成交部分保持不变。'
@@ -123,12 +123,12 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
   if (filled > 0) {
     row.canceledQuantity = Number(row.canceledQuantity || 0) + remaining
     row.canceledAmount = Number(row.canceledAmount || 0) + remaining * Number(row.price ?? referencePrice)
-    row.reportQuantity = 0; row.frozenMargin = 0; row.status = '部撒'
+    row.reportQuantity = 0; row.frozenMargin = 0; row.status = '部撤'
     const childNo = nextRemaining > 0 ? createChild(nextRemaining) : null
     appendHistory(row, '改单', childNo ? `已撤回未成交部分，新订单 ${childNo}` : '已撤回全部未成交部分', time)
   } else {
     Object.assign(row, { type: payload.type, price: payload.price, algorithm: payload.algorithm, algorithmParams: payload.algorithmParams, orderRemark: payload.note,
-      attribute: payload.type === 'market' ? '市价单' : '限价单', status: '已报待改', quantity: delta > 0 ? originalQuantity : nextQuantity })
+      attribute: payload.type === 'market' ? '市价单' : '限价单', status: '待改', quantity: delta > 0 ? originalQuantity : nextQuantity })
     row.inputAmount = payload.inputAmount == null ? null : Math.round(row.quantity * referencePrice * 100) / 100
     row.orderValueNumber = row.inputAmount ?? row.quantity
     row.reportQuantity = row.quantity; row.frozenMargin = referencePrice * row.quantity * (row.marginRate || 0) / 100

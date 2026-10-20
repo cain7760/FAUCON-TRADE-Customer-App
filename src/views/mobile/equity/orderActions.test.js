@@ -39,7 +39,7 @@ function amendment(row, changes = {}) {
 }
 test('操作结果、订单动态和历史不附加演示说明，原有状态变更保留', () => {
   const created = createDemoOrder({ symbol, type: 'limit', price: 12, quantity: 100, amount: 1200, algorithmCode: 'DMA' }, 1, date)
-  const canceled = order(), converted = order({ status: '被拒绝' }), amended = order({ filledQuantity: 400 })
+  const canceled = order(), converted = order({ status: '拒单' }), amended = order({ filledQuantity: 400 })
   const rows = [amended]
   const messages = [created.feedback,
     applyDemoOrderAction([canceled], canceled.id, 'cancel', {}, date),
@@ -57,30 +57,30 @@ test('all Customer order business fields remain independent', () => {
   assert.equal(orderTableColumns.find(column => column.key === 'price').value(order({ price: null })), '--')
   assert.equal(orderTableColumns.some(column => column.key === 'index'), false)
   assert.deepEqual(orderTableColumns.filter(column => column.readable).map(column => column.key), ['status', 'side', 'attribute'])
-  assert.equal(orderTableColumns.find(column => column.key === 'status').tone(order({ status: '被拒绝' }))[1]['status-alert'], true)
+  assert.equal(orderTableColumns.find(column => column.key === 'status').tone(order({ status: '拒单' }))[1]['status-alert'], true)
   assert.equal(orderTableColumns.find(column => column.key === 'status').tone(order({ status: '全成' }))[1]['status-complete'], true)
 })
 test('Customer permissions enable only outstanding 待报/已报/部成 orders', () => {
   for (const status of ['待报', '已报', '部成']) assert.equal(orderActionReason(order({ status })), '')
-  for (const status of ['未报', '待撤', '已报待改', '审核中', '部撒', '撤单', '全成', '被拒绝', '审核拒绝']) assert.ok(orderActionReason(order({ status })))
+  for (const status of ['未报', '待改', '待撤', '部撤', '撤单', '全成', '拒单', '异常']) assert.ok(orderActionReason(order({ status })))
   assert.ok(orderActionReason(order({ filledQuantity: 1000 })))
-  assert.equal(canConvertOrder(order({ status: '被拒绝' })), true)
-  assert.equal(canConvertOrder(order({ status: '被拒绝', orderType: '手工单' })), false)
+  assert.equal(canConvertOrder(order({ status: '拒单' })), true)
+  assert.equal(canConvertOrder(order({ status: '拒单', orderType: '手工单' })), false)
   assert.equal(canConvertOrder(order()), false)
 })
 test('cancel affects outstanding only; terminal orders reject repeated confirmation', () => {
   const row = order({ status: '部成', filledQuantity: 400, filledPrice: 11.9 })
   applyDemoOrderAction([row], row.id, 'cancel', {}, date)
-  assert.equal(row.status, '部撒'); assert.equal(row.canceledQuantity, 600)
+  assert.equal(row.status, '部撤'); assert.equal(row.canceledQuantity, 600)
   assert.equal(row.quantity, 1000); assert.equal(row.filledQuantity, 400); assert.equal(row.filledPrice, 11.9)
   assert.equal(row.reportQuantity, 0); assert.equal(row.frozenMargin, 0)
   assert.equal(row.history.length, 1)
   assert.throws(() => applyDemoOrderAction([row], row.id, 'cancel'), /状态已变化/)
 })
 test('conversion preserves rejected order identity, status and values', () => {
-  const row = order({ status: '被拒绝', feedback: '余额不足' })
+  const row = order({ status: '拒单', feedback: '余额不足' })
   applyDemoOrderAction([row], row.id, 'convert', { note: '  交由交易员  ' }, date)
-  assert.equal(row.id, 'one'); assert.equal(row.orderNo, 'WT1'); assert.equal(row.status, '被拒绝')
+  assert.equal(row.id, 'one'); assert.equal(row.orderNo, 'WT1'); assert.equal(row.status, '拒单')
   assert.equal(row.quantity, 1000); assert.equal(row.price, 12); assert.equal(row.orderType, '手工单')
   assert.equal(row.orderRemark, '交由交易员'); assert.equal(canConvertOrder(row), false)
   assert.match(row.feedback, /余额不足/)
@@ -106,7 +106,7 @@ test('part-filled amendment replaces unfilled portion without changing fills', (
   const row = order({ status: '部成', filledQuantity: 400, filledPrice: 11.9 })
   const orders = [row], next = amendment(row, { value: 500, price: 12.1 })
   applyDemoOrderAction(orders, row.id, 'amend', next.payload, date)
-  assert.equal(row.status, '部撒'); assert.equal(row.quantity, 1000); assert.equal(row.filledQuantity, 400)
+  assert.equal(row.status, '部撤'); assert.equal(row.quantity, 1000); assert.equal(row.filledQuantity, 400)
   assert.equal(row.filledPrice, 11.9); assert.equal(row.price, 12); assert.equal(row.canceledQuantity, 600)
   assert.equal(orders[1].quantity, 500); assert.equal(orders[1].filledQuantity, 0)
   assert.equal(orders[1].price, 12.1); assert.equal(orders[1].parentOrderNo, 'WT1'); assert.equal(orders[1].status, '待报')
@@ -116,13 +116,13 @@ test('zero outstanding amendment cancels remainder without a replacement', () =>
   const next = amendment(row, { value: 0 })
   assert.equal(amendmentError(next.draft, row, symbol, next.estimate), '')
   applyDemoOrderAction(orders, row.id, 'amend', next.payload, date)
-  assert.equal(orders.length, 1); assert.equal(row.status, '部撒')
+  assert.equal(orders.length, 1); assert.equal(row.status, '部撤')
 })
 test('unfilled amendment quantity increases create child, reductions update original', () => {
   for (const value of [1200, 800, 1000]) {
     const row = order(), orders = [row], next = amendment(row, { value, price: 12.1 })
     applyDemoOrderAction(orders, row.id, 'amend', next.payload, date)
-    assert.equal(row.status, '已报待改'); assert.equal(row.price, 12.1)
+    assert.equal(row.status, '待改'); assert.equal(row.price, 12.1)
     assert.equal(row.quantity, Math.min(value, 1000)); assert.equal(row.filledQuantity, 0)
     if (value > 1000) { assert.equal(orders[1].quantity, 200); assert.equal(orders[1].parentOrderNo, 'WT1') }
     else assert.equal(orders.length, 1)

@@ -63,16 +63,17 @@ test('演示持仓仅保留做多数据，多空方向统一使用做多/做空�
     assert.deepEqual(activeFilterLabels('positions', { ...defaultFilters(), direction }), [`多空方向：${label}`])
   }
 })
-test('订单组合筛选、状态多选和被拒绝系统单优先', () => {
+test('订单组合筛选、状态多选和异常优先', () => {
   const rows = filters => filterRecords('orders', demoRecords.orders, { ...defaultFilters(), ...filters }, ['TZS_T0'])
-  assert.equal(rows({})[0].orderNo, 'WT20260911008')
+  assert.equal(rows({})[0].orderNo, 'WT20260911016')
   assert.equal(rows({ orderNo: '11004', symbol: '深华发', side: 'sell', openClose: '开', orderType: '手工单', status: ['部成'] }).length, 1)
   assert.equal(rows({ status: ['部成', '全成'] }).length, 3)
   assert.equal(filterCount('orders', { ...defaultFilters(), status: ['全成', '部成'] }), 1)
 })
-test('所有订单状态按三端约定保留原文、顺序与重复项', () => {
-  assert.deepEqual(orderStatuses, ['未报', '待报', '已报', '待撤', '待撤［部成］', '部撒', '撤单', '部成', '全成', '被拒绝', '已报待改', '待改［部成］', '待确认', '审核中', '审核拒绝', '待改审核', '待改［部成］', '待改［未报］', '待确认［待审核］'])
+test('所有订单状态统一为十个业务状态并保留异常', () => {
+  assert.deepEqual(orderStatuses, ['未报', '待报', '已报', '待改', '待撤', '部撤', '撤单', '部成', '全成', '拒单', '异常'])
   assert.ok(demoRecords.orders.every(order => orderStatuses.includes(order.status)))
+  assert.deepEqual(demoRecords.orders.slice(14, 16).map(order => order.status), ['待报', '异常'])
   assert.equal(demoRecords.orders.filter(order => order.inputAmount !== null).length, 4)
   assert.equal(orderQuantity(demoRecords.orders[2]), '1,917.00 元')
 })

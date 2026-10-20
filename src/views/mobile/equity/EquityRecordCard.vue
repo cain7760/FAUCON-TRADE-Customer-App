@@ -21,7 +21,7 @@ const progressPercent = computed(() => Number.parseFloat(fillProgress(props.reco
         </span>
       </span>
       <span v-if="kind === 'positions'" class="position-account" :aria-label="`下单账户：${accountLabel(record.account)}`">{{ accountLabel(record.account) }}</span>
-      <span v-else-if="kind === 'orders'" class="record-status" :class="{ 'status-alert': ['被拒绝', '审核拒绝'].includes(record.status), 'status-complete': record.status === '全成' }">{{ record.status }}</span>
+      <span v-else-if="kind === 'orders'" class="record-status" :class="{ 'status-alert': ['拒单', '异常'].includes(record.status), 'status-complete': record.status === '全成' }">{{ record.status }}</span>
       <span v-else-if="kind === 'trades'" class="record-highlight">
         <span class="record-caption">成交金额</span>
         <strong>{{ formatNumber(record.filledAmount) }}</strong>

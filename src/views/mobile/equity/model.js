@@ -50,7 +50,7 @@ export function filterRecords(kind, records, filters, accountIds) {
     && (kind !== 'orders' || (contains(row.orderNo, filters.orderNo) && (!filters.status.length || filters.status.includes(row.status))))
     && filterGroups[kind].every(group => filters[group.key] === 'ALL' || row[group.key] === filters[group.key]))
   if (kind === 'orders') {
-    const rank = row => row.status === '被拒绝' ? (row.orderType === '系统单' ? 0 : 1) : 2
+    const rank = row => row.status === '异常' ? 0 : 1
     result.sort((a, b) => rank(a) - rank(b))
   }
   return result

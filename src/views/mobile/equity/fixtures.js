@@ -99,8 +99,8 @@ const positions = [...basePositions, ...basePositions.map(row => ({
   floatingProfit: row.floatingProfit * 2, dailyRealizedProfit: row.dailyRealizedProfit * 2, totalProfit: row.totalProfit * 2,
 }))]
 
-export const orderStatuses = ['未报', '待报', '已报', '待撤', '待撤［部成］', '部撒', '撤单', '部成', '全成', '被拒绝', '已报待改', '待改［部成］', '待确认', '审核中', '审核拒绝', '待改审核', '待改［部成］', '待改［未报］', '待确认［待审核］']
-const statuses = ['撤单', '待撤', '全成', '部成', '已报', '部成', '已报待改', '被拒绝', '被拒绝', '未报', '待确认', '审核中', '待改审核', '全成', '待改［未报］', '待确认［待审核］']
+export const orderStatuses = ['未报', '待报', '已报', '待改', '待撤', '部撤', '撤单', '部成', '全成', '拒单', '异常']
+const statuses = ['撤单', '待撤', '全成', '部成', '已报', '部成', '待改', '拒单', '拒单', '未报', '待报', '待报', '待改', '全成', '待报', '异常']
 const amountOrderIndices = new Set([2, 3, 6, 11])
 const orders = statuses.map((status, index) => {
   const instrument = basePositions[index % basePositions.length]
@@ -108,7 +108,7 @@ const orders = statuses.map((status, index) => {
   const filledQuantity = status === '全成' ? quantity : status.includes('部成') ? Math.max(100, Math.floor(quantity / 2 / 100) * 100) : 0
   const price = index % 3 === 1 ? null : instrument.price
   const inputAmount = price !== null && amountOrderIndices.has(index) ? Number((price * quantity).toFixed(2)) : null
-  const isManual = status === '被拒绝' ? index !== statuses.indexOf('被拒绝') : index % 4 === 3
+  const isManual = status === '拒单' ? index !== statuses.indexOf('拒单') : index % 4 === 3
   return {
     id: `seed-${index + 1}`, orderNo: `WT20260911${String(index + 1).padStart(3, '0')}`,
     code: instrument.code, name: instrument.name, market: instrument.market, currency: 'CNY',
@@ -118,13 +118,13 @@ const orders = statuses.map((status, index) => {
     status, price, quantity, inputAmount, orderValueNumber: inputAmount ?? quantity,
     attribute: `${price === null ? '市价' : '限价'}·${inputAmount === null ? '数量' : '金额'}`,
     filledQuantity, filledPrice: filledQuantity ? instrument.price : null,
-    reportQuantity: ['已报', '待撤', '待撤［部成］', '部成', '已报待改', '待改［部成］'].includes(status) ? quantity - filledQuantity : 0,
+    reportQuantity: ['已报', '待改', '待撤', '部成'].includes(status) ? quantity - filledQuantity : 0,
     canceledQuantity: status === '撤单' ? quantity - filledQuantity : 0,
-    frozenMargin: ['撤单', '全成', '被拒绝', '审核拒绝'].includes(status) ? 0 : (price || instrument.price) * quantity * .4,
+    frozenMargin: ['撤单', '全成', '拒单'].includes(status) ? 0 : (price || instrument.price) * quantity * .4,
     marginRate: 40, orderTime: `2026-09-11 09:${String(30 + index).padStart(2, '0')}:00`,
     orderRemark: isManual ? remarks[index % 3] : '',
-    traderRemark: status === '被拒绝' ? '拒绝原因：委托价格偏离当前市场价格，暂不具备执行条件。' : status === '全成' && isManual ? '成交结果已确认，回报已同步' : isManual ? traderRemarks[index % 3] : '',
-    feedback: status === '审核拒绝' ? '审核未通过' : status === '被拒绝' ? '订单已被拒绝' : status.includes('部成') ? '部分成交回报已确认，剩余数量继续挂单' : status === '全成' ? '成交回报已确认' : '',
+    traderRemark: status === '拒单' ? '拒绝原因：委托价格偏离当前市场价格，暂不具备执行条件。' : status === '全成' && isManual ? '成交结果已确认，回报已同步' : isManual ? traderRemarks[index % 3] : '',
+    feedback: status === '拒单' ? '订单已被拒绝' : status.includes('部成') ? '部分成交回报已确认，剩余数量继续挂单' : status === '全成' ? '成交回报已确认' : '',
   }
 })
 
