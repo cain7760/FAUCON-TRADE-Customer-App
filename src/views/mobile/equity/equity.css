@@ -125,6 +125,8 @@
 .sheet-handle { width: 32px; height: 4px; flex-shrink: 0; margin: 10px auto 0; border-radius: 2px; background: var(--app-color-frame); }
 .sheet-heading { display: flex; min-height: 54px; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 0 16px; }
 .sheet-heading h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.sheet-heading-copy { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding: 8px 0; }
+.sheet-heading-copy p { margin: 0; color: var(--app-color-text-secondary); font-size: 12px; line-height: 18px; }
 .filter-form { display: flex; min-height: 0; flex-direction: column; }
 .filter-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 16px; }
 .filter-group { min-width: 0; margin: 0 0 22px; padding: 0; border: 0; }

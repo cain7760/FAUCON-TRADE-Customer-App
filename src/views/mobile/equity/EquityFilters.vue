@@ -35,11 +35,11 @@ function handleKeyboard(event) {
 <template>
   <van-popup :show="show" position="bottom" round class="equity-filter-sheet" overlay-class="equity-sheet-overlay" :duration=".2" aria-label="筛选面板" @update:show="emit('update:show', $event)" @opened="closeButton?.focus()" @closed="emit('closed')" @keydown="handleKeyboard">
     <div class="sheet-handle" aria-hidden="true"></div>
-    <header class="sheet-heading"><h2>{{ accountOnly ? '下单账户' : kind === 'positions' ? '持仓筛选' : kind === 'orders' ? '订单筛选' : '成交筛选' }}</h2><button ref="closeButton" type="button" class="equity-icon-button" aria-label="关闭筛选" @click="emit('update:show', false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg></button></header>
+    <header class="sheet-heading"><div class="sheet-heading-copy"><h2>{{ accountOnly ? '下单账户' : kind === 'positions' ? '持仓筛选' : kind === 'orders' ? '订单筛选' : '成交筛选' }}</h2><p v-if="accountOnly">可多选 · 对三个列表生效</p></div><button ref="closeButton" type="button" class="equity-icon-button" aria-label="关闭筛选" @click="emit('update:show', false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg></button></header>
     <form class="filter-form" @submit.prevent="apply">
       <div class="filter-scroll">
-        <fieldset class="filter-group">
-          <legend class="app-form-label">下单账户 <small>可多选 · 对三个列表生效</small></legend>
+        <fieldset class="filter-group" :aria-label="accountOnly ? '下单账户，可多选，对三个列表生效' : undefined">
+          <legend v-if="!accountOnly" class="app-form-label">下单账户 <small>可多选 · 对三个列表生效</small></legend>
           <div class="account-options">
             <button type="button" class="account-option" :aria-pressed="allAccountsSelected" @click="draftAccounts = allAccountsSelected ? [] : accounts.map(item => item.id)"><span>全部账户</span><span class="option-check" aria-hidden="true">{{ allAccountsSelected ? '✓' : '' }}</span></button>
             <button v-for="account in accounts" :key="account.id" type="button" class="account-option" :aria-pressed="draftAccounts.includes(account.id)" @click="toggleAccount(account.id)"><span>{{ account.name }}<small>{{ account.id }}</small></span><span class="option-check" aria-hidden="true">{{ draftAccounts.includes(account.id) ? '✓' : '' }}</span></button>

@@ -72,7 +72,8 @@
 .ticket-fractions { display: flex; justify-content: space-between; margin-bottom: 8px; }
 .ticket-fractions button { min-height: 28px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 11px; }
 .ticket-fractions button[aria-pressed="true"] { border-color: var(--app-color-accent); color: var(--app-color-accent); background: var(--app-color-accent-soft); }
-.ticket-estimates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--app-color-border); }
+.ticket-estimates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--app-color-border); }
+.ticket-capacity { margin: 0; padding-top: 12px; }
 .ticket-estimates > div { display: flex; flex-wrap: wrap; gap: 4px; justify-content: space-between; font-size: 11px; }
 .ticket-estimates dt { color: var(--app-color-text-secondary); }
 .ticket-estimates dd { margin: 0; font-family: var(--app-font-family-numeric); font-size: 13px; }

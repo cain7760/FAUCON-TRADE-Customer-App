@@ -6,6 +6,46 @@ import { nextTableSort, sortTableRecords, tableSortValue } from './tableSorting.
 
 const ids = rows => rows.map(row => row.id)
 const column = (kind, key) => recordTableColumns(kind).find(item => item.key === key)
+test('持仓表移除序号和期初数量，保留后续列顺序及成交序号', () => {
+  const positions = recordTableColumns('positions')
+  assert.ok(positions.every(item => !['index', 'opening'].includes(item.key)))
+  assert.deepEqual(positions.slice(0, 4).map(item => item.key), ['price', 'floatingProfit', 'holdingQty', 'valueWan'])
+  assert.ok(recordTableColumns('trades').some(item => item.key === 'index'))
+})
+test('市值与可用数量共用双行列，浮动盈亏位于含标的的第三列', () => {
+  const positions = recordTableColumns('positions')
+  assert.equal(positions.findIndex(item => item.key === 'floatingProfit') + 2, 3)
+  assert.ok(!positions.some(item => item.key === 'available'))
+  const combined = column('positions', 'valueWan')
+  assert.equal(combined.title, '市值')
+  assert.equal(combined.secondTitle, '可用数量')
+  assert.equal(combined.value({ value: 1234567890 }), '1,234,567,890.00')
+  assert.equal(combined.second({ available: 9300.125 }), '9,300.125')
+  assert.equal(combined.second({ available: 0 }), '0')
+  assert.equal(combined.second({}), '--')
+  assert.equal(combined.secondTone(), 'equity-accent')
+  const rows = [{ id: 'high', value: 1000, available: 1 }, { id: 'low', value: 2, available: 10000 }]
+  assert.deepEqual(ids(sortTableRecords(rows, 'positions', combined, 'ascending')), ['low', 'high'])
+  assert.deepEqual(ids(sortTableRecords(rows, 'positions', combined, 'descending')), ['high', 'low'])
+})
+test('三表表头不附加股单位，保留金额币种和单元格单位', () => {
+  for (const kind of ['positions', 'orders', 'trades']) {
+    for (const item of recordTableColumns(kind)) {
+      assert.doesNotMatch(`${item.title}${item.secondTitle || ''}`, /[（(]\s*股\s*[）)]/)
+    }
+  }
+  assert.equal(column('positions', 'holdingQty').secondTitle, undefined)
+  assert.equal(column('trades', 'filledQuantity').secondTitle, undefined)
+  assert.equal(column('positions', 'marginOccupied').secondTitle, '（CNY）')
+  assert.match(column('orders', 'orderValueNumber').value({ quantity: 800 }), /股$/)
+})
+test('持仓三列仅在账户和市场前增加 8px 间距，不影响其他表格', () => {
+  const positions = recordTableColumns('positions')
+  assert.deepEqual(positions.filter(item => item.gapBefore).map(item => [item.key, item.gapBefore]), [['account', 8], ['market', 8]])
+  for (const kind of ['orders', 'trades']) {
+    assert.ok(recordTableColumns(kind).every(item => !item.gapBefore))
+  }
+})
 test('排序按升序、降序、默认循环，新列从升序开始', () => {
   let sort = nextTableSort({ key: '', direction: 'none' }, 'price')
   assert.deepEqual(sort, { key: 'price', direction: 'ascending' })
