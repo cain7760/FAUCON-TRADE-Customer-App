@@ -1,13 +1,13 @@
-import { orderTypeError } from './orderMarketRules.js'
+import { normalizeOrderType, orderTypeError } from './orderMarketRules.js'
 
 // 与同级 Customer 端 OrderTicket.vue / orderAlgorithmDefaults.js 的普通权益单口径对齐。
 // 仅供本地演示，不是生产风控或交易服务。
 export const demoOrderCash = { TZS_T0: 945527.41, TZS_T1: 620800 }
 export const largeOrderAmount = 8_000_000
 export const algorithmOptions = [
-  { value: 'POV', label: 'POV', description: '按市场成交占比执行' },
-  { value: 'DMA', label: 'DMA', description: 'Direct Market Access' },
-  { value: 'none', label: '无需算法', description: '不使用执行算法' },
+  { value: 'POV', label: 'POV' },
+  { value: 'DMA', label: 'DMA' },
+  { value: 'none', label: '无需算法' },
 ]
 export function defaultOrderAlgorithm(market, now = new Date()) {
   const cutoff = { A: 895, SH: 895, SZ: 895, HK: 955 }[market]
@@ -23,11 +23,11 @@ export function validPov({ hours, minutes, participation }) {
 export function orderEstimates(draft, symbol, cash, available) {
   const price = Number(draft.type === 'market' ? symbol?.price : draft.price) || 0
   const lot = symbol?.isManual ? 1 : (symbol?.lotSize || 100)
-  const maxBuy = symbol && price > 0 ? Math.floor(cash / price / lot) * lot : 0
-  const maxSell = symbol ? Math.max(0, Number(available) || 0) : 0
+  const maxBuy = symbol?.isManual ? Number.MAX_SAFE_INTEGER : symbol && price > 0 ? Math.floor(cash / price / lot) * lot : 0
+  const maxSell = symbol?.isManual ? Number.MAX_SAFE_INTEGER : symbol ? Math.max(0, Number(available) || 0) : 0
   const inputAmount = Number(draft.value)
   const quantity = draft.mode === 'amount'
-    ? (price > 0 ? Math.floor(inputAmount / price / lot) * lot : 0)
+    ? (price > 0 && !symbol?.isManual ? Math.floor(inputAmount / price / lot) * lot : 0)
     : Number(draft.value) * (draft.unit === 'wan' ? 10000 : 1)
   const byPercent = maximum => Math.floor(maximum * draft.fraction / 100 / lot) * lot
   const buy = draft.mode === 'percentage' ? byPercent(maxBuy) : quantity
@@ -40,7 +40,7 @@ export function orderError(draft, symbol, estimate, side) {
   if (!symbol) return '请先选择下单标的'
   const typeError = orderTypeError(draft.type, symbol)
   if (typeError) return typeError
-  if (!Number.isFinite(estimate.price) || estimate.price <= 0) return draft.type === 'market' ? '当前标的无参考行情，请使用限价' : '订单价格须大于 0'
+  if ((!Number.isFinite(estimate.price) || estimate.price <= 0) && !(symbol.isManual && draft.type === 'market')) return draft.type === 'market' ? '当前标的无参考行情，请使用限价' : '订单价格须大于 0'
   if (draft.type === 'limit' && Math.abs(estimate.price * 100 - Math.round(estimate.price * 100)) > 1e-6) return '订单价格最多保留两位小数'
   if (draft.mode === 'quantity' && !Number.isInteger(Number(draft.value))) return '订单数量请输入整数'
   if (draft.algorithm === 'POV' && !validPov(draft.pov)) return '请检查 POV 运行时间和市场成交占比'
@@ -49,4 +49,41 @@ export function orderError(draft, symbol, estimate, side) {
   if (quantity % estimate.lot !== 0) return `订单数量须为 ${estimate.lot} 股的整数倍`
   if (!symbol.isManual && quantity > (side === 'buy' ? estimate.maxBuy : estimate.maxSell)) return `当前订单数量超出最大可${side === 'buy' ? '买' : '卖'}，请重新输入`
   return ''
+}
+// Customer 按钮先校验参数，容量超限在点击预览时提示，不静默禁用。
+export function canPreviewOrder(draft, symbol, estimate, side) {
+  return !orderError(draft, symbol, { ...estimate, maxBuy: Number.MAX_SAFE_INTEGER, maxSell: Number.MAX_SAFE_INTEGER }, side)
+}
+
+// 与 Customer 的 watch 语义一致：重复点击当前选项不清空输入。
+export function resetOrderSize(draft) {
+  draft.value = ''; draft.fraction = 0
+  if (draft.mode === 'percentage') draft.mode = 'quantity'
+}
+export function changeOrderType(draft, type, symbol) {
+  type = normalizeOrderType(type, symbol)
+  if (draft.type === type) return
+  draft.type = type
+  if (type === 'market') draft.mode = 'quantity'
+  resetOrderSize(draft)
+}
+export function changeOrderMode(draft, mode) {
+  if (draft.mode === mode) return
+  draft.mode = mode; resetOrderSize(draft)
+}
+export function applyBookPrice(draft, price) {
+  if (!(Number.isFinite(price) && price > 0)) return
+  changeOrderType(draft, 'limit')
+  draft.price = price
+  if (draft.mode !== 'percentage') draft.fraction = 0
+}
+
+// Customer OrderBook 的确定性演示档位；不是实时行情。
+export function orderBookLevels(symbol, depth = 10) {
+  if (!symbol?.code || !(Number(symbol.price) > 0) || symbol.isManual) return []
+  return Array.from({ length: depth === 5 ? 5 : 10 }, (_, index) => {
+    const rank = index + 1
+    return { rank, bid: Math.max(.01, Number((symbol.price - index * .01).toFixed(2))), bidQuantity: rank * 6500 + 1800,
+      ask: Number((symbol.price + rank * .01).toFixed(2)), askQuantity: rank * 7800 + 1200 }
+  })
 }

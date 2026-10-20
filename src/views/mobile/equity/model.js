@@ -7,7 +7,7 @@ export const listTabs = [
   { key: 'trades', label: '所有成交', detail: '成交详情', empty: '暂无成交记录' },
 ]
 
-export const defaultFilters = () => ({ symbol: '', orderNo: '', market: 'ALL', direction: 'ALL', side: 'ALL', openClose: 'ALL', orderType: 'ALL', status: [] })
+export const defaultFilters = () => ({ symbol: '', orderNo: '', direction: 'ALL', side: 'ALL', openClose: 'ALL', orderType: 'ALL', status: [] })
 const options = pairs => pairs.map(([value, label]) => ({ value, label }))
 const sharedFilters = [
   { key: 'side', label: '买卖方向', options: options([['ALL', '全部'], ['buy', '买'], ['sell', '卖']]) },
@@ -16,7 +16,6 @@ const sharedFilters = [
 ]
 export const filterGroups = {
   positions: [
-    { key: 'market', label: '市场', options: options([['ALL', '全部市场'], ['SZ', '深市'], ['SH', '沪市']]) },
     { key: 'direction', label: '多空方向', options: options([['ALL', '全部'], ['多', '做多'], ['空', '做空']]) },
   ],
   orders: sharedFilters,

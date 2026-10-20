@@ -1,7 +1,23 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { calculatePositionMetrics, demoRecords, orderStatuses } from './fixtures.js'
-import { activeFilterLabels, advancedFilterCount, defaultFilters, detailSections, filterRecords, filterCount, formatNumber, orderPrice, orderQuantity, pnlClass } from './model.js'
+import { accountLabel, activeFilterLabels, advancedFilterCount, defaultFilters, detailSections, filterRecords, filterCount, fillProgress, formatNumber, orderPrice, orderQuantity, pnlClass } from './model.js'
+
+test('成交进度覆盖零、部分、全成和不可计算状态，比例限制在 0–100%', () => {
+  assert.equal(fillProgress({ quantity: 1000, filledQuantity: 0 }), '0%')
+  assert.equal(fillProgress({ quantity: 1000, filledQuantity: 400 }), '40%')
+  assert.equal(fillProgress({ quantity: 300, filledQuantity: 100 }), '33%')
+  assert.equal(fillProgress({ quantity: 1000, filledQuantity: 1000 }), '100%')
+  assert.equal(fillProgress({ quantity: 1000, filledQuantity: 1500 }), '100%')
+  assert.equal(fillProgress({ quantity: 1000, filledQuantity: -1 }), '0%')
+  assert.equal(fillProgress({ quantity: 0, filledQuantity: 0 }), '--')
+})
+
+test('账户全称同时保留编号与名称', () => {
+  assert.equal(accountLabel('TZS_T0'), 'TZS_T0 - 自营一号')
+  assert.equal(accountLabel('TZS_T1'), 'TZS_T1 - 自营二号')
+  assert.equal(accountLabel('UNKNOWN'), '--')
+})
 
 test('Customer 默认账户 12 / 14 / 3，全部账户 24 / 16 / 4', () => {
   const counts = accountIds => Object.entries(demoRecords).map(([kind, rows]) => filterRecords(kind, rows, defaultFilters(), accountIds).length)
@@ -27,11 +43,13 @@ test('持仓字段按日初、当日成交、在途卖出及 FIFO 计算，第�
   assert.equal(firstAccount.find(row => row.code === '002459').dailyRealizedProfit, -360)
   assert.deepEqual(calculatePositionMetrics({ openingLots: [{ quantity: 100, price: 10 }, { quantity: 100, price: 12 }], todayExecutions: [{ side: 'sell', quantity: 150, price: 15 }] }), { opening: 200, qty: 50, available: 50, dailyRealizedProfit: 650 })
 })
-test('持仓名称/代码、市场、多空筛选及无结果', () => {
+test('持仓保留名称/代码与多空筛选，不再按市场过滤', () => {
   const rows = filters => filterRecords('positions', demoRecords.positions, { ...defaultFilters(), ...filters }, ['TZS_T0'])
   assert.equal(rows({ symbol: ' 平安 ' })[0].code, '000001')
   assert.equal(rows({ symbol: '000001.sz' }).length, 1)
-  assert.equal(rows({ market: 'SH' }).length, 5)
+  // 兼容旧筛选状态：市场条件不再生效，沪深持仓都可见。
+  assert.equal(rows({ market: 'SH' }).length, 12)
+  assert.equal(Object.hasOwn(defaultFilters(), 'market'), false)
   assert.equal(rows({ direction: '空' }).length, 0)
   assert.equal(rows({ symbol: '不存在' }).length, 0)
 })
@@ -60,9 +78,9 @@ test('所有订单状态按三端约定保留原文、顺序与重复项', () =>
 })
 test('搜索词不计入高级筛选角标，已应用条件按当前列表展示', () => {
   const positions = { ...defaultFilters(), symbol: ' 平安 ', market: 'SH', direction: '多' }
-  assert.equal(filterCount('positions', positions), 3)
-  assert.equal(advancedFilterCount('positions', positions), 2)
-  assert.deepEqual(activeFilterLabels('positions', positions), ['标的：平安', '市场：沪市', '多空方向：做多'])
+  assert.equal(filterCount('positions', positions), 2)
+  assert.equal(advancedFilterCount('positions', positions), 1)
+  assert.deepEqual(activeFilterLabels('positions', positions), ['标的：平安', '多空方向：做多'])
   const orders = { ...defaultFilters(), orderNo: 'WT001', status: ['已报', '部成'] }
   assert.equal(advancedFilterCount('orders', orders), 2)
   assert.deepEqual(activeFilterLabels('orders', orders), ['订单编号：WT001', '订单状态：已报、部成'])

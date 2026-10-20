@@ -1,0 +1,35 @@
+/* 搜索与分类固定，名称/代码列表独立滚动。 */
+.equity-order-sheet.equity-symbol-sheet.van-popup { height: min(640px, calc(100% - 59px)); border-radius: 16px 16px 0 0; background: var(--app-color-surface); }
+.equity-symbol-sheet .sheet-handle { width: 40px; margin-top: 10px; }
+.symbol-picker { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.symbol-picker svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.symbol-picker .symbol-icon-button { display: flex; width: 44px; min-height: 44px; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; color: var(--app-color-text-secondary); }
+.symbol-picker-heading { display: flex; min-height: 44px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 0 8px 0 16px; }
+.symbol-picker-heading h2 { margin: 0; color: var(--app-color-text); font-size: 16px; font-weight: 600; }
+.symbol-picker-search { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding: 4px 12px 8px; }
+.symbol-search-control { display: flex; min-width: 0; min-height: 44px; flex: 1; align-items: center; gap: 8px; padding-left: 10px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-control); color: var(--app-color-text-secondary); }
+.symbol-search-control:focus-within { border-color: var(--app-color-accent); }
+.symbol-picker .symbol-search-control input { width: 0; min-height: 44px; flex: 1; padding: 0 8px 0 0; background: transparent; font-size: 16px; }
+.symbol-picker .symbol-search-control input::placeholder { font-size: 13px; }
+.symbol-picker .symbol-search-control input:focus-visible { outline: none; }
+.symbol-picker-tabs { display: flex; flex-shrink: 0; margin: 0 12px; border-bottom: 1px solid var(--app-color-border); }
+.symbol-picker .symbol-picker-tabs button { position: relative; min-height: 44px; flex: 1; padding: 0 6px; border: 0; background: transparent; color: var(--app-color-text-secondary); font-size: 13px; }
+.symbol-picker-tabs button[aria-pressed="true"] { color: var(--app-color-text); font-weight: 600; }
+.symbol-picker-tabs button[aria-pressed="true"]::after { position: absolute; bottom: 0; left: 50%; width: 28px; height: 2px; transform: translateX(-50%); background: var(--app-color-accent); content: ''; }
+.symbol-list-caption { display: flex; flex-shrink: 0; justify-content: space-between; padding: 14px 24px 8px; color: var(--app-color-text-secondary); font-size: 11px; }
+.symbol-picker-results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px max(12px, env(safe-area-inset-bottom)); scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+.symbol-picker .symbol-select { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--app-color-border); background: transparent; color: var(--app-color-text); text-align: left; }
+.symbol-select.is-current { border-radius: 3px; background: var(--app-color-accent-soft); }
+.symbol-name { min-width: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 500; line-height: 22px; }
+.symbol-code { flex-shrink: 0; color: var(--app-color-text-secondary); font-size: 13px; }
+.symbol-picker-empty { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--app-color-text-secondary); font-size: 13px; }
+.symbol-picker-empty p { margin: 0; }
+.symbol-picker-empty button { min-height: 44px; margin-top: 4px; padding: 0 12px; border: 0; border-radius: 3px; background: var(--app-color-control); color: var(--app-color-accent); }
+/* 最多保留两行常规历史标签的空间：44px 标题 + 68px 标签 + 8px 底部留白。 */
+.symbol-search-history { display: flex; min-height: 0; max-height: 120px; flex-shrink: 0; flex-direction: column; margin: 0 12px; padding-bottom: 8px; }
+.symbol-history-heading { display: flex; min-height: 36px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; }
+.symbol-history-heading h3 { margin: 0; color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; }
+.symbol-picker .symbol-history-heading button { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--app-color-accent); font-size: 12px; }
+.symbol-history-terms { display: flex; min-height: 0; flex-wrap: wrap; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+.symbol-picker .symbol-history-terms button { min-width: 44px; max-width: 100%; min-height: 30px; padding: 5px 12px; overflow-wrap: anywhere; border: 0; border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text); font-size: 13px; line-height: 20px; text-align: left; }
+.symbol-history-empty { margin: 0 0 4px; color: var(--app-color-text-secondary); font-size: 12px; }

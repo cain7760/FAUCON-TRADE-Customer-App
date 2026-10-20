@@ -39,7 +39,7 @@ function handleKeyboard(event) {
     <form class="filter-form" @submit.prevent="apply">
       <div class="filter-scroll">
         <fieldset class="filter-group">
-          <legend>下单账户 <small>可多选 · 对三个列表生效</small></legend>
+          <legend class="app-form-label">下单账户 <small>可多选 · 对三个列表生效</small></legend>
           <div class="account-options">
             <button type="button" class="account-option" :aria-pressed="allAccountsSelected" @click="draftAccounts = allAccountsSelected ? [] : accounts.map(item => item.id)"><span>全部账户</span><span class="option-check" aria-hidden="true">{{ allAccountsSelected ? '✓' : '' }}</span></button>
             <button v-for="account in accounts" :key="account.id" type="button" class="account-option" :aria-pressed="draftAccounts.includes(account.id)" @click="toggleAccount(account.id)"><span>{{ account.name }}<small>{{ account.id }}</small></span><span class="option-check" aria-hidden="true">{{ draftAccounts.includes(account.id) ? '✓' : '' }}</span></button>
@@ -47,14 +47,14 @@ function handleKeyboard(event) {
           <p v-if="!draftAccounts.length" class="filter-error" role="status">请至少选择一个下单账户</p>
         </fieldset>
         <template v-if="!accountOnly">
-          <div class="filter-group"><label for="equity-filter-symbol">{{ kind === 'positions' ? '代码 / 名称' : '标的名称 / 代码' }}</label><van-field id="equity-filter-symbol" v-model="draft.symbol" placeholder="请输入名称或代码" class="equity-filter-input" autocomplete="off" /></div>
-          <div v-if="kind === 'orders'" class="filter-group"><label for="equity-filter-order-no">订单编号</label><van-field id="equity-filter-order-no" v-model="draft.orderNo" placeholder="请输入订单编号" class="equity-filter-input" autocomplete="off" /></div>
+          <div class="filter-group"><label class="app-form-label" for="equity-filter-symbol">{{ kind === 'positions' ? '代码 / 名称' : '标的名称 / 代码' }}</label><van-field id="equity-filter-symbol" v-model="draft.symbol" placeholder="请输入名称或代码" class="equity-filter-input" autocomplete="off" /></div>
+          <div v-if="kind === 'orders'" class="filter-group"><label class="app-form-label" for="equity-filter-order-no">订单编号</label><van-field id="equity-filter-order-no" v-model="draft.orderNo" placeholder="请输入订单编号" class="equity-filter-input" autocomplete="off" /></div>
           <fieldset v-for="group in filterGroups[kind]" :key="group.key" class="filter-group">
-            <legend>{{ group.label }}</legend>
+            <legend class="app-form-label">{{ group.label }}</legend>
             <div class="filter-options"><button v-for="option in group.options" :key="option.value" type="button" class="filter-chip" :aria-pressed="draft[group.key] === option.value" @click="draft[group.key] = option.value">{{ option.label }}</button></div>
           </fieldset>
           <fieldset v-if="kind === 'orders'" class="filter-group">
-            <legend>订单状态 <small>可多选</small></legend>
+            <legend class="app-form-label">订单状态 <small>可多选</small></legend>
             <div class="status-selection"><button type="button" @click="draft.status = [...new Set(orderStatuses)]">全选</button><button type="button" @click="draft.status = [...new Set(orderStatuses.filter(status => !draft.status.includes(status)))]">反选</button><span>未选择时展示全部</span></div>
             <div class="filter-options status-options"><button v-for="(status, index) in orderStatuses" :key="index" type="button" class="filter-chip" :aria-pressed="draft.status.includes(status)" @click="toggleStatus(status)">{{ status }}</button></div>
           </fieldset>

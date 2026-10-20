@@ -43,19 +43,21 @@
 }
 .equity-order-entry svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .equity-order-entry:active { transform: scale(.96); }
-.equity-account { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--app-color-text); text-align: right; }
+.equity-account { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 var(--app-chevron-inset) 0 0; border: 0; background: none; color: var(--app-color-text); text-align: right; }
 .equity-account b { font-size: 14px; font-weight: 500; }
 .equity-account svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: var(--app-color-text-secondary); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .equity-account .equity-account-icon { width: 17px; height: 17px; stroke: none; }
 .equity-toolbar { display: flex; flex-shrink: 0; align-items: center; gap: 6px; padding: 8px 12px 0; }
+.equity-tab-panel.is-trades .equity-toolbar { padding-bottom: 8px; }
 .equity-quick-search { display: flex; min-width: 0; flex: 1; align-items: center; gap: 6px; }
-.equity-search-field { display: flex; min-width: 0; height: 28px; flex: 1; align-items: center; padding-left: 10px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); }
+.equity-search-field { display: flex; min-width: 0; height: 36px; flex: 1; align-items: center; padding-left: 10px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); }
 .equity-search-field:focus-within { border-color: var(--app-color-accent); }
 .equity-search-field svg { width: 17px; height: 17px; flex-shrink: 0; fill: none; stroke: var(--app-color-text-secondary); stroke-width: 1.5; }
 .equity-search-field input { min-width: 0; width: 100%; height: 100%; padding: 0 9px; border: 0; outline: none; background: none; color: var(--app-color-text); font: inherit; font-size: 16px; }
 .equity-search-field input::placeholder { color: var(--app-color-text-secondary); font-size: 13px; }
-.equity-search-submit { min-width: 52px; height: 28px; padding: 0 10px; border: 1px solid #4a4f58; border-radius: 2px; background: #2b2f35; color: #c8ced7; font-size: 13px; font-weight: 600; }
-.equity-filter-trigger { position: relative; display: flex; min-width: 68px; height: 28px; align-items: center; justify-content: center; gap: 4px; padding: 0 6px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); color: var(--app-color-text-secondary); font-size: 13px; }
+.equity-search-submit, .equity-filter-trigger { color: var(--app-color-text); font-size: 13px; font-weight: 500; line-height: 20px; }
+.equity-search-submit { min-width: 52px; height: 36px; padding: 0 10px; border: 1px solid #4a4f58; border-radius: 2px; background: #2b2f35; }
+.equity-filter-trigger { position: relative; display: flex; min-width: 68px; height: 36px; align-items: center; justify-content: center; gap: 4px; padding: 0 6px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-card); }
 .equity-filter-trigger svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 .equity-filter-trigger.is-filtered { border-color: var(--app-color-accent); color: var(--app-color-accent); }
 .equity-filter-trigger i { position: absolute; top: -5px; right: -5px; display: grid; min-width: 16px; height: 16px; place-items: center; border-radius: 8px; background: var(--app-color-accent); color: #fff; font-size: 11px; font-style: normal; }
@@ -80,8 +82,7 @@
 .record-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .record-instrument { min-width: 0; }
 .record-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
-.record-position .record-identity { align-items: center; }
-.record-tags { display: inline-flex; flex-shrink: 0; align-items: center; gap: 4px; }
+:is(.record-position, .record-order) .record-identity { align-items: center; }
 .record-name { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 16px; font-weight: 700; }
 .record-code { display: block; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .record-currency { margin-left: 5px; font-size: 10px; }
@@ -89,15 +90,23 @@
 .record-tag { padding: 0 5px; border-radius: 2px; background: #2b2e33; font-size: 11px; font-weight: 400; line-height: 18px; }
 .record-tag-long { background: var(--app-color-rise-soft); color: var(--app-color-rise); }
 .record-tag-short { background: var(--app-color-fall-soft); color: var(--app-color-fall); }
-.record-currency-tag { color: var(--app-color-text-secondary); }
 .position-card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 8px; margin: 0 12px; border-top: 1px solid var(--app-color-border); }
-.position-account { display: flex; min-width: 0; min-height: 44px; flex: 1; flex-direction: column; justify-content: center; padding: 5px 0; overflow-wrap: anywhere; }
+.position-account { min-width: 0; max-width: 40%; flex-shrink: 0; color: var(--app-color-text-secondary); font-size: 11px; line-height: 22px; text-align: right; overflow-wrap: anywhere; }
+.position-floating-profit { display: flex; min-width: 0; min-height: 44px; flex: 1; align-items: center; gap: 8px; padding: 5px 0; overflow-wrap: anywhere; }
+.position-floating-profit .record-caption { flex-shrink: 0; }
+.position-floating-profit .record-value { min-width: 0; margin-left: 0; text-align: left; }
 .record-highlight { min-width: 0; max-width: 55%; flex-shrink: 0; text-align: right; }
 .record-highlight strong { display: block; margin-top: 2px; overflow-wrap: anywhere; font-family: var(--app-font-family-numeric); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 24px; }
 .record-caption { display: block; color: var(--app-color-text-secondary); font-size: 11px; font-weight: 400; line-height: 14px; }
 /* 两列键值对；长金额可换行，不截断交易数值。 */
 .record-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 18px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--app-color-border); }
 .record-metrics > span { display: flex; min-width: 0; min-height: 20px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 6px; }
+.record-metrics > .record-order-tags { grid-column: 1 / -1; align-items: center; justify-content: flex-start; gap: 6px; margin-top: 3px; }
+.record-progress-value { display: inline-flex; max-width: 100%; align-items: center; gap: 6px; margin-left: auto; }
+.record-progress-bar { appearance: none; width: 36px; height: 4px; flex-shrink: 0; overflow: hidden; border: 0; border-radius: 2px; background: var(--app-color-frame); color: var(--app-color-accent); }
+.record-progress-bar::-webkit-progress-bar { background: var(--app-color-frame); }
+.record-progress-bar::-webkit-progress-value { border-radius: 2px; background: var(--app-color-accent); }
+.record-progress-bar::-moz-progress-bar { border-radius: 2px; background: var(--app-color-accent); }
 .record-value { display: block; margin-left: auto; overflow-wrap: anywhere; font-family: var(--app-font-family-numeric); font-size: 15px; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 20px; text-align: right; }
 .record-position .record-value { font-size: 13px; }
 .record-context { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; color: var(--app-color-text-secondary); font-size: 11px; line-height: 18px; }
@@ -119,7 +128,7 @@
 .filter-form { display: flex; min-height: 0; flex-direction: column; }
 .filter-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 16px; }
 .filter-group { min-width: 0; margin: 0 0 22px; padding: 0; border: 0; }
-.filter-group legend, .filter-group > label { display: block; margin-bottom: 10px; padding: 0; color: var(--app-color-text); font-size: 14px; }
+.filter-group legend, .filter-group > label { display: block; margin-bottom: 10px; padding: 0; }
 .filter-group small { margin-left: 6px; color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; }
 .filter-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .filter-chip { min-height: 44px; padding: 6px 4px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text-secondary); font: inherit; font-size: 13px; }
@@ -140,7 +149,6 @@
 .detail-symbol { padding: 20px 4px; }
 .detail-symbol h3 { display: inline; margin: 0 10px 0 0; font-size: 20px; }
 .detail-symbol > span { color: var(--app-color-text-secondary); font-size: 13px; }
-.detail-symbol small { display: block; margin-top: 5px; color: var(--app-color-text-secondary); font-size: 12px; }
 .detail-section { margin-bottom: 10px; overflow: hidden; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-card); }
 .detail-section > h3 { margin: 0; padding: 14px; border-bottom: 1px solid var(--app-color-border); font-size: 14px; font-weight: 600; }
 .detail-section dl { margin: 0; padding: 0 14px; }

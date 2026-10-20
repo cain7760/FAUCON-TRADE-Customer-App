@@ -6,6 +6,7 @@ import 'vant/es/badge/index.css'
 import 'vant/es/button/style'
 import 'vant/es/field/style'
 import 'vant/es/popup/style'
+import 'vant/es/toast/style'
 import 'vant/es/tab/style'
 import 'vant/es/tabs/style'
 

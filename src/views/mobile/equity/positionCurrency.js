@@ -1,5 +1,5 @@
 // 与 Customer PC 的账户概要使用相同演示汇率；不是实时外汇行情。
-const demoCnyExchangeRates = Object.freeze({ CNY: 1, HKD: 0.92, USD: 7.18 })
+export const demoCnyExchangeRates = Object.freeze({ CNY: 1, HKD: 0.92, USD: 7.18 })
 
 // marginCurrency 可标明接口保证金已是 CNY，避免按标的币种重复换算。
 export function positionMarginInCny(row, exchangeRates = demoCnyExchangeRates) {

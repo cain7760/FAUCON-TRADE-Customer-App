@@ -21,7 +21,16 @@ const instruments = [
   { code: '600900', name: '长江电力', market: 'SH', cost: 27.85, price: 28.34, change: .53, opening: 17000, todayExecutions: [{ side: 'sell', quantity: 1000, price: 27.93 }] },
   { code: '002594', name: '比亚迪', market: 'SZ', cost: 242.50, price: 245.80, change: 1.42, opening: 1400, pendingSell: 200, todayExecutions: [{ side: 'buy', quantity: 600, price: 242.50 }] },
 ]
-export const orderInstruments = [...instruments, ...hongKongDemoInstruments]
+// 与 Customer variantData.marketInstruments 相同的演示搜索池。
+// 搜索池独立于持仓，包含标准港股演示标的。
+const marketNames = ['华远科技', '新城制造', '中原能源', '海岳医药', '智联电子', '云帆软件', '国泰材料', '远景通信', '华夏消费', '深港物流']
+export const orderInstruments = [...instruments, ...hongKongDemoInstruments, ...Array.from({ length: 220 }, (_, index) => {
+  const serial = index + 1
+  const market = serial % 10 === 0 ? 'HK' : serial % 2 ? 'SZ' : 'SH'
+  const price = Number((6.5 + (serial * 1.73) % 183).toFixed(2))
+  return { code: String(market === 'HK' ? 1000 + serial : 100000 + serial).padStart(market === 'HK' ? 5 : 6, '0'),
+    name: `${marketNames[index % 10]} ${String(serial).padStart(3, '0')}`, market, currency: market === 'HK' ? 'HKD' : 'CNY', price, cost: Number((price * .97).toFixed(2)), change: 0, available: 0, qty: 0, lotSize: 100 }
+})]
 const cents = value => Math.round(Number(value) * 100)
 export function calculatePositionMetrics(position, isAStock = false) {
   const openingLots = position.openingLots || [{ quantity: position.opening, price: position.cost }]
