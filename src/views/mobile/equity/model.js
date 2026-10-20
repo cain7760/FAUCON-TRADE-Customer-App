@@ -1,4 +1,5 @@
 import { accounts, orderStatuses } from './fixtures.js'
+import { positionMarginInCny } from './positionCurrency.js'
 
 export const listTabs = [
   { key: 'positions', label: '所有持仓', detail: '持仓详情', empty: '无匹配持仓，请调整或重置筛选' },
@@ -85,7 +86,7 @@ export function detailSections(kind, row, index) {
   if (kind === 'positions') return [
     { title: '持仓信息', fields: [...basic, field('direction', '多空方向', row.direction === '多' ? '做多' : '做空'), ...account] },
     { title: '价格与数量', fields: [field('price', '持仓均价 / 最新价', `${price(row.cost, row.market)} / ${price(row.price, row.market)}`), quantity('opening', '期初数量'), quantity('qty', '持仓数量'), quantity('available', '可用数量')] },
-    { title: '市值与盈亏', fields: [money('value', '市值'), money('marginOccupied', '占用保证金'), field('marginRate', '保证金率', `${formatNumber(row.marginRate)}%`), ...[['totalProfit', '总盈亏'], ['dailyRealizedProfit', '实现盈亏'], ['floatingProfit', '浮动盈亏']].map(([key, label]) => money(key, label, { tone: pnlClass(row[key]) }))] },
+    { title: '市值与盈亏', fields: [money('value', '市值'), field('marginOccupied', '保证金占用(CNY)', formatNumber(positionMarginInCny(row))), field('marginRate', '保证金率', `${formatNumber(row.marginRate)}%`), ...[['totalProfit', '总盈亏'], ['dailyRealizedProfit', '实现盈亏'], ['floatingProfit', '浮动盈亏']].map(([key, label]) => money(key, label, { tone: pnlClass(row[key]) }))] },
     ...remarks,
   ]
   const execution = [...account, field('orderType', '订单类型', row.orderType), field('algorithm', '执行算法', row.algorithm)]

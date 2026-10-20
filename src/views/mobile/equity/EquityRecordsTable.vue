@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, useId, watch } from 'vue'
 import { accountLabel, activityText, fillProgress, formatNumber, listTabs, orderPrice, orderQuantity, pnlClass, price, sideLabel } from './model.js'
+import { positionMarginInCny } from './positionCurrency.js'
 
 const props = defineProps({ kind: { type: String, required: true }, records: { type: Array, required: true } })
 const emit = defineEmits(['open', 'action'])
@@ -32,7 +33,7 @@ const columns = computed(() => {
     { key: 'holdingQty', title: '持仓数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.qty, 3, false) },
     { key: 'available', title: '可用数量', secondTitle: '（股）', width: 76, value: row => formatNumber(row.available, 3, false), tone: () => 'equity-accent' },
     { key: 'valueWan', title: '市值', width: 92, value: row => formatNumber(row.value) },
-    { key: 'marginOccupied', title: '占用保证金', width: 88, value: row => formatNumber(row.marginOccupied) },
+    { key: 'marginOccupied', title: '保证金占用(CNY)', width: 120, value: row => formatNumber(positionMarginInCny(row)) },
     { key: 'marginRate', title: '保证金率', width: 64, value: row => row.marginRate == null || !Number.isFinite(Number(row.marginRate)) ? '--' : `${formatNumber(row.marginRate)}%` },
     { key: 'floatingProfit', title: '浮动盈亏', width: 84, value: row => formatNumber(row.floatingProfit), tone: row => row.floatingProfit >= 0 ? 'equity-positive' : 'equity-negative' },
     { key: 'account', title: '下单账户', width: 120, text: true, value: row => accountLabel(row.account) },
@@ -46,11 +47,12 @@ const columns = computed(() => {
   const account = { key: 'account', title: '下单账户', width: 120, text: true, value: row => accountLabel(row.account) }
   if (props.kind === 'orders') return [
     { key: 'status', title: '订单状态', secondTitle: '成交进度', width: 112, text: true, secondNumeric: true, value: row => row.status, second: fillProgress, tone: row => ['被拒绝', '审核拒绝'].includes(row.status) ? 'equity-positive' : row.status === '全成' ? 'equity-negative' : '' },
-    { key: 'price', title: '订单价格', secondTitle: '成交均价', width: 72, value: orderPrice, second: row => price(row.filledPrice, row.market) },
+    { key: 'price', title: '订单限价', secondTitle: '成交均价', width: 72, value: orderPrice, second: row => price(row.filledPrice, row.market) },
     { key: 'quantity', title: '订单数量 / 金额', width: 112, value: orderQuantity },
-    { key: 'filled', title: '挂单数量（股）', secondTitle: '已成数量（股）', width: 92, value: row => row.reportQuantity ? formatNumber(row.reportQuantity, 3, false) : '--', second: row => row.filledQuantity ? formatNumber(row.filledQuantity, 3, false) : '--' },
+    { key: 'filledQuantity', title: '已成数量（股）', width: 92, value: row => row.filledQuantity ? formatNumber(row.filledQuantity, 3, false) : '--' },
     context, account,
     { key: 'time', title: '订单时间', width: 132, value: row => row.orderTime || '--' },
+    { key: 'reportQuantity', title: '挂单数量（股）', width: 92, value: row => row.reportQuantity ? formatNumber(row.reportQuantity, 3, false) : '--' },
   ]
   // Customer TradesTable / tradeColumnOptions 的完整业务字段，标的名称与代码仍合并固定。
   return [
