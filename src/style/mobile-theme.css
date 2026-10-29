@@ -32,6 +32,8 @@
   --app-font-family-numeric: 'D-DIN Exp', 'DIN Alternate', 'Arial Narrow', sans-serif;
   --app-chevron-size: 20px;
   --app-chevron-inset: 12px;
+  --app-radius-button: 999px;
+  --app-radius-filter-control: 8px;
   --app-chevron-image: url('../assets/ui/chevron-down.svg');
 
   font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -65,6 +67,16 @@
 html, body, #app { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
 body { min-height: 100dvh; background: var(--app-color-stage); }
 button { font: inherit; -webkit-tap-highlight-color: transparent; }
+
+/* 实体操作共用胶囊形状；文字 Tab、排序入口、列表行和输入控件保持各自结构。 */
+main.mobile-app :is(
+  .van-button, .equity-account, .equity-filter-trigger, .filter-chip,
+  .equity-order-entry, .equity-view-switch--inline, .equity-view-switch--inline button,
+  .record-actions .record-action, .record-actions .record-action > span, .position-detail-actions button,
+  .ticket-trade-buttons button, .ticket-secondary-actions button,
+  .focus-record-actions button, .focus-columns-footer button, .focus-more-button,
+  .concept-c-close-position, .symbol-history-terms button
+) { border-radius: var(--app-radius-button); }
 .app-numeric { font-family: var(--app-font-family-numeric); font-variant-numeric: tabular-nums; }
 /* 表单字段标题共用；不改变输入值、占位符、辅助信息和只读数据标签。 */
 .app-form-label { color: var(--app-color-text); font-size: var(--app-font-size-form-label); font-weight: 400; line-height: 20px; }
@@ -100,23 +112,42 @@ select:not([multiple]):not([size]) { appearance: none; -webkit-appearance: none;
   --van-tab-font-size: 13px;
   --van-tabs-line-height: 40px;
 }
-.equity-list-tabs .van-tabs__wrap { height: auto; flex-shrink: 0; margin: 0; padding: 0 8px 8px; border: 1px solid var(--app-color-border); border-top: 0; border-radius: 0 0 4px 4px; background: var(--app-color-card); }
-.equity-list-tabs .van-tabs__nav { height: 32px; box-sizing: border-box; gap: 4px; padding: 0; }
+.equity-list-tabs .van-tabs__wrap { height: auto; flex-shrink: 0; margin: 0; padding: 0 12px; border: 0; border-bottom: 1px solid var(--app-color-border); border-radius: 0; background: var(--app-color-card); }
+.equity-list-tabs .van-tabs__nav { height: 40px; box-sizing: border-box; gap: 16px; padding: 0; }
 .equity-list-tabs .van-tabs__line { display: none; }
-.equity-list-tabs .van-tab { min-width: 0; height: 32px; padding: 0 2px; border: 1px solid transparent; border-radius: 2px; font-weight: 500; }
-.equity-list-tabs .van-tab--active { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); color: #dfc890; font-weight: 700; }
-.equity-tab-title { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.equity-tab-total { min-width: 18px; padding: 0 3px; border-radius: 2px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; line-height: 18px; text-align: center; }
-.equity-list-tabs .van-tab--active .equity-tab-total { background: var(--app-color-accent); color: #fff; font-weight: 400; }
+.equity-list-tabs .van-tab { min-width: 0; height: 40px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 0; font-weight: 500; }
+.equity-list-tabs .van-tab--active { background: transparent; color: var(--app-color-text); font-weight: 600; }
+.equity-list-tabs .van-tab__text { display: inline-flex; height: 100%; }
+.equity-tab-title { display: inline-flex; height: 100%; align-items: center; gap: 6px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.equity-list-tabs .van-tab--active .equity-tab-title { border-bottom-color: var(--app-color-accent); }
+.equity-tab-total { min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--app-color-control); color: var(--app-color-accent); font-size: 12px; font-weight: 400; line-height: 18px; text-align: center; }
+.equity-tab-total--baseline { font-size: 14px; font-weight: 700; }
 .equity-list-tabs .van-tab:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
 .equity-list-tabs .van-tabs__content { min-height: 0; flex: 1; }
 .equity-list-tabs .van-tab__panel { height: 100%; }
 
+/* 消息沿用权益的 Tab 样式；列表在面板内独立滚动，分类和已读操作保持可见。 */
+.mobile-app .messages-page .messages-tabs > .van-tabs__wrap { background: transparent; }
+.mobile-app .messages-page .messages-tabs .van-tabs__nav { justify-content: flex-start; }
+.mobile-app .messages-page .messages-tabs .van-tab__text { justify-content: center; align-items: center; }
+.messages-tabs .van-tab__panel { display: flex; min-height: 0; flex-direction: column; }
+.mobile-tabbar .van-badge { border-color: var(--app-color-surface); background: var(--app-color-accent-soft); color: var(--app-color-accent); font-family: var(--app-font-family-numeric); }
+
 /* 浏览器预览的浮层限于手机框；安全区不叠加到外部桌面视口。 */
 .equity-sheet-overlay.van-overlay { position: absolute; }
 .equity-filter-sheet.van-popup { position: absolute; display: flex; max-height: calc(100% - 59px); flex-direction: column; border: 1px solid var(--app-color-border); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--app-color-card); }
+/* 基线底部抽屉沿用方案 C 持仓详情的顶部圆角；不影响居中弹窗与其他方案。 */
+.mobile-app.mobile-app--baseline .van-popup.van-popup--bottom { border-radius: 18px 18px 0 0; }
+.mobile-app.mobile-app--baseline :is(.equity-filter-sheet, .equity-order-sheet).van-popup { border: 0; }
 .equity-filter-input.van-field { min-height: 44px; padding: 10px 12px; border: 1px solid var(--app-color-frame); border-radius: 2px; background: var(--app-color-control); --van-field-input-text-color: var(--app-color-text); --van-field-placeholder-text-color: var(--app-color-text-secondary); font-size: 16px; }
 .equity-filter-input.van-field::after { display: none; }
+/* 筛选内容统一为圆角矩形，底部操作按钮继续使用胶囊样式。 */
+.mobile-app .equity-filter-sheet .filter-scroll :is(.equity-filter-input.van-field, .filter-chip, .account-options, select) { border-radius: var(--app-radius-filter-control); }
+/* 单选组合仅外侧圆角，状态多选保持独立按钮。 */
+.mobile-app.mobile-app--baseline .filter-options--segmented { gap: 0; overflow: hidden; border: 1px solid var(--app-color-frame); border-radius: var(--app-radius-filter-control); background: var(--app-color-control); }
+.mobile-app.mobile-app--baseline .equity-filter-sheet .filter-options--segmented .filter-chip { border: 0; border-radius: 0; background: transparent; }
+.mobile-app.mobile-app--baseline .filter-options--segmented .filter-chip + .filter-chip { border-left: 1px solid var(--app-color-frame); }
+.mobile-app.mobile-app--baseline .filter-options--segmented .filter-chip[aria-pressed="true"] { border-color: var(--app-color-frame); background: var(--app-color-accent-soft); }
 .sheet-actions .van-button { min-height: 46px; flex: 1; border-radius: 4px; font-size: 15px; }
 .sheet-actions .van-button--primary { --van-button-primary-color: #fff; font-weight: 600; }
 .sheet-actions .equity-secondary-button { max-width: 100px; background: var(--app-color-control); }
@@ -130,3 +161,74 @@ select:not([multiple]):not([size]) { appearance: none; -webkit-appearance: none;
     transition-duration: .01ms !important;
   }
 }
+.ticket-size-value > .van-popover__wrapper { display: flex; flex-shrink: 0; }
+/* 单位菜单沿用所在下单面板的主题，浮层不受数量输入框与滚动区裁切。 */
+.ticket-unit-popover.van-popover { --van-popover-dark-background: var(--app-color-control); --van-popover-border-radius: 4px; border: 1px solid var(--app-color-frame); border-radius: 4px; box-shadow: none; }
+
+/* 基线边线的不透明度统一乘以 80%；独立保留文字、底色和表格行内样式。 */
+.mobile-app.mobile-app--baseline {
+  --table-header-surface: #1a1c20;
+  --table-row-divider: rgb(32 34 38 / 70%);
+  --app-color-border-solid: #303338;
+  --app-color-frame-solid: #363a40;
+  --app-color-border: color-mix(in srgb, var(--app-color-border-solid) 80%, transparent);
+  --app-color-frame: color-mix(in srgb, var(--app-color-frame-solid) 80%, transparent);
+  --app-color-line-accent: color-mix(in srgb, var(--app-color-accent) 80%, transparent);
+  --app-color-line-rise: color-mix(in srgb, var(--app-color-rise) 80%, transparent);
+}
+.mobile-app--baseline .equity-data-table {
+  --app-color-border: var(--app-color-border-solid);
+  --app-color-frame: var(--app-color-frame-solid);
+  --app-color-line-accent: var(--app-color-accent);
+}
+.mobile-app--baseline .record-detail-trigger:active { background: var(--app-color-border-solid); }
+.mobile-app.mobile-app--baseline :is(
+  .equity-search-field:focus-within,
+  .equity-filter-trigger.is-filtered,
+  .filter-chip[aria-pressed="true"],
+  .account-option[aria-pressed="true"] .option-check,
+  .account-picker-search:focus-within,
+  .ticket-number-control:focus-within,
+  .ticket-percentage-control:focus-within,
+  .ticket-symbol-control:focus-within,
+  .ticket-algorithm-row > button:focus-visible,
+  .ticket-pov-dialog .ticket-primary
+) { border-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline :is(
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+  a:focus-visible, [role="tab"]:focus-visible, .equity-table-scroll:focus-visible,
+  .ticket-number-control:focus-within, .ticket-percentage-control:focus-within,
+  .ticket-symbol-control:focus-within, .ticket-duration label:focus-within,
+  .ticket-participation:focus-within, .ticket-segment button[aria-pressed="true"],
+  .ticket-algorithm-tabs .van-tab--active
+) { outline-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .ticket-number-control.has-error { border-color: var(--app-color-line-rise); }
+.mobile-app.mobile-app--baseline .ticket-number-control.has-error:focus-within { outline-color: var(--app-color-line-rise); }
+.mobile-app.mobile-app--baseline .account-picker-check { border-color: color-mix(in srgb, var(--app-color-text-secondary) 80%, transparent); }
+.mobile-app.mobile-app--baseline .account-picker-option[aria-pressed="true"] .account-picker-check { border-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .van-tab--active .equity-tab-title { border-bottom-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .equity-view-switch button[aria-pressed="true"] { text-decoration-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .ticket-fractions input[type="range"] {
+  background-image: linear-gradient(to right, var(--app-color-line-accent) 0 var(--ticket-fraction), var(--app-color-frame) var(--ticket-fraction) 100%);
+}
+.mobile-app.mobile-app--baseline .ticket-fractions input[type="range"]::-webkit-slider-thumb { border-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .ticket-fractions input[type="range"]::-moz-range-thumb { border-color: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .ticket-fractions input[type="range"]::-moz-range-progress { background: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .record-progress-bar::-webkit-progress-value { background: var(--app-color-line-accent); }
+.mobile-app.mobile-app--baseline .record-progress-bar::-moz-progress-bar { background: var(--app-color-line-accent); }
+
+/* App 历史记录共用 Vant 简洁分页，保留 44px 触控高度。 */
+.equity-pagination {
+  width: 100%;
+  --van-pagination-height: 44px;
+  --van-pagination-font-size: 12px;
+  --van-pagination-background: var(--app-color-control);
+  --van-pagination-item-default-color: var(--app-color-text);
+  --van-pagination-item-disabled-color: var(--app-color-text-secondary);
+  --van-pagination-item-disabled-background: var(--app-color-control);
+  --van-pagination-desc-color: var(--app-color-text-secondary);
+}
+.equity-pagination .van-pagination__item { border-radius: var(--app-radius-button); overflow: hidden; }
+.equity-pagination .van-pagination__item::after { display: none; }
+.equity-pagination .van-pagination__item button { color: inherit; }
+.equity-pagination .van-pagination__item button:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; border-radius: inherit; }

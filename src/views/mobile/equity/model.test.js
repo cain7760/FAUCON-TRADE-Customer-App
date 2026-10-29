@@ -1,29 +1,50 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calculatePositionMetrics, demoRecords, orderStatuses } from './fixtures.js'
+import { accounts, calculatePositionMetrics, demoRecords, orderStatuses } from './fixtures.js'
+import { demoOrderCash, orderEstimates } from './orderModel.js'
 import { accountLabel, activeFilterLabels, advancedFilterCount, defaultFilters, detailSections, filterRecords, filterCount, fillProgress, formatNumber, orderPrice, orderQuantity, pnlClass } from './model.js'
 
 test('成交进度覆盖零、部分、全成和不可计算状态，比例限制在 0–100%', () => {
   assert.equal(fillProgress({ quantity: 1000, filledQuantity: 0 }), '0%')
   assert.equal(fillProgress({ quantity: 1000, filledQuantity: 400 }), '40%')
-  assert.equal(fillProgress({ quantity: 300, filledQuantity: 100 }), '33%')
+  assert.equal(fillProgress({ quantity: 300, filledQuantity: 100 }), '33.33%')
   assert.equal(fillProgress({ quantity: 1000, filledQuantity: 1000 }), '100%')
   assert.equal(fillProgress({ quantity: 1000, filledQuantity: 1500 }), '100%')
   assert.equal(fillProgress({ quantity: 1000, filledQuantity: -1 }), '0%')
   assert.equal(fillProgress({ quantity: 0, filledQuantity: 0 }), '--')
 })
 
+test('订单与成交移除订单类型条件，兼容旧筛选值且不计入筛选徽标', () => {
+  for (const kind of ['orders', 'trades']) {
+    const filters = defaultFilters()
+    const legacy = { ...filters, orderType: '手工单' }
+    const records = demoRecords[kind]
+    const accounts = ['TZS_T0', 'TZS_T1']
+    assert.deepEqual(filterRecords(kind, records, legacy, accounts), filterRecords(kind, records, filters, accounts))
+    assert.equal(filterCount(kind, legacy), 0)
+    assert.deepEqual(activeFilterLabels(kind, legacy), [])
+  }
+})
 test('账户全称同时保留编号与名称', () => {
   assert.equal(accountLabel('TZS_T0'), 'TZS_T0 - 自营一号')
   assert.equal(accountLabel('TZS_T1'), 'TZS_T1 - 自营二号')
   assert.equal(accountLabel('UNKNOWN'), '--')
 })
+test('扩展为八个演示账户，新增账户无持仓且买入额度为零', () => {
+  assert.equal(accounts.length, 8)
+  assert.equal(new Set(accounts.map(account => account.id)).size, 8)
+  for (const account of accounts.slice(2)) {
+    assert.equal(demoOrderCash[account.id], 0)
+    assert.ok(demoRecords.positions.every(row => row.account !== account.id))
+    assert.equal(orderEstimates({ type: 'limit', price: 10, mode: 'quantity', value: 100, unit: 'shares' }, { price: 10 }, demoOrderCash[account.id], 0).maxBuy, 0)
+  }
+})
 
-test('Customer 默认账户 12 / 14 / 3，全部账户 24 / 16 / 4', () => {
+test('Customer 两个持仓账户补齐各状态样例及对应成交，持仓数保持不变', () => {
   const counts = accountIds => Object.entries(demoRecords).map(([kind, rows]) => filterRecords(kind, rows, defaultFilters(), accountIds).length)
-  assert.deepEqual(counts(['TZS_T0']), [12, 14, 3])
-  assert.deepEqual(counts(['TZS_T0', 'TZS_T1']), [24, 16, 4])
-  assert.deepEqual(counts(['TZS_T1']), [12, 2, 1])
+  assert.deepEqual(counts(['TZS_T0']), [12, 47, 12])
+  assert.deepEqual(counts(['TZS_T0', 'TZS_T1']), [24, 82, 22])
+  assert.deepEqual(counts(['TZS_T1']), [12, 35, 10])
 })
 test('持仓字段按日初、当日成交、在途卖出及 FIFO 计算，第二账户保持相同口径', () => {
   const firstAccount = demoRecords.positions.filter(row => row.account === 'TZS_T0')
@@ -41,7 +62,7 @@ test('持仓字段按日初、当日成交、在途卖出及 FIFO 计算，第�
     }
   }
   assert.equal(firstAccount.find(row => row.code === '002459').dailyRealizedProfit, -360)
-  assert.deepEqual(calculatePositionMetrics({ openingLots: [{ quantity: 100, price: 10 }, { quantity: 100, price: 12 }], todayExecutions: [{ side: 'sell', quantity: 150, price: 15 }] }), { opening: 200, qty: 50, available: 50, dailyRealizedProfit: 650 })
+  assert.deepEqual(calculatePositionMetrics({ price: 16, openingLots: [{ quantity: 100, price: 10 }, { quantity: 100, price: 12 }], todayExecutions: [{ side: 'sell', quantity: 150, price: 15 }] }), { opening: 200, qty: 50, available: 50, dailyRealizedProfit: 650, cost: 12, value: 800, floatingProfit: 200, marginOccupied: 60, totalProfit: 850 })
 })
 test('持仓保留名称/代码与多空筛选，不再按市场过滤', () => {
   const rows = filters => filterRecords('positions', demoRecords.positions, { ...defaultFilters(), ...filters }, ['TZS_T0'])
@@ -65,16 +86,16 @@ test('演示持仓仅保留做多数据，多空方向统一使用做多/做空�
 })
 test('订单组合筛选、状态多选和异常优先', () => {
   const rows = filters => filterRecords('orders', demoRecords.orders, { ...defaultFilters(), ...filters }, ['TZS_T0'])
-  assert.equal(rows({})[0].orderNo, 'WT20260911016')
-  assert.equal(rows({ orderNo: '11004', symbol: '深华发', side: 'sell', openClose: '开', orderType: '手工单', status: ['部成'] }).length, 1)
-  assert.equal(rows({ status: ['部成', '全成'] }).length, 3)
+  assert.equal(rows({})[0].orderNo, demoRecords.orders[15].orderNo)
+  assert.equal(rows({ orderNo: demoRecords.orders[3].orderNo, symbol: '深华发', side: 'sell', openClose: '开', orderType: '手工单', status: ['部成'] }).length, 1)
+  assert.equal(rows({ status: ['部成', '全成'] }).length, 9)
   assert.equal(filterCount('orders', { ...defaultFilters(), status: ['全成', '部成'] }), 1)
 })
 test('所有订单状态统一为十个业务状态并保留异常', () => {
   assert.deepEqual(orderStatuses, ['未报', '待报', '已报', '待改', '待撤', '部撤', '撤单', '部成', '全成', '拒单', '异常'])
   assert.ok(demoRecords.orders.every(order => orderStatuses.includes(order.status)))
   assert.deepEqual(demoRecords.orders.slice(14, 16).map(order => order.status), ['待报', '异常'])
-  assert.equal(demoRecords.orders.filter(order => order.inputAmount !== null).length, 4)
+  assert.equal(demoRecords.orders.filter(order => order.inputAmount !== null).length, 26)
   assert.equal(orderQuantity(demoRecords.orders[2]), '1,917.00 元')
 })
 test('搜索词不计入高级筛选角标，已应用条件按当前列表展示', () => {
@@ -103,7 +124,7 @@ test('截断、千分位、空值、市价和零盈亏显示', () => {
   assert.equal(pnlClass(0), '')
 })
 test('详情覆盖完整数据字段，只为记录编号提供复制', () => {
-  const expectedCounts = { positions: 19, orders: 26, trades: 20 }
+  const expectedCounts = { positions: 18, orders: 26, trades: 20 }
   for (const kind of Object.keys(demoRecords)) {
     for (const row of demoRecords[kind]) {
       const fields = detailSections(kind, row, 1).flatMap(section => section.fields)

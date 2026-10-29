@@ -1,4 +1,5 @@
 <script setup>
+import EquitySheetClose from './EquitySheetClose.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { addSearchHistory, filterSymbolRecords, normalizeSymbolHistory, symbolHistoryLabel } from './symbolSearch.js'
 import './symbol-picker.css'
@@ -19,6 +20,7 @@ function readHistory() {
 // 只保存在当前浏览器标签页；存储不可用时仍可在内存中使用。
 const history = ref(readHistory())
 const positionRows = computed(() => props.instruments.filter(row => props.positionCodes.includes(row.code)))
+const positionCount = computed(() => new Set(positionRows.value.map(row => `${row.code}.${row.market}`)).size)
 const tabs = [
   { id: 'all', label: '全部' },
   { id: 'positions', label: '持仓标的' },
@@ -47,7 +49,7 @@ defineExpose({ focusSearch })
   <section class="symbol-picker" :inert="!active ? true : undefined" aria-label="标的搜索">
     <header class="symbol-picker-heading">
       <h2>标的搜索</h2>
-      <button type="button" class="symbol-icon-button" aria-label="关闭标的搜索弹窗" @click="emit('close')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+      <EquitySheetClose aria-label="关闭标的搜索弹窗" @click="emit('close')" />
     </header>
     <form class="symbol-picker-search" role="search" @submit.prevent="submitSearch">
       <div class="symbol-search-control">
@@ -61,7 +63,7 @@ defineExpose({ focusSearch })
       <div v-if="history.length" class="symbol-history-terms" aria-label="搜索历史记录"><button v-for="term in history" :key="term" type="button" :aria-label="`重新搜索 ${symbolHistoryLabel(instruments, term)}`" @click="repeatSearch(term)">{{ symbolHistoryLabel(instruments, term) }}</button></div>
       <p v-else class="symbol-history-empty" role="status">暂无搜索历史</p>
     </section>
-    <nav class="symbol-picker-tabs" aria-label="标的分类"><button v-for="tab in tabs" :key="tab.id" type="button" :aria-pressed="category === tab.id" @click="chooseCategory(tab.id)">{{ tab.label }}</button></nav>
+    <nav class="symbol-picker-tabs" aria-label="标的分类"><button v-for="tab in tabs" :key="tab.id" type="button" :aria-pressed="category === tab.id" @click="chooseCategory(tab.id)">{{ tab.label }}<span v-if="tab.id === 'positions'" class="equity-tab-total app-numeric">{{ positionCount }}</span></button></nav>
       <div class="symbol-list-caption" aria-hidden="true"><span>标的名称</span><span>代码</span></div>
       <div class="symbol-picker-results" aria-label="标的搜索结果">
         <button v-for="row in rows" :key="row.code" type="button" class="symbol-select" :class="{ 'is-current': selectedCode === row.code }" :aria-label="`选择${row.name} ${row.code}`" :aria-current="selectedCode === row.code ? 'true' : undefined" @click="select(row)"><span class="symbol-name">{{ row.name }}</span><span class="symbol-code app-numeric">{{ row.code }}.{{ row.market }}</span></button>

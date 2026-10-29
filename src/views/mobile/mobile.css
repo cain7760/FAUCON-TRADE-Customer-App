@@ -38,6 +38,52 @@
 /* 权益页的顶部卡片延伸到状态栏，与标题、Tab 连成同一表面。 */
 .status-bar--equity { background: var(--app-color-card); }
 
+/* 状态栏、标题、三项账户数据与 Tab 共享连续品牌背景。 */
+.mobile-app--baseline.mobile-app--equity-home {
+  background-image:
+    radial-gradient(ellipse at top left, color-mix(in srgb, var(--app-color-accent) 6%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--app-color-card), var(--app-color-background));
+  background-repeat: no-repeat;
+  background-size: 100% calc(max(59px, env(safe-area-inset-top)) + 56px + 64px + 56px - 12px);
+}
+
+.mobile-app--baseline.mobile-app--equity-home :is(.status-bar--equity, .equity-page-header, .equity-list-tabs > .van-tabs__wrap) { background: transparent; }
+.mobile-app--baseline .equity-list-tabs > .van-tabs__wrap { overflow: hidden; padding: 8px 12px 11px 10px; border-bottom: 1px solid var(--app-color-border); border-radius: 0; }
+/* 首页资金区下方少 12px 留白，Tab 顶部再少 2px，合计收紧 14px。 */
+.mobile-app--baseline.mobile-app--equity-home .equity-list-tabs > .van-tabs__wrap { padding-top: 6px; }
+
+.mobile-equity-brand-mark {
+  position: absolute;
+  top: -12px;
+  left: -18px;
+  width: 134px;
+  height: 140px;
+  overflow: hidden;
+  opacity: .07;
+  mask-image: linear-gradient(180deg, #000 35%, transparent);
+  pointer-events: none;
+}
+
+/* Crop the existing lockup to its falcon symbol; keep the original asset intact. */
+.mobile-equity-brand-mark img { display: block; width: auto; max-width: none; height: 140px; }
+
+.mobile-equity-brand-wave {
+  position: absolute;
+  z-index: -1;
+  top: -4px;
+  right: -24px;
+  width: 300px;
+  max-width: 82%;
+  height: 150px;
+  object-fit: contain;
+  object-position: right top;
+  opacity: .32;
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+  pointer-events: none;
+}
+
+.mobile-app--baseline .status-bar--equity :is(.status-time, .status-indicators) { position: relative; }
+
 .dynamic-island {
   position: absolute;
   top: 10px;
@@ -63,6 +109,10 @@
 .status-battery .battery-cap { fill: currentColor; stroke: none; }
 
 .mobile-content { flex: 1; min-height: 0; overflow: hidden; }
+.mobile-app--baseline {
+  /* 与 62px 菜单内容、上下内距及安全区保持一致。 */
+  --mobile-bottom-nav-height: calc(var(--van-tabbar-height, 62px) + 6px + max(6px, env(safe-area-inset-bottom)) + 1px);
+}
 
 .bottom-nav {
   --bottom-nav-icon-size: 18px;
@@ -79,6 +129,20 @@
   box-sizing: border-box;
   padding-inline: 20px;
 }
+
+.mobile-app--baseline .bottom-nav {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  background: rgb(23 25 28 / 55%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+  border-top-color: rgb(164 177 195 / 12%);
+  box-shadow: none;
+}
+.mobile-app--baseline .mobile-tabbar { --van-tabbar-background: transparent; background: transparent; }
 
 .nav-item svg {
   width: 21px;
@@ -99,7 +163,7 @@
   mask: var(--bottom-nav-icon) center / contain no-repeat;
 }
 
-.bottom-equity-icon {
+.bottom-equity-icon, .bottom-options-icon {
   position: relative;
   display: block;
   width: var(--bottom-nav-icon-size);
@@ -107,10 +171,22 @@
   opacity: .72;
 }
 
-.bottom-equity-icon img { position: absolute; display: block; }
-.bottom-equity-icon.active {
+.bottom-equity-icon img, .bottom-options-icon img { position: absolute; display: block; }
+/* 基线底部图标沿用权益的双层填色与 72% 未选中透明度。 */
+.mobile-app--baseline .bottom-nav-filled-icon { width: 18px; height: 18px; fill: #a4b1c3; stroke: none; opacity: .72; }
+.mobile-app--baseline .bottom-nav-filled-icon .nav-icon-highlight { fill: #e2dfd6; }
+.mobile-app--baseline .van-tabbar-item--active .bottom-nav-filled-icon { fill: currentColor; opacity: 1; }
+.mobile-app--baseline .van-tabbar-item--active .bottom-nav-filled-icon .nav-icon-highlight { fill: currentColor; }
+.bottom-equity-icon.active, .bottom-options-icon.active {
   opacity: 1;
   filter: brightness(0) saturate(100%) invert(62%) sepia(17%) saturate(1317%) hue-rotate(2deg) brightness(93%) contrast(89%);
+}
+
+.mobile-app--baseline .mobile-tabbar .nav-item--equity.van-tabbar-item--active {
+  color: #efc563;
+}
+.mobile-app--baseline .bottom-equity-icon.active {
+  filter: brightness(0) saturate(100%) invert(62%) sepia(17%) saturate(1317%) hue-rotate(2deg) brightness(93%) contrast(89%) brightness(1.25);
 }
 
 @media (min-width: 394px) and (min-height: 853px) {

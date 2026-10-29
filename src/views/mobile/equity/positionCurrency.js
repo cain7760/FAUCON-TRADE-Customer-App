@@ -1,3 +1,4 @@
+import { decimalProduct, truncateDecimal } from './decimalMath.js'
 // 与 Customer PC 的账户概要使用相同演示汇率；不是实时外汇行情。
 export const demoCnyExchangeRates = Object.freeze({ CNY: 1, HKD: 0.92, USD: 7.18 })
 
@@ -8,5 +9,5 @@ export function positionMarginInCny(row, exchangeRates = demoCnyExchangeRates) {
   if (row.marginOccupied == null || rate == null) return null
   const amount = Number(row.marginOccupied)
   const exchangeRate = Number(rate)
-  return Number.isFinite(amount) && Number.isFinite(exchangeRate) && exchangeRate > 0 ? amount * exchangeRate : null
+  return Number.isFinite(amount) && Number.isFinite(exchangeRate) && exchangeRate > 0 ? truncateDecimal(decimalProduct(amount, exchangeRate), 2) : null
 }

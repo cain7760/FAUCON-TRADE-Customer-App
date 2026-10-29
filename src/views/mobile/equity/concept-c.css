@@ -1,0 +1,140 @@
+/* 方案 C 独立命名空间；不覆盖基线、专注交易及下单 A/B 的设计令牌。 */
+.mobile-app--concept-c {
+  --app-color-background: #111315;
+  --app-color-surface: #191b1e;
+  --app-color-card: #1d2024;
+  --app-color-control: #292d33;
+  --app-color-border: #373c43;
+  --app-color-frame: #373c43;
+  --app-color-text: #eceef1;
+  --app-color-text-secondary: #a0a7b2;
+  --app-color-accent: #bb984a;
+  --app-color-accent-soft: #302b22;
+  --app-color-rise: #f27c83;
+  --app-color-fall: #62c5a6;
+  --app-color-sell: #2f7864;
+  caret-color: var(--app-color-accent);
+}
+.mobile-app--concept-c ::selection { background: #57482a; color: #fff; }
+.mobile-app--concept-c .status-bar--equity { background: var(--app-color-surface); }
+.mobile-app--concept-c .equity-workspace { --equity-order-clearance: 12px; }
+.mobile-app--concept-c .equity-page-header { min-height: 64px; padding: 8px 16px; background: var(--app-color-surface); }
+.mobile-app--concept-c .equity-page-header h1 { font-size: 24px; letter-spacing: 0; }
+.mobile-app--concept-c .equity-page-title { align-items: flex-start; flex-direction: column; gap: 0; }
+.mobile-app--concept-c .equity-review-entry { min-height: 24px; font-size: 11px; }
+.mobile-app--concept-c .equity-account { height: 36px; min-height: 36px; padding-left: 14px; gap: 8px; }
+.mobile-app--concept-c .equity-account--compact::before { inset: -4px 0; }
+.mobile-app--concept-c .equity-account b { font-size: 14px; font-weight: 600; }
+.mobile-app--concept-c .equity-list-tabs .van-tabs__wrap { padding-inline: 16px; background: var(--app-color-surface); }
+.mobile-app--concept-c .equity-list-tabs .van-tabs__nav { height: 46px; justify-content: space-between; gap: 8px; }
+.mobile-app--concept-c .equity-list-tabs .van-tab { height: 46px; font-size: 14px; }
+.mobile-app--concept-c .equity-tab-title { gap: 6px; border-bottom-width: 2px; }
+.mobile-app--concept-c .equity-tab-total { min-width: 22px; padding: 1px 6px; line-height: 20px; font-size: 14px; font-weight: 700; }
+.mobile-app--concept-c .equity-toolbar { gap: 8px; padding: 12px 16px 0; }
+.mobile-app--concept-c .equity-search-field { height: 42px; border-radius: 4px; background: #191b1f; }
+.mobile-app--concept-c .equity-search-field input::placeholder { font-size: 14px; }
+.mobile-app--concept-c .equity-filter-trigger { min-width: 76px; height: 42px; gap: 6px; border-radius: 4px; background: #191b1f; font-size: 14px; }
+.mobile-app--concept-c .sheet-actions .van-button--primary,
+.mobile-app--concept-c .equity-order-sheet .ticket-primary { border: 1px solid var(--app-color-accent); background: var(--app-color-accent-soft); color: var(--app-color-accent); }
+.mobile-app--concept-c .equity-view-toolbar { min-height: 46px; padding-inline: 16px; font-size: 11px; gap: 4px; }
+.mobile-app--concept-c .equity-view-switch { gap: 8px; }
+.mobile-app--concept-c .equity-view-switch button { min-height: 44px; padding-inline: 0; gap: 5px; font-size: 14px; }
+.mobile-app--concept-c .equity-view-switch button[aria-pressed="true"] { color: var(--app-color-accent); text-underline-offset: 8px; }
+.mobile-app--concept-c .equity-view-switch svg { width: 18px; height: 18px; }
+
+/* 表格保留完整列，首屏四列；窄于 393px 时横向滚动而非压缩数字。 */
+.mobile-app--concept-c .equity-table-view { padding: 0; }
+.mobile-app--concept-c .equity-table-scroll { border: 0; border-radius: 0; scrollbar-width: thin; }
+.mobile-app--concept-c .equity-data-table { font-size: 14px; }
+.mobile-app--concept-c .equity-data-table :is(th, td) { padding: 6px 12px; padding-inline-start: calc(12px + var(--table-column-gap-before, 0px)); }
+.mobile-app--concept-c .equity-data-table thead th { height: 48px; padding-block: 0; background: #202328; font-size: 12px; }
+.mobile-app--concept-c .equity-data-table .table-symbol { padding: 0; }
+.mobile-app--concept-c .equity-data-table thead .table-symbol { padding-inline: 16px 8px; }
+.mobile-app--concept-c .equity-data-table .table-detail-trigger { min-height: 52px; padding: 7px 8px 7px 16px; }
+.mobile-app--concept-c .equity-data-table .table-symbol-name { font-size: 14px; line-height: 20px; }
+.mobile-app--concept-c .equity-data-table .table-symbol-code { font-size: 12px; line-height: 17px; }
+.mobile-app--concept-c .equity-data-table .table-cell-secondary { margin-top: 3px; }
+.mobile-app--concept-c .equity-data-table .is-selected > * { background: #2b2924; }
+.mobile-app--concept-c .equity-data-table .is-selected > .table-symbol { box-shadow: inset 3px 0 var(--app-color-accent); }
+.mobile-app--concept-c .equity-data-table .table-sort-button { gap: 4px; }
+.mobile-app--concept-c .equity-records { padding: 0 16px 12px; }
+.concept-c-trade-rail { display: flex; flex-shrink: 0; padding: 10px 16px 12px; border-top: 1px solid var(--app-color-border); background: var(--app-color-background); }
+.concept-c-trade-rail .equity-order-entry { position: static; width: 100%; height: 44px; flex-direction: row; gap: 8px; border: 1px solid var(--app-color-accent); border-radius: 8px; background: var(--app-color-accent-soft); color: var(--app-color-accent); box-shadow: none; font-size: 16px; }
+.concept-c-trade-rail .equity-order-entry svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.mobile-app--concept-c .bottom-nav { min-height: 64px; padding-top: 0; }
+.mobile-app--concept-c .mobile-tabbar { --van-tabbar-height: 54px; padding-inline: 8px; }
+
+/* 卡片与底部详情复用同一持仓呈现，不包含任何下单计算。 */
+.concept-c-position { margin-bottom: 12px; border-radius: 12px; background: #202328; overflow: hidden; }
+.concept-c-position-body { display: block; width: 100%; padding: 16px; border: 0; background: transparent; color: var(--app-color-text); text-align: left; }
+button.concept-c-position-body:active { background: rgb(255 255 255 / .025); }
+.concept-c-position-summary { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.concept-c-position-identity { min-width: 0; }
+.concept-c-position-identity h3 { margin: 0; font-size: 18px; font-weight: 600; line-height: 26px; }
+.concept-c-position-identity h3 { display: flex; align-items: center; gap: 7px; }
+.concept-c-position-identity h3 svg { width: 14px; height: 14px; flex-shrink: 0; fill: var(--app-color-text-secondary); }
+.concept-c-position-identity p { margin: 3px 0 0; color: var(--app-color-text-secondary); font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.concept-c-position-profit { min-width: 0; flex-shrink: 0; text-align: right; }
+.concept-c-position-profit > span { display: block; color: var(--app-color-text-secondary); font-size: 11px; line-height: 18px; }
+.concept-c-position-profit strong { display: block; margin-top: 3px; font-size: 23px; font-weight: 400; line-height: 28px; }
+.concept-c-position-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; margin: 20px 0 0; }
+.concept-c-position-metrics > div { min-width: 0; }
+.concept-c-position-metrics dt { color: var(--app-color-text-secondary); font-size: 12px; line-height: 18px; }
+.concept-c-position-metrics dd { margin: 3px 0 0; font-size: 17px; line-height: 23px; overflow-wrap: anywhere; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-body { padding-block: 14px 12px; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-summary { padding-bottom: 10px; border-bottom: 1px solid var(--app-color-border); }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics { gap: 10px 16px; margin-top: 12px; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics > div { display: flex; min-height: 23px; align-items: baseline; justify-content: space-between; gap: 4px; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics dt { font-size: 11px; white-space: nowrap; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics dd { margin: 0; font-size: 16px; text-align: right; }
+.concept-c-position:not(.concept-c-position--drawer) .concept-c-position-footer { min-height: 56px; padding-block: 6px; }
+.concept-c-position-footer { display: flex; min-height: 66px; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; margin: 0 16px; padding-block: 10px; border-top: 1px solid var(--app-color-border); }
+.concept-c-capacity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.concept-c-capacity > span { font-size: 12px; color: var(--app-color-text-secondary); }
+.concept-c-capacity > strong { font-size: 16px; font-weight: 400; overflow-wrap: anywhere; }
+.concept-c-close-position { min-height: 44px; min-width: 112px; flex-shrink: 0; padding: 8px 24px; border: 0; border-radius: 6px; background: var(--app-color-sell); color: #fff; font-size: 16px; font-weight: 600; }
+.concept-c-close-position:enabled:active { filter: brightness(.9); }
+.concept-c-close-position:disabled { background: #343b3a; color: #a8b1ae; cursor: not-allowed; }
+.mobile-app--concept-c .concept-c-position-sheet.van-popup { height: 374px; max-height: calc(100% - 75px); border: 0; border-radius: 18px 18px 0 0; background: #25282e; box-shadow: 0 -8px 30px rgb(0 0 0 / .16); }
+.mobile-app--concept-c .concept-c-position-overlay { background: rgb(0 0 0 / .08); }
+.concept-c-position-sheet > .sheet-handle { width: 36px; height: 3px; min-height: 3px; margin: 10px auto 2px; border-radius: 2px; background: #646c78; }
+.concept-c-position--drawer { display: flex; min-height: 0; flex: 1; flex-direction: column; margin: 0; border-radius: 0; background: none; }
+.concept-c-detail-heading { display: flex; min-height: 44px; align-items: center; justify-content: space-between; flex-shrink: 0; padding: 0 12px 0 20px; }
+.concept-c-detail-heading h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 26px; }
+.concept-c-detail-heading .equity-icon-button { width: 44px; height: 44px; }
+.concept-c-detail-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 0; scrollbar-width: thin; scrollbar-color: #646c78 transparent; }
+.concept-c-detail-scroll:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -3px; }
+.concept-c-position--drawer .concept-c-position-summary { padding-bottom: 10px; border-bottom: 1px solid var(--app-color-border); }
+.concept-c-position--drawer .concept-c-position-identity h3 { font-size: 20px; line-height: 28px; }
+.concept-c-position--drawer .concept-c-position-profit strong { font-size: 25px; line-height: 28px; }
+.concept-c-position--drawer .concept-c-position-metrics { gap: 14px 24px; margin-top: 10px; }
+.concept-c-position--drawer .concept-c-position-metrics dt { line-height: 17px; }
+.concept-c-position--drawer .concept-c-position-metrics dd { margin-top: 2px; font-size: 18px; line-height: 22px; }
+.concept-c-position--drawer .concept-c-position-footer { min-height: 70px; margin-inline: 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.concept-c-additional-info { margin-top: 18px; padding-top: 8px; border-top: 1px solid var(--app-color-border); }
+.concept-c-additional-info h3 { margin: 12px 0; color: var(--app-color-text); font-size: 13px; font-weight: 600; }
+.concept-c-additional-info dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; margin: 0 0 20px; }
+.concept-c-additional-info dl > div { min-width: 0; }
+.concept-c-additional-info .is-long { grid-column: 1 / -1; }
+.concept-c-additional-info dt { color: var(--app-color-text-secondary); font-size: 12px; }
+.concept-c-additional-info dd { margin: 4px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+@media (max-width: 359px) {
+  .mobile-app--concept-c .equity-page-header { padding-inline: 12px; }
+  .mobile-app--concept-c .equity-page-header h1 { font-size: 22px; }
+  .mobile-app--concept-c .equity-list-tabs .van-tabs__wrap { padding-inline: 12px; }
+  .mobile-app--concept-c .equity-list-tabs .van-tab { font-size: 13px; }
+  .mobile-app--concept-c .equity-tab-title { gap: 4px; }
+  .mobile-app--concept-c .equity-toolbar { padding-inline: 12px; }
+  .mobile-app--concept-c .equity-view-toolbar { padding-inline: 12px; font-size: 10px; }
+  .mobile-app--concept-c .equity-view-switch { gap: 6px; }
+  .concept-c-position-body { padding-inline: 12px; }
+  .concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics > div { display: block; }
+  .concept-c-position:not(.concept-c-position--drawer) .concept-c-position-metrics dd { margin-top: 3px; text-align: left; }
+  .concept-c-position-profit strong { font-size: 20px; }
+  .concept-c-position--drawer .concept-c-position-profit strong { font-size: 23px; }
+  .concept-c-position-footer { margin-inline: 12px; gap: 8px; }
+  .concept-c-close-position { min-width: 92px; padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app--concept-c .van-popup, .mobile-app--concept-c .van-overlay { transition-duration: .01ms !important; }
+}

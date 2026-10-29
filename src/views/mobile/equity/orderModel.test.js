@@ -70,7 +70,7 @@ test('金额预估按分计算，不受浮点截断误差影响', () => {
   assert.equal(estimate({ ...draft, price: 11.79, value: 20000 }).buyAmount, 235800)
   const d = { ...draft, price: 11.789 }
   assert.match(orderError(d, symbol, estimate(d), 'buy'), /两位小数/)
-  const fractional = { ...draft, value: 1.01, unit: 'wan' }
+  const fractional = { ...draft, value: 1.00001, unit: 'wan' }
   assert.match(orderError(fractional, symbol, estimate(fractional), 'buy'), /整数/)
 })
 test('重复点击价格或数量模式不丢输入，真正切换才重置', () => {

@@ -1,0 +1,131 @@
+/* 新版专注交易：局部主题保证原版与下单 A/B 基线不受影响。 */
+.mobile-app--focus {
+  --app-color-background: #121821;
+  --app-color-surface: #19212c;
+  --app-color-card: #19212c;
+  --app-color-control: #242e3c;
+  --app-color-border: #2b3543;
+  --app-color-frame: #3b4758;
+  --app-color-text: #f1f4f8;
+  --app-color-text-secondary: #a8b3c2;
+  --app-color-accent: #d8b56a;
+  --app-color-accent-soft: #383329;
+  --app-color-rise: #f38b94;
+  --app-color-fall: #6dcbb0;
+  --app-color-buy: #ac4356;
+  --app-color-sell: #287760;
+  --van-background: var(--app-color-background);
+  --van-background-2: var(--app-color-surface);
+  --van-background-3: var(--app-color-control);
+  --van-text-color: var(--app-color-text);
+  --van-text-color-2: var(--app-color-text-secondary);
+  --van-border-color: var(--app-color-border);
+  --van-primary-color: var(--app-color-accent);
+  --van-button-primary-background: var(--app-color-accent-soft);
+  --van-button-primary-color: var(--app-color-accent);
+  --van-button-primary-border-color: var(--app-color-accent);
+  --van-tabbar-item-text-color: var(--app-color-text-secondary);
+  color-scheme: dark;
+}
+.mobile-app--focus ::selection { background: var(--app-color-accent); color: var(--app-color-background); }
+.mobile-app--focus :is(input,textarea) { caret-color: var(--app-color-accent); }
+.mobile-app--focus :is(button,a,select):focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: 2px; }
+.mobile-app--focus .equity-workspace { --equity-order-clearance: 0px; }
+.mobile-app--focus :is(.status-bar--equity,.equity-page-header,.equity-list-tabs .van-tabs__wrap) { background: var(--app-color-background); }
+.mobile-app--focus .equity-page-header { min-height: 68px; padding: 0 20px 8px; }
+.mobile-app--focus .equity-page-header h1 { font-size: 24px; letter-spacing: 0; font-weight: 650; }
+.mobile-app--focus .equity-page-title { display: block; }
+.mobile-app--focus .equity-review-entry { min-height: 24px; font-size: 11px; }
+.mobile-app--focus .equity-account { min-height: 36px; padding-left: 10px; padding-right: 8px; gap: 6px; background: var(--app-color-surface); border: 1px solid var(--app-color-border); border-radius: 8px; }
+.mobile-app--focus .equity-account b { font-size: 12px; }
+.mobile-app--focus .equity-list-tabs { --van-tab-font-size: 15px; }
+.mobile-app--focus .equity-list-tabs .van-tabs__wrap { padding: 0 20px; border-bottom-color: var(--app-color-border); }
+.mobile-app--focus .equity-list-tabs .van-tabs__nav { justify-content: space-between; height: 48px; gap: 8px; }
+.mobile-app--focus .equity-list-tabs .van-tab { height: 48px; }
+.mobile-app--focus .equity-tab-title { gap: 5px; border-bottom-width: 3px; }
+.mobile-app--focus .equity-tab-total { min-width: 0; padding: 0; background: none; color: var(--app-color-text-secondary); font-size: 12px; }
+.mobile-app--focus .van-tab--active .equity-tab-total { color: var(--app-color-accent); }
+.mobile-app--focus .equity-toolbar { padding: 16px 20px 0; gap: 8px; }
+.mobile-app--focus .equity-tab-panel.is-trades .equity-toolbar { padding-bottom: 0; }
+.mobile-app--focus .equity-search-field { height: 44px; border-color: transparent; border-radius: 8px; background: var(--app-color-surface); }
+.mobile-app--focus .equity-search-field:focus-within { border-color: var(--app-color-accent); }
+.mobile-app--focus .equity-search-field input { padding-left: 2px; }
+.mobile-app--focus .equity-filter-trigger { min-width: 44px; height: 44px; padding: 0 10px; border-color: var(--app-color-border); border-radius: 8px; background: transparent; }
+.mobile-app--focus .equity-filter-trigger > span { display: none; }
+.focus-view-toolbar { display: flex; min-height: 52px; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 0 20px; color: var(--app-color-text-secondary); font-size: 12px; }
+.focus-view-switch { display: flex; flex-shrink: 0; gap: 0; }
+.focus-view-switch button { min-height: 44px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: var(--app-color-text-secondary); font-size: 12px; }
+.focus-view-switch button[aria-pressed="true"] { color: var(--app-color-text); font-weight: 600; }
+.focus-trade-rail { display: flex; min-height: 68px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 20px; background: var(--app-color-surface); border-top: 1px solid var(--app-color-border); }
+.focus-trade-rail > span { font-size: 11px; color: var(--app-color-text-secondary); }
+.focus-trade-rail .equity-order-entry { position: static; width: auto; min-width: 132px; height: 44px; flex-direction: row; gap: 8px; border: 1px solid var(--app-color-accent); border-radius: 8px; background: var(--app-color-accent-soft); box-shadow: none; color: var(--app-color-accent); font-size: 15px; font-weight: 650; }
+.focus-trade-rail .equity-order-entry svg { width: 18px; height: 18px; }
+.mobile-app--focus .bottom-nav { min-height: 64px; background: var(--app-color-background); border-top: 0; }
+.mobile-app--focus .mobile-tabbar { --van-tabbar-height: 48px; padding-inline: 10px; }
+.mobile-app--focus .nav-item { --van-tabbar-item-font-size: 11px; }
+.mobile-app--focus .equity-data-table { font-size: 12px; }
+.mobile-app--focus .equity-table-view { padding: 0 20px; }
+.mobile-app--focus .equity-table-scroll { border-radius: 8px; }
+.mobile-app--focus .equity-filter-sheet.van-popup { border: 0; border-radius: 16px 16px 0 0; background: var(--app-color-surface); }
+.mobile-app--focus .sheet-handle { width: 36px; margin-top: 10px; background: #566173; }
+.mobile-app--focus .sheet-heading { min-height: 64px; padding-inline: 20px; }
+.mobile-app--focus :is(.filter-chip,.equity-filter-input.van-field) { border-radius: 8px; background: var(--app-color-background); }
+.mobile-app--focus .filter-group { margin-bottom: 24px; }
+.mobile-app--focus .account-options { border: 0; border-radius: 8px; }
+.mobile-app--focus .account-option { min-height: 60px; padding: 12px; background: var(--app-color-background); }
+.mobile-app--focus .sheet-actions .van-button { border-radius: 8px; }
+.mobile-app--focus .sheet-actions .van-button--primary { color: var(--app-color-accent); }
+/* 交易详情沿用一个表单和原有提交逻辑；层级由局部组件外观承载。 */
+.mobile-app--focus .ticket-reference-layout.van-popup { background: var(--app-color-background); }
+.mobile-app--focus .ticket-reference-layout > .order-sheet-heading { min-height: 60px; padding-inline: 20px 12px; }
+.mobile-app--focus .ticket-workspace { padding-inline: 20px; }
+.mobile-app--focus .ticket-execution { margin-bottom: 16px; border-radius: 8px; padding: 3px; border: 0; background: var(--app-color-surface); }
+.mobile-app--focus .ticket-execution button { min-height: 32px; border-radius: 6px; }
+.mobile-app--focus .ticket-execution button[aria-pressed="true"] { box-shadow: none; background: var(--app-color-control); color: var(--app-color-accent); }
+.mobile-app--focus .ticket-symbol-control { min-height: 80px; padding: 8px 0 16px; border: 0; border-bottom: 1px solid var(--app-color-border); border-radius: 0; background: transparent; }
+.mobile-app--focus .ticket-symbol-control:focus-within { outline-offset: 3px; }
+.mobile-app--focus .ticket-symbol-identity strong { font-size: 20px; }
+.mobile-app--focus .ticket-symbol-tags > :is(b,span) { padding: 0 4px; border: 0; background: var(--app-color-control); color: var(--app-color-text-secondary); }
+.mobile-app--focus .ticket-trading-stack--split { gap: 16px; }
+.mobile-app--focus .ticket-caption { margin-bottom: 8px; }
+.mobile-app--focus .app-form-label { font-size: 12px; color: var(--app-color-text-secondary); }
+.mobile-app--focus :is(.ticket-number-control,.ticket-market-price,.ticket-algorithm-row > button) { border: 1px solid var(--app-color-frame); border-radius: 8px; background: var(--app-color-surface); }
+.mobile-app--focus .ticket-number-control { overflow: hidden; }
+.mobile-app--focus .ticket-number-control :is(input,select,button) { background-color: transparent; }
+.mobile-app--focus .ticket-price-control > button { width: 26px; color: var(--app-color-text-secondary); }
+.mobile-app--focus .ticket-price-control input { font-size: 20px; padding: 0; }
+.mobile-app--focus .ticket-size-value input { font-size: 20px; }
+.mobile-app--focus .ticket-fractions { grid-template-rows: 44px 14px; height: 58px; margin-top: 0; }
+.mobile-app--focus .ticket-fractions input[type="range"] { height: 44px; }
+.mobile-app--focus .ticket-fractions input[type="range"]::-webkit-slider-thumb { width: 16px; height: 16px; margin-top: -6px; }
+.mobile-app--focus .ticket-fractions input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; }
+.mobile-app--focus .ticket-algorithm-heading { padding-right: 0; gap: 4px; }
+.mobile-app--focus .ticket-algorithm-row > button { padding-inline: 10px; }
+.mobile-app--focus .ticket-segment { border: 0; border-radius: 4px; background: var(--app-color-control); }
+.mobile-app--focus .ticket-segment button { min-height: 28px; padding-inline: 6px; border-radius: 4px; }
+.mobile-app--focus .ticket-segment button[aria-pressed="true"] { box-shadow: none; background: var(--app-color-accent-soft); color: var(--app-color-accent); }
+.mobile-app--focus .ticket-book-depths button { border-radius: 2px; }
+.mobile-app--focus .ticket-order-actions { padding: 14px 20px 10px; border-top: 1px solid var(--app-color-border); background: var(--app-color-surface); }
+.mobile-app--focus .ticket-trade-buttons button { height: 48px; border-radius: 8px; font-size: 17px; }
+.mobile-app--focus .ticket-estimate-column dd { font-size: 14px; }
+.mobile-app--focus .ticket-summary-footer { margin-top: 12px; }
+.focus-account-scope { margin: 0 0 8px; color: var(--app-color-text-secondary); font-size: 11px; line-height: 16px; }
+.mobile-app--focus .equity-algorithm-dialog.van-popup { border-radius: 16px; background: var(--app-color-surface); }
+.mobile-app--focus .ticket-secondary-actions button { border-radius: 8px; }
+.mobile-app--focus .ticket-primary { border: 1px solid var(--app-color-accent); background: var(--app-color-accent-soft); color: var(--app-color-accent); }
+.mobile-app--focus .ticket-confirm h3 { padding-block: 12px; font-size: 20px; }
+.mobile-app--focus .ticket-confirm dl > div { min-height: 44px; }
+.focus-system-control { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; border: 0; padding: 0; background: none; color: var(--app-color-text-secondary); font-size: 11px; text-align: left; }
+.focus-system-control b { color: var(--app-color-text); font-size: 12px; font-weight: 500; }
+.focus-system-control[aria-pressed="false"] b { color: var(--app-color-rise); }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app--focus *, .mobile-app--focus *::before, .mobile-app--focus *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 360px) {
+  .mobile-app--focus :is(.equity-page-header,.equity-list-tabs .van-tabs__wrap,.focus-view-toolbar,.focus-trade-rail) { padding-inline: 16px; }
+  .mobile-app--focus :is(.equity-toolbar,.ticket-workspace,.ticket-order-actions) { padding-inline: 16px; }
+  .mobile-app--focus .ticket-trading-stack--split { gap: 12px; }
+  .mobile-app--focus .ticket-caption { flex-wrap: wrap; gap: 4px; }
+  .mobile-app--focus .ticket-caption > .ticket-segment { margin-left: 0; }
+  .mobile-app--focus .ticket-symbol-identity strong { font-size: 18px; }
+}

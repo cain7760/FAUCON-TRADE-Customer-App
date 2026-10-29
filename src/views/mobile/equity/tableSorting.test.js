@@ -28,7 +28,40 @@ test('市值与可用数量共用双行列，浮动盈亏位于含标的的第�
   assert.deepEqual(ids(sortTableRecords(rows, 'positions', combined, 'ascending')), ['low', 'high'])
   assert.deepEqual(ids(sortTableRecords(rows, 'positions', combined, 'descending')), ['high', 'low'])
 })
-test('三表表头不附加股单位，保留金额币种和单元格单位', () => {
+test('基线持仓数量与可用数量双行显示，市值独立且仍按各自主值排序', () => {
+  const positions = recordTableColumns('positions', 'baseline')
+  const quantity = positions.find(item => item.key === 'holdingQty')
+  const value = positions.find(item => item.key === 'valueWan')
+  assert.equal(quantity.secondTitle, '可用数量')
+  assert.equal(quantity.value({ qty: 12500 }), '12,500')
+  assert.equal(quantity.second({ available: 10000.125 }), '10,000.125')
+  assert.equal(quantity.second({ available: 0 }), '0')
+  assert.equal(quantity.second({}), '--')
+  assert.equal(quantity.secondTone(), 'equity-accent')
+  assert.equal(value.value({ value: 86500 }), '86,500.00')
+  assert.equal(value.secondTitle, undefined)
+  assert.equal(value.second, undefined)
+  const rows = [{ id: 'high', qty: 1000, available: 1, value: 2 }, { id: 'low', qty: 2, available: 10000, value: 1000 }]
+  assert.deepEqual(ids(sortTableRecords(rows, 'positions', quantity, 'ascending')), ['low', 'high'])
+  assert.deepEqual(ids(sortTableRecords(rows, 'positions', value, 'ascending')), ['high', 'low'])
+  assert.equal(recordTableColumns('positions', 'c').find(item => item.key === 'valueWan').secondTitle, '可用数量')
+})
+test('基线持仓前五列不变，后续按 Customer Web 默认字段补期初数量并排除备注', () => {
+  const columns = recordTableColumns('positions', 'baseline')
+  assert.deepEqual(columns.slice(0, 4).map(column => column.key), ['price', 'floatingProfit', 'holdingQty', 'valueWan'])
+  assert.deepEqual(columns.slice(4).map(column => column.key), ['opening', 'marginOccupied', 'marginRate', 'account', 'market', 'currency', 'direction'])
+  const opening = columns.find(column => column.key === 'opening')
+  assert.equal(opening.value({ opening: 9300.125 }), '9,300.125')
+  assert.equal(opening.value({}), '0')
+  const rows = [{ id: 'large', opening: 10000 }, { id: 'small', opening: 2 }, { id: 'empty' }]
+  assert.deepEqual(ids(sortTableRecords(rows, 'positions', opening, 'ascending')), ['empty', 'small', 'large'])
+  for (const design of ['default', 'c']) {
+    const keys = recordTableColumns('positions', design).map(column => column.key)
+    assert.ok(keys.includes('orderRemark') && keys.includes('traderRemark'))
+    assert.ok(!keys.includes('opening'))
+  }
+})
+test('纯数量单元格不附加股，订单数量/金额列及货币单位除外', () => {
   for (const kind of ['positions', 'orders', 'trades']) {
     for (const item of recordTableColumns(kind)) {
       assert.doesNotMatch(`${item.title}${item.secondTitle || ''}`, /[（(]\s*股\s*[）)]/)
@@ -38,6 +71,11 @@ test('三表表头不附加股单位，保留金额币种和单元格单位', ()
   assert.equal(column('trades', 'filledQuantity').secondTitle, undefined)
   assert.equal(column('positions', 'marginOccupied').secondTitle, '（CNY）')
   assert.match(column('orders', 'orderValueNumber').value({ quantity: 800 }), /股$/)
+  assert.equal(column('orders', 'filledQuantity').value({ filledQuantity: 1200 }), '1,200')
+  assert.equal(column('orders', 'reportQuantity').value({ reportQuantity: 3000 }), '3,000')
+  assert.equal(column('trades', 'filledQuantity').value({ filledQuantity: 1200 }), '1,200')
+  assert.equal(column('orders', 'orderValueNumber').value({ inputAmount: 1917, currency: 'CNY' }), '1,917.00 元')
+  assert.equal(column('orders', 'orderValueNumber').value({ inputAmount: 1917, currency: 'HKD' }), '1,917.00 HKD')
 })
 test('持仓三列仅在账户和市场前增加 8px 间距，不影响其他表格', () => {
   const positions = recordTableColumns('positions')

@@ -8,14 +8,16 @@ import * as model from './model.js'
 import * as orderModel from './orderModel.js'
 import * as orderActions from './orderActions.js'
 import * as marketRules from './orderMarketRules.js'
+import * as decimal from './decimalMath.js'
+import * as calculations from './orderCalculations.js'
 import { orderAccountOverview } from './accountOverview.js'
 
 function setup(result) {
   const toasts = [], events = []
   const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: 'amend-feedback-test' }).content
-  const imports = { ...vue, ...fixtures, ...model, ...orderModel, ...orderActions, ...marketRules, orderAccountOverview,
-    showSuccessToast: message => toasts.push(message), EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityAccountSummary: {} }
+  const imports = { ...vue, ...fixtures, ...model, ...orderModel, ...orderActions, ...marketRules, ...decimal, ...calculations, orderAccountOverview,
+    showSuccessToast: message => toasts.push(message), EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityAccountSummary: {} }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   const record = { ...fixtures.orderInstruments[0], id: 'one', account: 'TZS_T0', orderType: '系统单', type: 'limit', side: 'buy',
     quantity: 1000, filledQuantity: 0, status: '已报', price: 12 }

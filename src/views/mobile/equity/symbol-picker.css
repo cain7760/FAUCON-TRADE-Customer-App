@@ -13,10 +13,12 @@
 .symbol-picker .symbol-search-control input::placeholder { font-size: 13px; }
 .symbol-picker .symbol-search-control input:focus-visible { outline: none; }
 .symbol-picker-tabs { display: flex; flex-shrink: 0; margin: 0 12px; border-bottom: 1px solid var(--app-color-border); }
-.symbol-picker .symbol-picker-tabs button { position: relative; min-height: 44px; flex: 1; padding: 0 6px; border: 0; background: transparent; color: var(--app-color-text-secondary); font-size: 13px; }
+.symbol-picker .symbol-picker-tabs button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; flex: 1; padding: 0 6px; border: 0; background: transparent; color: var(--app-color-text-secondary); font-size: 13px; }
 .symbol-picker-tabs button[aria-pressed="true"] { color: var(--app-color-text); font-weight: 600; }
 .symbol-picker-tabs button[aria-pressed="true"]::after { position: absolute; bottom: 0; left: 50%; width: 28px; height: 2px; transform: translateX(-50%); background: var(--app-color-accent); content: ''; }
 .symbol-list-caption { display: flex; flex-shrink: 0; justify-content: space-between; padding: 14px 24px 8px; color: var(--app-color-text-secondary); font-size: 11px; }
+/* 与权益表格共用表头底色、分隔线，名称与代码仍沿结果列对齐。 */
+.mobile-app--baseline .symbol-list-caption { height: 48px; align-items: center; padding-block: 0; border-bottom: 1px solid var(--table-row-divider); background: var(--table-header-surface); font-size: 12px; font-weight: 400; line-height: 16px; }
 .symbol-picker-results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px max(12px, env(safe-area-inset-bottom)); scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
 .symbol-picker .symbol-select { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--app-color-border); background: transparent; color: var(--app-color-text); text-align: left; }
 .symbol-select.is-current { border-radius: 3px; background: var(--app-color-accent-soft); }

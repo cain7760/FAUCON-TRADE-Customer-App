@@ -1,4 +1,5 @@
 import { positionMarginInCny } from './positionCurrency.js'
+import { activeOrderStatuses, averageFillPrice, canceledValue, filledAmount, frozenMargin } from './orderCalculations.js'
 
 const collator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
 const numericKeys = new Set(['opening', 'available', 'marginRate', 'floatingProfit', 'filledQuantity', 'filledPrice', 'frozenMargin', 'reportQuantity'])
@@ -13,13 +14,15 @@ export function tableSortValue(kind, column, row) {
     case 'opening': return row.opening ?? 0
     case 'valueWan': return row.value
     case 'marginOccupied': return positionMarginInCny(row)
-    case 'filledAmount': return kind === 'orders' ? row.filledQuantity > 0 && row.filledPrice > 0 ? row.filledQuantity * row.filledPrice : null : row.filledAmount
+    case 'filledAmount': return kind === 'orders' ? filledAmount(row) : row.filledAmount
+    case 'filledPrice': return averageFillPrice(row)
+    case 'frozenMargin': return row.side === 'buy' && row.marginRate != null && activeOrderStatuses.has(row.status) ? frozenMargin(row) : null
     case 'fillProgress': return row.quantity > 0 ? Math.min(1, Math.max(0, row.filledQuantity / row.quantity)) : null
     case 'orderTime': return row.orderTime
     case 'filledTime': return row.filledTime
     // 同列包含股数/金额时先按单位分组，避免把 100 元与 100 股直接比较。
     case 'orderValueNumber': return row.inputAmount != null ? [1, row.orderValueNumber ?? row.inputAmount] : [0, row.quantity]
-    case 'canceledValue': return row.canceledAmount ? [1, row.canceledAmount] : [0, row.canceledQuantity]
+    case 'canceledValue': return [row.inputAmount != null ? 1 : 0, canceledValue(row)]
     default: return numericKeys.has(column.key) ? row[column.key] : column.value(row)
   }
 }

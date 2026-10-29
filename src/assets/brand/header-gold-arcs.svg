@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300" fill="none">
+  <defs>
+    <linearGradient id="edge" x1="190" y1="0" x2="560" y2="290" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BB984A" stop-opacity=".08"/>
+      <stop offset=".48" stop-color="#DEC58D" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#BB984A" stop-opacity=".16"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="260" y1="0" x2="550" y2="270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BB984A" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#BB984A" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#BB984A" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="570" cy="-80" r="330" stroke="url(#metal)" stroke-width="40"/>
+  <circle cx="570" cy="-80" r="310" stroke="url(#edge)" stroke-width="1.5"/>
+  <circle cx="570" cy="-80" r="350" stroke="url(#edge)" stroke-width="1"/>
+  <circle cx="570" cy="-80" r="390" stroke="url(#edge)" stroke-opacity=".45" stroke-width="1"/>
+</svg>

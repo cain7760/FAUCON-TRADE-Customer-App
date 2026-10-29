@@ -1,4 +1,5 @@
 <script setup>
+import EquitySheetClose from './EquitySheetClose.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { accountLabel, activityText, formatNumber, orderPrice, orderQuantity, sideLabel } from './model.js'
 import { remainingQuantity } from './orderActions.js'
@@ -22,7 +23,7 @@ function handleKeyboard(event) {
 <template>
   <van-popup :show="show" position="bottom" round class="equity-filter-sheet equity-order-sheet order-operation-sheet" overlay-class="equity-sheet-overlay" :duration=".2" :aria-label="title" aria-modal="true" @update:show="emit('update:show', $event)" @opened="nextTick(() => closeButton?.focus())" @closed="emit('closed')" @keydown="handleKeyboard">
     <div class="sheet-handle" aria-hidden="true"></div>
-    <header class="order-sheet-heading"><h2>{{ title }}</h2><button ref="closeButton" type="button" class="equity-icon-button" aria-label="关闭订单操作" @click="close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
+    <header class="order-sheet-heading"><h2>{{ title }}</h2><EquitySheetClose ref="closeButton" aria-label="关闭订单操作" @click="close" /></header>
     <div class="order-entry-scroll ticket-confirm">
       <h3>{{ row.name }} <small>{{ row.code }}</small></h3>
       <template v-if="result"><p role="status">{{ result }}</p></template>
@@ -45,7 +46,6 @@ function handleKeyboard(event) {
           <p v-else class="ticket-help">暂无操作记录。</p>
         </template>
         <label v-if="context.action === 'convert'" class="ticket-note"><span class="app-form-label">下单备注 <small>{{ note.length }}/200</small></span><textarea v-model="note" maxlength="200" rows="3" placeholder="请输入备注"></textarea></label>
-        <p v-if="context.action !== 'history'" class="ticket-help">{{ context.action === 'cancel' ? '只撤回未成交部分，已成交部分保持不变。' : context.action === 'convert' ? '转换后保留原订单编号、价格、数量及状态，交由交易员处理。' : '' }}</p>
         <p v-if="error" class="ticket-error" role="alert">{{ error }}</p>
       </template>
     </div>
@@ -55,6 +55,7 @@ function handleKeyboard(event) {
 
 <style scoped>
 .order-operation-sheet { max-height: min(720px, calc(100% - 60px)); }
+.ticket-confirm > .ticket-note { margin-top: 16px; }
 .order-history-title { margin-top: 24px; font-size: 14px; }
 .order-history { padding: 0; list-style: none; }
 .order-history li { padding: 12px 0; border-bottom: 1px solid var(--app-color-border); font-size: 13px; }

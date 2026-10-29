@@ -1,14 +1,23 @@
-/* Customer 参数不变；40px 输入框与紧凑标题适配手机票据。 */
+/* 图稿试版：顶置双边盘口，参数成对排列，底部操作独立于滚动正文。 */
 .equity-order-sheet.van-popup { height: calc(100% - 59px); }
+.ticket-reference-layout.van-popup { border-radius: 4px 4px 0 0; background: var(--app-color-surface); }
 .equity-order-sheet.equity-account-sheet.van-popup { height: auto; max-height: min(70%, 440px); }
+.equity-order-sheet.equity-algorithm-dialog.van-popup { position: absolute; display: flex; width: calc(100% - 32px); max-width: 352px; height: auto; max-height: calc(100% - 96px); flex-direction: column; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-card); }
+.equity-algorithm-dialog .order-entry-scroll { padding-top: 8px; }
+.ticket-entry-sheet .order-sheet-heading { min-height: 48px; }
+.ticket-reference-layout > .order-sheet-heading { min-height: 56px; padding: 0 16px; }
+.ticket-entry-sheet .order-sheet-heading h2 { font-size: 18px; }
+.ticket-entry-sheet .order-sheet-heading .equity-icon-button { width: 44px; height: 44px; min-height: 44px; }
 .equity-account-sheet .order-sheet-heading { min-height: 44px; padding-right: 16px; }
 .equity-account-sheet .order-sheet-heading .equity-icon-button { width: 44px; height: 44px; min-height: 44px; }
 .order-sheet-heading { display: flex; min-height: 36px; flex-shrink: 0; align-items: center; padding: 0 12px 0 16px; gap: 8px; }
 .order-sheet-heading h2 { margin: 0; font-size: 16px; font-weight: 600; }
-.order-sheet-heading .equity-icon-button { width: 36px; height: 36px; min-height: 36px; }
+.order-sheet-heading .equity-icon-button:not(.equity-sheet-close) { width: 36px; height: 36px; min-height: 36px; }
 .order-sheet-heading h2:focus { outline: none; }
 .order-sheet-heading > .equity-icon-button:last-child { margin-left: auto; }
 .order-entry-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 16px; scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+/* 四个业务模块使用统一背景，以标题、留白和分隔线组织，不使用卡片外框。 */
+.ticket-module { min-width: 0; }
 .equity-order-sheet button, .equity-order-sheet input, .equity-order-sheet select, .equity-order-sheet textarea { font: inherit; }
 .equity-order-sheet button { cursor: pointer; touch-action: manipulation; }
 .equity-order-sheet :is(input, select, textarea) { min-width: 0; color: var(--app-color-text); border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); font-size: 16px; caret-color: var(--app-color-accent); }
@@ -20,75 +29,189 @@
 .equity-order-sheet button:disabled { cursor: not-allowed; opacity: .45; }
 .equity-order-sheet button:not(:disabled):active { filter: brightness(.88); }
 .ticket-segment { display: inline-flex; padding: 0; gap: 0; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); }
-.ticket-segment button { min-height: 28px; padding: 0 12px; border: 0; border-radius: 2px; color: var(--app-color-text-secondary); background: transparent; font-size: 12px; }
-.ticket-segment button[aria-pressed="true"] { color: #fff; background: var(--app-color-accent); font-weight: 600; }
+.ticket-segment button { min-height: 24px; padding: 0 8px; border: 0; border-radius: 2px; color: var(--app-color-text-secondary); background: transparent; font-size: 11px; line-height: 1; }
+.ticket-segment button[aria-pressed="true"] { color: var(--app-color-background); background: var(--app-color-accent); font-weight: 600; }
 .ticket-execution { display: flex; margin-bottom: 8px; }
 .ticket-execution button { flex: 1; }
 .ticket-execution button { min-height: 32px; }
-.ticket-account { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin-bottom: 8px; padding-bottom: 8px; }
-.ticket-account > span { display: flex; align-items: center; min-height: 28px; }
-.ticket-account button { display: flex; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 8px; padding: 6px var(--app-chevron-inset); border: 1px solid var(--app-color-frame); border-radius: 3px; color: var(--app-color-text); background: var(--app-color-control); font-size: 12px; text-align: left; }
-.ticket-account button span { overflow-wrap: anywhere; }
+.ticket-order-context { margin-bottom: 16px; padding-bottom: 0; }
+.ticket-header-account { min-width: 0; margin: 0 0 0 auto; }
+.ticket-reference-layout > .order-sheet-heading > .equity-icon-button:last-child { margin-left: 0; }
 .ticket-field { margin-bottom: 8px; }
 .ticket-caption { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-bottom: 6px; color: var(--app-color-text-secondary); font-size: 12px; }
 .ticket-caption > .ticket-segment, .ticket-symbol-tags { margin-left: auto; }
-.ticket-symbol-tags { display: flex; align-items: center; gap: 8px; font-family: var(--app-font-family-numeric); }
-.ticket-symbol-tags b { font-weight: 400; }
-.ticket-symbol-tags > span, .ticket-lot { padding: 3px 5px; border-radius: 2px; background: var(--app-color-control); font-size: 11px; }
-/* 复用 Customer symbol-tags 的外观，保留移动端现有字号、内边距和间距。 */
-.ticket-symbol-tags b, .ticket-symbol-tags > span { border-radius: 2px; background: #3b362a; color: #cbb587; }
-.ticket-symbol-control { display: flex; min-height: 40px; align-items: center; background: var(--app-color-control); border: 1px solid var(--app-color-frame); border-radius: 3px; }
-.ticket-symbol-control > button:first-child { flex: 1; min-width: 0; min-height: 38px; padding: 6px 10px; border: 0; background: transparent; color: var(--app-color-text); text-align: left; overflow-wrap: anywhere; }
-.ticket-symbol-control strong { font-size: 14px; font-weight: 600; }
-.ticket-symbol-control .equity-icon-button { width: 36px; height: 36px; min-height: 36px; }
-.ticket-symbol-control .app-numeric { font-size: 14px; color: var(--app-color-text-secondary); }
+.ticket-symbol-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-family: var(--app-font-family-numeric); }
+/* 两个标签统一视觉尺寸，宽度仅随内容长度变化。 */
+.ticket-symbol-tags > :is(b, span) { display: inline-flex; height: 18px; align-items: center; padding: 0 4px; border-radius: 2px; background: #3b362a; color: #cbb587; font-size: 11px; font-weight: 400; line-height: 14px; white-space: nowrap; }
+.ticket-symbol-field { margin-bottom: 0; }
+.ticket-symbol-control { display: flex; min-height: 76px; align-items: center; gap: 8px; padding: 8px 4px 8px 12px; background: var(--app-color-background); border: 1px solid var(--app-color-border); border-radius: 4px; }
+.ticket-symbol-control > button:first-child { display: grid; flex: 1; min-width: 0; min-height: 52px; align-content: center; gap: 4px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--app-color-text); text-align: left; overflow-wrap: anywhere; }
+.ticket-symbol-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; }
+.ticket-symbol-identity strong { font-size: 18px; font-weight: 600; }
+.ticket-symbol-identity .app-numeric { font-size: 12px; color: var(--app-color-text-secondary); }
+.ticket-symbol-control .ticket-symbol-tags { margin-left: 0; }
+.ticket-symbol-control .equity-icon-button { width: 32px; min-width: 32px; height: 44px; min-height: 44px; }
+.mobile-app--baseline .ticket-entry-sheet .ticket-symbol-control .equity-icon-button svg { width: 16px; height: 16px; }
+.ticket-symbol-quote { display: grid; flex-shrink: 0; justify-items: end; gap: 2px; font-size: 12px; white-space: nowrap; }
+.ticket-symbol-quote strong { font-size: 24px; font-weight: 600; line-height: 28px; }
+.ticket-symbol-quote > span { line-height: 18px; }
+.ticket-symbol-placeholder { color: var(--app-color-text-secondary); }
 .ticket-symbol-control > button:disabled { opacity: 1; }
-.ticket-number-control { display: flex; height: 40px; padding: 0; align-items: stretch; gap: 0; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); }
-.ticket-number-control:focus-within, .ticket-symbol-control:focus-within { border-color: var(--app-color-accent); }
-.ticket-number-control input { flex: 1; width: 0; padding: 0 10px; border: 0; text-align: left; font-family: var(--app-font-family-numeric); font-size: 17px; }
+.ticket-number-control { display: flex; height: 36px; padding: 0; align-items: stretch; gap: 0; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); }
+/* 组合控件只绘制一组统一的外层焦点环，避免内部控件描边与边框叠加。 */
+:is(.ticket-number-control, .ticket-percentage-control, .ticket-symbol-control):focus-within { border-color: var(--app-color-accent); outline: 1px solid var(--app-color-accent); outline-offset: 0; }
+.equity-order-sheet :is(.ticket-number-control, .ticket-percentage-control, .ticket-symbol-control) :is(input, select, button):focus-visible { outline: none; }
+.equity-order-sheet :is(.ticket-number-control, .ticket-symbol-control) :is(button, select):focus-visible { color: var(--app-color-accent); background: var(--app-color-accent-soft); }
+.ticket-number-control input { flex: 1; width: 0; padding: 0 10px; border: 0; text-align: left; font-family: var(--app-font-family-numeric); font-size: 16px; }
 .ticket-price-control > button { display: flex; width: 44px; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: 0; background: var(--app-color-control); color: var(--app-color-text-secondary); }
 .ticket-price-control > button:first-child { border-right: 1px solid var(--app-color-frame); }
 .ticket-price-control > button:last-child { border-left: 1px solid var(--app-color-frame); }
 .ticket-price-control > button:hover:not(:disabled) { background: #353a41; color: var(--app-color-text); }
-.ticket-price-control input { text-align: center; }
+.ticket-price-control input { text-align: center; font-size: 18px; }
 .ticket-number-control svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
-.ticket-quantity-control select { width: 84px; flex-shrink: 0; padding: 0 var(--app-chevron-inset); border: 0; border-left: 1px solid var(--app-color-frame); border-radius: 0; font-size: 13px; }
-.ticket-quantity-control select.is-wan-unit { color: var(--app-color-accent); background-color: var(--app-color-accent-soft); border-left-color: var(--app-color-accent); }
-.ticket-quantity-control select option { color: var(--app-color-text); background: var(--app-color-control); }
-.ticket-market-price { display: flex; min-height: 40px; align-items: center; justify-content: flex-start; padding: 0 10px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 14px; }
-.ticket-percentage-control { display: flex; align-items: center; min-height: 40px; padding: 0 10px; border: 1px solid var(--app-color-frame); background: var(--app-color-control); }
+.ticket-market-price { display: flex; min-height: 36px; align-items: center; justify-content: flex-start; padding: 0 10px; background: var(--app-color-control); color: var(--app-color-text-secondary); font-size: 14px; }
+.ticket-percentage-control { display: flex; align-items: center; min-height: 36px; padding: 0 10px; border: 1px solid var(--app-color-frame); background: var(--app-color-control); }
 .ticket-percentage-control input { width: 0; flex: 1; border: 0; font-family: var(--app-font-family-numeric); font-size: 17px; text-align: left; }
 .ticket-percentage-control span { font-size: 12px; color: var(--app-color-text-secondary); }
-.ticket-algorithm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--app-color-text-secondary); font-size: 12px; }
-.ticket-algorithm-row > span { flex-shrink: 0; }
-.ticket-algorithm-row button { display: flex; min-width: 0; min-height: 28px; align-items: center; justify-content: flex-end; flex: 1; gap: 8px; padding: 0 var(--app-chevron-inset) 0 8px; border: 0; border-radius: 2px; background: transparent; color: var(--app-color-accent); font-size: 12px; }
-.ticket-algorithm-row b { font-size: 15px; font-weight: 400; }
-.ticket-fraction-slider input[type="range"] { appearance: none; display: block; width: 100%; height: 24px; margin: 0; border: 0; background: transparent; accent-color: var(--app-color-accent); touch-action: pan-y; cursor: pointer; }
-.ticket-fraction-slider input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--app-color-accent) var(--ticket-fraction), var(--app-color-frame) var(--ticket-fraction)); }
-.ticket-fraction-slider input::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; margin-top: -5px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-card); }
-.ticket-fraction-slider input::-moz-range-track { height: 4px; border-radius: 2px; background: var(--app-color-frame); }
-.ticket-fraction-slider input::-moz-range-progress { height: 4px; background: var(--app-color-accent); }
-.ticket-fraction-slider input::-moz-range-thumb { width: 10px; height: 10px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-card); }
-.ticket-fractions { display: flex; justify-content: space-between; margin-bottom: 8px; }
-.ticket-fractions button { min-height: 28px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 11px; }
-.ticket-fractions button[aria-pressed="true"] { border-color: var(--app-color-accent); color: var(--app-color-accent); background: var(--app-color-accent-soft); }
+.ticket-algorithm-row { min-width: 0; margin: 0; color: var(--app-color-text-secondary); font-size: 12px; }
+.ticket-baseline-order-entry .ticket-algorithm-row { margin-top: 10px; }
+.ticket-algorithm-row > button { display: grid; width: 100%; min-width: 0; min-height: 44px; gap: 4px; padding: 4px 12px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-background); color: inherit; font-size: 12px; text-align: left; }
+.ticket-algorithm-row > button:hover { border-color: var(--app-color-frame); }
+.equity-order-sheet .ticket-algorithm-row > button:focus-visible { border-color: var(--app-color-accent); outline: 1px solid var(--app-color-accent); outline-offset: 0; }
+.ticket-algorithm-heading { display: flex; min-height: 26px; align-items: center; gap: 8px; padding-right: var(--app-chevron-inset); }
+.ticket-algorithm-heading > b { margin-left: auto; color: var(--app-color-accent); font-size: 14px; font-weight: 600; }
+.ticket-algorithm-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ticket-algorithm-summary > span { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+.ticket-algorithm-summary b { color: var(--app-color-text); font-weight: 400; white-space: nowrap; }
+.ticket-algorithm-row > .van-popover__wrapper { display: block; }
+.ticket-algorithm-select { display: flex; width: 100%; min-height: 42px; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-background); color: var(--app-color-text); text-align: left; }
+.ticket-algorithm-choice { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; margin-left: auto; }
+.ticket-algorithm-choice > b { color: var(--app-color-text); font-size: 14px; font-weight: 400; }
+.ticket-pov-tag { box-sizing: border-box; display: inline-flex; min-width: 76px; height: 22px; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 2px; background: #26282e; color: var(--app-color-accent); font-size: 12px; line-height: 18px; white-space: nowrap; }
+.ticket-pov-dialog .van-tabs__wrap { display: none; }
+.ticket-fractions { display: grid; grid-template-rows: 16px 12px; height: 28px; margin-top: 6px; }
+.ticket-fractions input[type="range"] { appearance: none; width: 100%; height: 16px; margin: 0; padding: 0; border: 0; border-radius: 0; background: linear-gradient(to right, var(--app-color-accent) 0 var(--ticket-fraction), var(--app-color-frame) var(--ticket-fraction) 100%) center / 100% 4px no-repeat; cursor: pointer; }
+.ticket-fractions input[type="range"]::-webkit-slider-runnable-track { height: 4px; border: 0; background: transparent; }
+.ticket-fractions input[type="range"]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-surface); }
+.ticket-fractions input[type="range"]::-moz-range-track { height: 4px; border: 0; background: var(--app-color-frame); }
+.ticket-fractions input[type="range"]::-moz-range-progress { height: 4px; background: var(--app-color-accent); }
+.ticket-fractions input[type="range"]::-moz-range-thumb { width: 8px; height: 8px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-surface); }
+.ticket-fractions input[type="range"]:disabled { cursor: not-allowed; opacity: .45; }
+.ticket-fraction-marks { display: flex; justify-content: space-between; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 11px; line-height: 12px; }
+.ticket-fraction-marks > button { position: relative; min-height: 12px; padding: 0; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.ticket-fraction-marks > button::after { position: absolute; inset: 0 -3px -8px; content: ''; }
+.ticket-fraction-marks > button[aria-pressed="true"] { color: var(--app-color-accent); }
+.ticket-fraction-marks > button:disabled { cursor: not-allowed; opacity: .45; }
 .ticket-estimates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--app-color-border); }
-.ticket-capacity { margin: 0; padding-top: 12px; }
-.ticket-estimates > div { display: flex; flex-wrap: wrap; gap: 4px; justify-content: space-between; font-size: 11px; }
-.ticket-estimates dt { color: var(--app-color-text-secondary); }
-.ticket-estimates dd { margin: 0; font-family: var(--app-font-family-numeric); font-size: 13px; }
+.ticket-capacity { margin: 0; padding-top: 0; border-top: 0; }
+.ticket-capacity > div { min-height: 36px; align-items: center; padding: 4px 0; }
+.ticket-trading-stack { display: grid; gap: 12px; }
+/* 方案 B 仅重排中间工作区；标题、标的和固定操作区不变。 */
+.ticket-trading-stack--split { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+/* 基线盘口收窄为 132px，剩余空间归下单参数；不依赖评审页面的视口宽度。 */
+.ticket-trading-stack--split.ticket-trading-stack--baseline { grid-template-columns: minmax(0, 132px) minmax(0, 1fr); }
+.ticket-trading-stack--split > .ticket-order-form { grid-column: 2; grid-row: 1; padding-top: 0; border-top: 0; }
+.ticket-trading-stack--split > .ticket-book { grid-column: 1; grid-row: 1; }
+.ticket-trading-stack--split .ticket-input-pair { grid-template-columns: minmax(0, 1fr); }
+.ticket-trading-stack--split .ticket-capacity { grid-template-columns: minmax(0, 1fr); gap: 0; }
+.ticket-trading-stack--split .ticket-algorithm-heading { gap: 4px; padding-right: 0; }
+.ticket-trading-stack--split .ticket-algorithm-summary { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.ticket-trading-stack--split .ticket-book h3 > span { display: none; }
+.ticket-compact-book-headings, .ticket-book .ticket-compact-book-depths .ticket-book-level { display: grid; grid-template-columns: 24px max-content minmax(0, 1fr); align-items: center; gap: 4px; text-align: right; }
+.ticket-compact-book-headings { margin: 6px 0; padding: 0 4px; color: var(--app-color-text-secondary); font-size: 11px; }
+.ticket-trading-stack--baseline .ticket-compact-book-headings { line-height: 16px; }
+.ticket-trading-stack--baseline .ticket-book > header > h3 { display: none; }
+.ticket-trading-stack--baseline .ticket-book > header > .ticket-segment { display: flex; width: 100%; }
+.ticket-trading-stack--baseline .ticket-book > header > .ticket-segment > button { flex: 1; }
+.ticket-compact-book-headings > :first-child { text-align: left; }
+.ticket-compact-book-depths { display: grid; gap: 23px; } /* 11px 留白 + 1px 分隔线 + 11px 留白 */
+/* 十档沿用五档的可见高度，多出的档位只在盘口内滚动，边界不传递给下单正文。 */
+/* 十档增加 60px，初始视口同时露出卖盘和买盘，余下档位仅在盘口内滚动。 */
+.ticket-book--ten-levels .ticket-compact-book-depths { max-height: calc((var(--ticket-book-row-height) + 4px) * 10 - 8px + 23px + 60px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+.ticket-compact-book-side { display: grid; gap: 4px; min-width: 0; }
+/* 保持分隔线与卖盘位置，买盘在线下额外留出 6px。 */
+.ticket-compact-book-side + .ticket-compact-book-side { position: relative; }
+.ticket-compact-book-side + .ticket-compact-book-side::before { position: absolute; inset: -12px 0 auto; border-top: 1px solid var(--app-color-border); content: ''; pointer-events: none; }
+.ticket-compact-book-depths .ticket-book-level .ticket-book-rank { text-align: left; }
+.ticket-compact-book-depths .ticket-book-level :is(b, .ticket-book-quantity) { text-align: right; }
+.ticket-order-fields { display: grid; gap: 8px; }
+.ticket-input-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px; }
+.ticket-input-pair > .ticket-field { min-width: 0; margin: 0; }
+/* 基线左右布局使用同一组间距，标题行共享高度，控件内部间距维持原值。 */
+.ticket-trading-stack--baseline { --ticket-form-group-gap: 16px; }
+.ticket-trading-stack--baseline .ticket-book > header { min-height: 28px; }
+.ticket-trading-stack--baseline :is(.ticket-order-fields, .ticket-input-pair) { gap: var(--ticket-form-group-gap); }
+.ticket-trading-stack--baseline :is(.ticket-algorithm-row, .ticket-fractions) { margin-top: 0; }
+.ticket-reference-layout .ticket-segment { padding: 0; border: 1px solid var(--app-color-frame); border-radius: 4px; background: var(--app-color-control); }
+.ticket-reference-layout .ticket-segment button { position: relative; border: 0; border-radius: 0; }
+.ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment { border-radius: 2px; }
+.ticket-baseline-order-entry.ticket-reference-layout :is(.ticket-book, .ticket-caption) .ticket-segment button { min-height: 20px; padding: 0 7px; font-size: 12px; }
+.ticket-baseline-order-entry.ticket-reference-layout .ticket-book .ticket-segment button { padding-inline: 10px; }
+.ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment button:first-child { border-radius: 2px 0 0 2px; }
+.ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment button:last-child { border-radius: 0 2px 2px 0; }
+.ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment button:only-child { border-radius: 2px; }
+.ticket-reference-layout .ticket-segment button:first-child { border-radius: 3px 0 0 3px; }
+.ticket-reference-layout .ticket-segment button:last-child { border-radius: 0 3px 3px 0; }
+.ticket-reference-layout .ticket-segment button:only-child { border-radius: 3px; }
+/* 选中描边覆盖分段外框，不与外框叠成双线；键盘焦点保留更清晰的内环。 */
+.ticket-reference-layout .ticket-segment button[aria-pressed="true"] { z-index: 1; outline: 1px solid var(--app-color-accent); outline-offset: 0; background: var(--app-color-accent-soft); color: var(--app-color-accent); }
+.ticket-reference-layout .ticket-segment button:focus-visible { z-index: 2; outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.ticket-reference-layout .ticket-number-control { height: 44px; border-radius: 4px; background: var(--app-color-background); }
+.ticket-reference-layout .ticket-number-control input { background: transparent; }
+.ticket-reference-layout .ticket-number-control > button { display: flex; width: 32px; min-width: 0; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; color: var(--app-color-text); }
+.ticket-reference-layout .ticket-number-control > button:first-child { border-right: 1px solid var(--app-color-border); border-radius: 3px 0 0 3px; }
+.ticket-reference-layout .ticket-number-control > button:last-child { border-left: 1px solid var(--app-color-border); border-radius: 0 3px 3px 0; }
+.ticket-size-value { display: flex; min-width: 0; flex: 1; align-items: stretch; }
+.ticket-size-capacity-label { display: flex; flex-shrink: 0; align-items: center; padding: 0 8px; color: var(--app-color-text); font-size: 12px; white-space: nowrap; }
+.ticket-reference-layout .ticket-quantity-control .ticket-size-value input { padding: 0 2px 0 8px; text-align: left; }
+.ticket-reference-layout .ticket-unit-trigger { display: flex; min-width: 44px; height: 100%; align-items: center; justify-content: flex-end; gap: 6px; margin-left: 8px; margin-right: 8px; padding: 0; border: 0; border-radius: 2px; background: transparent; color: var(--app-color-text); font-size: 14px; white-space: nowrap; }
+.ticket-reference-layout .ticket-unit-trigger:is(.is-wan-unit, [aria-expanded="true"]) { color: var(--app-color-accent); background-color: transparent; }
+.ticket-unit-trigger .app-chevron { --app-chevron-size: 12px; }
+.ticket-unit-options { width: 112px; padding: 4px; }
+.ticket-algorithm-options { width: 128px; }
+.ticket-algorithm-options button > span { white-space: nowrap; }
+.ticket-unit-options button { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px; border: 0; border-radius: 3px; background: transparent; color: var(--app-color-text); font-size: 14px; text-align: left; }
+.ticket-unit-options button[aria-checked="true"] { background: var(--app-color-accent-soft); color: var(--app-color-accent); }
+.ticket-unit-options button:focus-visible { outline-offset: -2px; }
+@media (hover: hover) { .ticket-unit-options button:hover { background: var(--app-color-accent-soft); } }
+.ticket-unit-options svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* 市价为只读展示，灰色填充与可编辑价格框的深色底区分。 */
+.ticket-reference-layout .ticket-market-price { min-height: 44px; border: 1px solid var(--app-color-border); border-radius: 4px; background: var(--app-color-control); color: var(--app-color-accent); }
+.ticket-order-form .ticket-caption { flex-wrap: wrap; row-gap: 4px; min-height: 28px; margin-bottom: 4px; }
+.ticket-order-form :is(.ticket-caption, .ticket-algorithm-select) .app-form-label { font-size: 12px; }
+.ticket-order-form .ticket-caption .ticket-segment button { padding: 0 6px; }
+.ticket-order-form .ticket-number-control input { padding: 0 6px; }
+.ticket-order-form { padding-top: 12px; border-top: 1px solid var(--app-color-border); }
+.ticket-order-actions--single .ticket-estimates { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.ticket-order-actions { flex-shrink: 0; margin: 0; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); border-top: 1px solid var(--app-color-border); }
+.ticket-order-actions .ticket-trade-buttons { gap: 12px; }
+.ticket-reference-layout .ticket-trade-buttons button { min-height: 48px; border-radius: 10px; font-size: 18px; }
+.ticket-order-actions .ticket-estimates { margin-top: 8px; padding-top: 0; border-top: 0; }
+.ticket-estimate-column { display: grid; min-width: 0; gap: 4px; margin: 0; }
+.ticket-estimate-column > div { display: flex; min-height: 20px; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; }
+.ticket-estimate-column dt { white-space: nowrap; }
+.ticket-order-actions .ticket-error { margin: 0 0 8px; }
+.equity-order-sheet .ticket-summary-footer .ticket-account-summary { margin-top: 0; border-top: 0; }
+.ticket-summary-footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--app-color-border); }
+.ticket-baseline-order-entry .ticket-summary-footer { padding-top: 4px; }
+.ticket-baseline-order-entry .ticket-summary-footer .ticket-account-summary { padding-top: 2px; }
+.ticket-estimates > div { display: flex; flex-wrap: wrap; gap: 4px; justify-content: space-between; }
+/* 容量与预估共用辅助指标层级，不套用资产净值的大号字。 */
+.ticket-estimates dt { color: var(--app-color-text-secondary); font-size: 12px; }
+.ticket-estimates dd { max-width: 100%; margin: 0 0 0 auto; font-family: var(--app-font-family-numeric); font-size: 12px; white-space: nowrap; }
 .ticket-error, .ticket-warning, .ticket-help { margin: 8px 0 0; font-size: 12px; line-height: 1.6; }
 .ticket-error { color: var(--app-color-rise); }
 .ticket-warning { color: var(--app-color-accent); }
 .ticket-help { color: var(--app-color-text-secondary); }
 .ticket-number-control.has-error { border-color: var(--app-color-rise); }
+.ticket-number-control.has-error:focus-within { outline-color: var(--app-color-rise); }
 .ticket-note { display: grid; gap: 8px; font-size: 13px; }
 .ticket-note > span { display: flex; justify-content: space-between; }
 .ticket-note > span small { color: var(--app-color-text-secondary); font-size: 11px; }
 .ticket-note textarea { resize: vertical; width: 100%; min-height: 80px; padding: 10px; line-height: 1.5; }
 .ticket-footer { flex-shrink: 0; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); border-top: 1px solid var(--app-color-border); background: var(--app-color-card); }
 .ticket-trade-buttons { display: flex; gap: 12px; }
-.ticket-trade-buttons button { display: flex; min-width: 0; min-height: 40px; flex: 1; align-items: center; justify-content: center; border: 0; border-radius: 3px; color: #fff; font-size: 15px; font-weight: 600; }
+.ticket-trade-buttons button { display: flex; min-width: 0; min-height: 44px; flex: 1; align-items: center; justify-content: center; border: 0; border-radius: 3px; color: #fff; font-size: 15px; font-weight: 600; }
 .ticket-buy { background: color-mix(in srgb, var(--app-color-buy) 94%, #000); }
 .ticket-sell { background: color-mix(in srgb, var(--app-color-sell) 88%, #000); }
 .ticket-trade-buttons strong { font-size: 20px; font-weight: 600; }
@@ -97,9 +220,11 @@
 .ticket-footer > p { margin: 8px 0 0; color: var(--app-color-text-secondary); font-size: 10px; text-align: center; }
 .ticket-footer > .ticket-error { margin: 0 0 8px; color: var(--app-color-rise); font-size: 12px; text-align: left; }
 .ticket-algorithm-tabs { --van-tabs-card-height: 44px; --van-tab-font-size: 14px; --van-tabs-default-color: var(--app-color-accent); --van-tabs-nav-background: var(--app-color-control); }
-.ticket-algorithm-tabs .van-tabs__nav--card { margin: 0; border-color: var(--app-color-frame); border-radius: 3px; }
-.ticket-algorithm-tabs .van-tab--card { min-width: 0; flex: 1 0 0; border-color: var(--app-color-frame); color: var(--app-color-text-secondary); }
-.ticket-algorithm-tabs .van-tab--active { background: var(--app-color-accent); color: #fff; font-weight: 600; }
+.ticket-algorithm-tabs .van-tabs__nav--card { margin: 0; overflow: visible; border: 1px solid var(--app-color-frame); border-radius: 4px; background: var(--app-color-control); }
+.ticket-algorithm-tabs .van-tab--card { min-width: 0; flex: 1 0 0; border: 0; border-radius: 0; color: var(--app-color-text-secondary); }
+.ticket-algorithm-tabs .van-tab--card:first-child { border-radius: 3px 0 0 3px; }
+.ticket-algorithm-tabs .van-tab--card:last-child { border-radius: 0 3px 3px 0; }
+.ticket-algorithm-tabs .van-tab--active { z-index: 1; outline: 1px solid var(--app-color-accent); outline-offset: 0; background: var(--app-color-accent-soft); color: var(--app-color-accent); font-weight: 600; }
 .ticket-algorithm-tabs [role="tab"]:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
 .ticket-settings > label, .ticket-algorithm-params > label { display: block; margin: 20px 0 8px; }
 .ticket-settings :is(select, input) { min-height: 44px; padding: 0 12px; }
@@ -107,9 +232,18 @@
 .ticket-duration { display: flex; gap: 20px; }
 .ticket-duration label, .ticket-participation { display: flex; flex: 1; align-items: center; gap: 8px; }
 .ticket-duration select, .ticket-participation input { min-width: 0; flex: 1; }
+.ticket-pov-dialog .ticket-algorithm-params > label:first-child { margin-top: 0; }
+.ticket-pov-dialog .ticket-duration { gap: 12px; }
+.ticket-pov-dialog :is(.ticket-duration label, .ticket-participation) { min-width: 0; gap: 0; padding-right: 12px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); }
+.ticket-pov-dialog :is(.ticket-duration select, .ticket-participation input) { width: 0; min-height: 42px; border: 0; background-color: transparent; }
+.ticket-pov-dialog .ticket-duration select { padding-right: 32px; }
+.ticket-pov-dialog :is(.ticket-duration label, .ticket-participation):focus-within { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.ticket-pov-dialog :is(.ticket-duration select, .ticket-participation input):focus-visible { outline: none; }
 .ticket-secondary-actions { display: flex; gap: 12px; }
 .ticket-secondary-actions button { min-height: 44px; flex: 1; padding: 8px 12px; border: 0; border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text); font-size: 14px; }
 .equity-order-sheet .ticket-primary { background: var(--app-color-accent); color: #fff; font-weight: 600; }
+.ticket-entry-sheet .ticket-primary { color: var(--app-color-background); }
+.ticket-pov-dialog .ticket-primary { border: 1px solid var(--app-color-accent); background: var(--app-color-accent-soft); color: var(--app-color-accent); }
 .ticket-confirm h3 { margin: 18px 0; font-size: 19px; }
 .ticket-confirm h3 small { color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 13px; font-weight: 400; }
 .ticket-confirm dl { margin: 0; }
@@ -124,28 +258,47 @@
   .order-entry-scroll { padding-right: 12px; padding-left: 12px; }
   .ticket-caption { gap: 4px; }
   .ticket-caption .ticket-segment button { padding: 0 9px; }
-  .ticket-symbol-control strong { font-size: 14px; }
   .ticket-estimates { column-gap: 12px; }
+  .ticket-reference-layout .ticket-input-pair { gap: 8px; }
+  .ticket-reference-layout .ticket-number-control > button { width: 26px; }
+  .ticket-symbol-control { gap: 4px; padding-left: 8px; }
+  .ticket-symbol-identity strong { font-size: 16px; }
+  .ticket-symbol-quote strong { font-size: 22px; }
 }
 .ticket-amend-original { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--app-color-border); color: var(--app-color-text-secondary); font-size: 12px; }
 .ticket-amend-original strong { color: var(--app-color-text); font-size: 14px; }
 .ticket-amend-confirm { padding: 8px 16px; color: var(--app-color-text-secondary); font-size: 13px; }
 .equity-order-sheet .symbol-search-control input { border: 0; }
-.ticket-book { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--app-color-border); }
+.ticket-book { --ticket-book-row-height: 24px; --ticket-book-visible-levels: 5; min-width: 0; }
 .ticket-book > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ticket-book h3 { margin: 0; font-size: 13px; font-weight: 600; }
-.ticket-book-identity { display: flex; align-items: baseline; gap: 6px; margin-top: 8px; font-size: 12px; }
-.ticket-book-identity small { color: var(--app-color-text-secondary); font-size: 10px; }
-.ticket-book-quote { display: flex; align-items: baseline; gap: 8px; padding: 6px 0 10px; font-size: 12px; }
-.ticket-book-quote > strong { font-size: 16px; font-weight: 500; }
-.ticket-book-columns, .ticket-book-level { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.ticket-book-columns { padding-bottom: 6px; color: var(--app-color-text-secondary); font-size: 10px; }
-.ticket-book-level button { display: grid; grid-template-columns: 16px 1fr 1fr; align-items: center; gap: 4px; min-height: 28px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--app-color-border); background: transparent; color: var(--app-color-text); font-family: var(--app-font-family-numeric); font-size: 12px; text-align: right; }
-.ticket-book-level button > span:first-child { color: var(--app-color-text-secondary); text-align: left; }
+.ticket-book h3 { margin: 0; color: var(--app-color-text-secondary); font-size: 13px; font-weight: 500; }
+.ticket-book h3 > span { font-size: 11px; }
+.ticket-book .ticket-segment { border-radius: 2px; }
+.ticket-book .ticket-segment button:first-child { border-radius: 2px 0 0 2px; }
+.ticket-book .ticket-segment button:last-child { border-radius: 0 2px 2px 0; }
+.ticket-book .ticket-segment button { min-height: 24px; padding: 0 12px; font-size: 12px; }
+.ticket-book-headings, .ticket-book-depths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ticket-book-headings { margin: 6px 0; }
+.ticket-book-columns, .ticket-book-level { display: grid; grid-template-columns: 24px minmax(0, 1fr) max-content; align-items: center; gap: 4px; text-align: right; white-space: nowrap; }
+.ticket-book-columns--sell, .ticket-book .ticket-book-level--sell { grid-template-columns: max-content minmax(0, 1fr) 24px; }
+.ticket-book-columns { color: var(--app-color-text-secondary); font-size: 11px; }
+.ticket-book-columns--buy > :nth-child(-n+2) { text-align: left; }
+.ticket-book-columns--sell > :first-child { text-align: left; }
+/* 共享纵向滚动保持买卖同档对齐；滚动条位于外侧留白，不覆盖完整数量。 */
+.ticket-book-depths { max-height: calc((var(--ticket-book-row-height) + 4px) * var(--ticket-book-visible-levels) - 4px); margin-right: -8px; padding-right: 8px; overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: thin; scrollbar-color: var(--app-color-frame) transparent; }
+.ticket-book-depth { display: grid; min-width: 0; gap: 4px; }
+.ticket-book .ticket-book-level { position: relative; isolation: isolate; width: 100%; min-width: 0; height: var(--ticket-book-row-height); min-height: var(--ticket-book-row-height); padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--app-color-text); font-family: var(--app-font-family-numeric); font-size: 12px; line-height: 24px; }
+.ticket-book-fill { position: absolute; inset: 0 auto 0 0; z-index: -1; border-radius: 2px; background: var(--app-color-rise-soft); pointer-events: none; }
+.ticket-book-level--sell .ticket-book-fill { right: 0; left: auto; background: var(--app-color-fall-soft); }
+.ticket-book-rank { color: var(--app-color-text-secondary); }
+.ticket-book-level--buy .ticket-book-rank, .ticket-book-level--buy .ticket-book-quantity { text-align: left; }
+.ticket-book-level--sell b { text-align: left; }
 .ticket-book-level b { font-weight: 500; }
-.ticket-book-level button:hover { background: var(--app-color-control); }
-.ticket-book .ticket-help { font-size: 10px; }
+.ticket-book-level:not(:disabled):hover { background: var(--app-color-control); }
+.ticket-book .ticket-book-level:disabled { color: var(--app-color-text-secondary); opacity: 1; }
 @media (pointer: coarse) {
-  /* 保持视觉紧凑；触屏提高盘口与小分段的点击高度。 */
-  .ticket-book-level button, .ticket-caption .ticket-segment button { min-height: 36px; }
+  /* 盘口按用户标注在各输入方式下均为 24px；分段仍保留透明触屏命中扩展。 */
+  .ticket-segment button { position: relative; }
+  .ticket-segment button::after { position: absolute; inset: -6px 0; content: ''; }
+  .ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment button::after { inset: -7px 0; }
 }
