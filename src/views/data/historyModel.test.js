@@ -113,6 +113,11 @@ test('导出所有匹配记录而非当前页，字段完整，逐笔价格不�
   assert.equal(historyColumns.orders.at(-1).key, 'reportQuantity')
   assert.ok(historyColumns.trades.some(column => column.label === '成交价格'))
   assert.ok(!historyColumns.trades.some(column => column.label === '成交均价'))
+  for (const [key, label] of [['algorithm', '执行算法'], ['orderRemark', '下单备注'], ['feedback', '订单动态']]) {
+    assert.ok(!historyColumns.trades.some(column => column.key === key))
+    assert.ok(historyColumns.orders.some(column => column.key === key))
+    assert.ok(!historyCsv('trades', demo.trades, filters.range).content.split('\r\n')[0].includes(label))
+  }
 })
 test('CSV 防公式注入，正确转义逗号、换行、双引号', () => {
   const csv = historyCsv('orders', [{ ...demo.orders[0], name: '=SUM(A1)', orderRemark: '说明,"原文"\n第二行' }], filters.range)

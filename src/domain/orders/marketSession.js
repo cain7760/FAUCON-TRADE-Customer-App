@@ -75,3 +75,21 @@ export function expireOrdersAtClose(orders, now = new Date()) {
   }
   return changed
 }
+
+// 普通股票的日内交易窗口；沿用本地演示的特殊收市日和服务端实际收市时间。
+// 节假日及临时休市应由交易服务日历提供，不在前端推算下一交易日。
+export function orderTradingSession(row, now = new Date()) {
+  const market = orderMarket(row || {}), clock = marketClock(now, market)
+  if (!clock) return null
+  const weekend = [0, 6].includes(new Date(clock.date + 'T12:00:00Z').getUTCDay())
+  let close = specialCloses[market]?.[clock.date] || sessions[market].close
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(row?.sessionCloseAt || '')) {
+    const actual = marketClock(new Date(row.sessionCloseAt), market)
+    if (actual?.date === clock.date) close = actual.time
+  }
+  const windows = market === 'A' ? [['09:30:00', '11:30:00'], ['13:00:00', close]]
+    : market === 'HK' ? [['09:30:00', '12:00:00'], ['13:00:00', close]]
+      : [['09:30:00', close]]
+  return { ...clock, market, timeZone: sessions[market].timeZone, close,
+    windows: weekend ? [] : windows.map(([start, end]) => [start, end < close ? end : close]).filter(([start, end]) => start < end) }
+}

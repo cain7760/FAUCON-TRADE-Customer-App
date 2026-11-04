@@ -17,7 +17,7 @@ function setup(result) {
   const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: 'amend-feedback-test' }).content
   const imports = { ...vue, ...fixtures, ...model, ...orderModel, ...orderActions, ...marketRules, ...decimal, ...calculations, orderAccountOverview,
-    showSuccessToast: message => toasts.push(message), EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityAccountSummary: {} }
+    showSuccessToast: message => toasts.push(message), AppSelectField: {}, EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityPovDeadline: {}, EquityAccountSummary: {} }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   const record = { ...fixtures.orderInstruments[0], id: 'one', account: 'TZS_T0', orderType: '系统单', type: 'limit', side: 'buy',
     quantity: 1000, filledQuantity: 0, status: '已报', price: 12 }

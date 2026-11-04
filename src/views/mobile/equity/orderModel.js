@@ -1,3 +1,4 @@
+import { isValidPovDuration } from '../../../domain/orders/povSchedule.js'
 import { normalizeOrderType, orderTypeError } from './orderMarketRules.js'
 import { decimalProduct, decimalSum, quantityForAmount, truncateDecimal } from './decimalMath.js'
 import { currencyFor, orderNotional, pricePrecision } from './orderCalculations.js'
@@ -20,9 +21,7 @@ export function defaultOrderAlgorithm(market, now = new Date()) {
 export function validPov(parameters) {
   const { hours, minutes, participation } = parameters || {}
   return hours != null && minutes != null && participation != null
-    && Number.isInteger(Number(hours)) && hours !== '' && hours >= 0 && hours <= 23
-    && Number.isInteger(Number(minutes)) && minutes !== '' && minutes >= 0 && minutes <= 59
-    && Number(hours) + Number(minutes) > 0
+    && isValidPovDuration(hours, minutes)
     && Number.isInteger(Number(participation)) && participation > 0 && participation <= 25
 }
 export function orderEstimates(draft, symbol, cash, available) {

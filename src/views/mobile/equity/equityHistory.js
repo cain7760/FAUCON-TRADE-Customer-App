@@ -21,8 +21,8 @@ function historyOperator(label) {
 
 function statusRecord(row, time) {
   const status = row.status || '待报'
-  if (status === '全成') return { operator: '交易所', time, type: status, content: `订单已全部成交，成交数量 ${quantity(row.filledQuantity || row.quantity)} 股。` }
-  if (status === '部成') return { operator: '交易所', time, type: status, content: `订单已部分成交，成交数量 ${quantity(row.filledQuantity || 0)} 股。` }
+  if (status === '全成') return { operator: '系统', time, type: status, content: `订单已全部成交，成交数量 ${quantity(row.filledQuantity || row.quantity)} 股。` }
+  if (status === '部成') return { operator: '系统', time, type: status, content: `订单已部分成交，成交数量 ${quantity(row.filledQuantity || 0)} 股。` }
   if (status === '部撤' || status === '撤单') return { operator: '当前账户', time, type: status, content: row.feedback || '订单撤单结果已确认。' }
   if (status === '拒单') return { operator: '交易员', time, type: status, content: row.traderRemark || row.feedback || '订单未获通过。' }
   return { operator: '交易员', time, type: status, content: row.feedback || `订单状态更新为${status}。` }
@@ -38,7 +38,7 @@ export function buildEquityHistory(row, kind = 'orders') {
   if (Array.isArray(row.history) && row.history.length) {
     return row.history.map(item => ({
       // 同时读取 PC 历史字段与原 App 本地操作历史，不改变原始记录。
-      operator: item.operator || (item.label ? historyOperator(item.label) : '当前账户'),
+      operator: item.operator === '交易所' ? '系统' : item.operator || (item.label ? historyOperator(item.label) : '当前账户'),
       // 已有日志缺时间时显示未知，不用快照日期伪造该事件的发生时点。
       time: item.at || item.time || '--',
       type: item.label || item.action || item.type || '状态更新',

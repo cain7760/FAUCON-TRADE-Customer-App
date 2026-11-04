@@ -59,8 +59,8 @@ test('无标的或零价不产生 Infinity 或错误容量', () => {
   assert.equal(estimate({ ...draft, mode: 'amount', price: 0 }).buy, 0)
 })
 test('POV 时间和占比边界', () => {
-  assert.ok(validPov(draft.pov)); assert.ok(validPov({ hours: 23, minutes: 59, participation: 25 }))
-  for (const pov of [{ hours: 0, minutes: 0, participation: 10 }, { hours: 24, minutes: 0, participation: 10 }, { hours: 1, minutes: 60, participation: 10 }, { hours: 1, minutes: 0, participation: 26 }, { hours: '', minutes: 10, participation: 10 }]) assert.equal(validPov(pov), false)
+  assert.ok(validPov(draft.pov)); assert.ok(validPov({ hours: 6, minutes: 30, participation: 25 }))
+  for (const pov of [{ hours: 6, minutes: 31, participation: 10 }, { hours: 7, minutes: 0, participation: 10 }, { hours: 0, minutes: 0, participation: 10 }, { hours: 24, minutes: 0, participation: 10 }, { hours: 1, minutes: 60, participation: 10 }, { hours: 1, minutes: 0, participation: 26 }, { hours: '', minutes: 10, participation: 10 }]) assert.equal(validPov(pov), false)
 })
 test('默认算法遵循上海时区 A 股 14:55 分界', () => {
   assert.equal(defaultOrderAlgorithm('SZ', new Date('2026-10-19T06:54:59Z')), 'POV')

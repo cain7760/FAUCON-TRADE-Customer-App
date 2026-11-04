@@ -1,4 +1,4 @@
-import { accountLabel, activityText, formatNumber, marketLabel, pnlClass, price, shares, signedMoney } from './model.js'
+import { accountLabel, formatNumber, marketLabel, pnlClass, price, shares, signedMoney } from './model.js'
 import { orderTableColumns } from './orderTableColumns.js'
 import { positionMarginInCny } from './positionCurrency.js'
 import { withoutShareUnit } from '../../../utils/tableQuantity.js'
@@ -46,9 +46,6 @@ export function recordTableColumns(kind, design = 'default') {
     { key: 'market', title: '市场', width: 40, text: true, value: row => marketLabel(row) },
     { key: 'currency', title: '币种', width: 40, text: true, value: row => row.currency || (row.market === 'HK' ? 'HKD' : row.market === 'US' ? 'USD' : 'CNY') },
     { key: 'orderType', title: '订单类型', width: 60, text: true, value: row => row.orderType || '--' },
-    { key: 'algorithm', title: '执行算法', width: 60, text: true, value: row => row.algorithm || '--' },
-    { key: 'orderRemark', title: '下单备注', width: 104, text: true, truncate: true, value: row => row.orderRemark || '--' },
-    { key: 'feedback', title: '订单动态', width: 144, text: true, truncate: true, value: activityText },
     { key: 'openClose', title: '开平方向', width: 60, text: true, value: row => row.openClose === '开' ? '开仓' : '平仓' },
   ]
 }

@@ -1,11 +1,12 @@
 <script setup>
+import EquityPovDeadline from './EquityPovDeadline.vue'
 import EquitySheetClose from './EquitySheetClose.vue'
 import { computed, nextTick, reactive, ref, shallowRef, useId, watch } from 'vue'
 import { showSuccessToast } from 'vant'
 import { accounts, demoRecords, orderInstruments } from './fixtures.js'
 import { accountLabel, formatNumber } from './model.js'
 import { algorithmOptions, applyBookPrice, canPreviewOrder, changeOrderMode, changeOrderType, defaultOrderAlgorithm, demoOrderCash, largeOrderAmount, orderError, orderEstimates, resetOrderSize, validPov } from './orderModel.js'
-import { amendmentDraft, amendmentError, amendmentEstimate, amendmentFilledAmount, amendmentPayload, remainingQuantity } from './orderActions.js'
+import { amendmentDraft, amendmentError, amendmentEstimate, amendmentFilledAmount, amendmentPayload } from './orderActions.js'
 import { orderAccountOverview } from './accountOverview.js'
 import { decimalProduct, decimalSum, quantityForAmount, truncateDecimal } from './decimalMath.js'
 import { orderNotional, pricePrecision } from './orderCalculations.js'
@@ -31,6 +32,7 @@ const assetsVisible = ref(true), assetsCollapsed = ref(true)
 const accountId = ref(accounts[0].id), symbolCode = ref('000001'), manualSymbol = ref(null)
 const draft = reactive({ execution: 'lowTouch', type: 'limit', price: '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { hours: 1, minutes: 0, participation: 10 }, note: '' })
 const algorithmDraft = reactive({ value: 'DMA', hours: 1, minutes: 0, participation: 10 })
+watch(() => algorithmDraft.hours, value => { if (Number(value) === 6 && Number(algorithmDraft.minutes) > 30) algorithmDraft.minutes = 30 })
 const customDraft = reactive({ name: '', code: '', market: 'A' })
 const instruments = orderInstruments
 const isLocked = computed(() => props.context.action !== 'new')
@@ -99,13 +101,13 @@ const usesAmount = computed(() => draft.mode === 'amount')
 // 金额始终以元保存，单位切换只转换输入框的显示值。
 const displayValue = computed({
   get: () => props.fullCapabilities && isAmend.value && usesAmount.value
-    ? (decimalSum(amendmentTotalAmount.value, -amendmentFilledAmount(props.context.record))) / (draft.amountUnit === 'wan' ? 10000 : 1)
+    ? amendmentTotalAmount.value / (draft.amountUnit === 'wan' ? 10000 : 1)
     : draft.value === '' ? '' : Number(draft.value) / (usesAmount.value && draft.amountUnit === 'wan' ? 10000 : 1),
   set: value => {
     const next = value === '' ? '' : decimalProduct(value, usesAmount.value && draft.amountUnit === 'wan' ? 10000 : 1)
     if (next !== draft.value) draft.fraction = 0
     draft.value = next
-    if (props.fullCapabilities && isAmend.value && usesAmount.value) amendmentTotalAmount.value = decimalSum(Number(next), amendmentFilledAmount(props.context.record))
+    if (props.fullCapabilities && isAmend.value && usesAmount.value) amendmentTotalAmount.value = Number(next)
   },
 })
 const quantityUnit = computed({
@@ -188,7 +190,7 @@ function initialize() {
   }
   if (isAmend.value) {
     amendmentTotalAmount.value = record.inputAmount ?? orderNotional(record.quantity, record.price || 0)
-    amendmentShareQuantity.value = remainingQuantity(record)
+    amendmentShareQuantity.value = Number(record.quantity)
     Object.assign(draft, amendmentDraft(record, amendmentOptions.value))
   }
   page.value = 'form'; snapshot.value = null; error.value = ''; doneMessage.value = ''
@@ -253,7 +255,7 @@ function setMode(value) {
     if (draft.mode === value) return
     if (draft.mode === 'quantity') amendmentShareQuantity.value = decimalProduct(draft.value, draft.unit === 'wan' ? 10000 : 1)
     draft.mode = value
-    draft.value = value === 'amount' ? decimalSum(amendmentTotalAmount.value, -amendmentFilledAmount(props.context.record)) : amendmentShareQuantity.value / (draft.unit === 'wan' ? 10000 : 1)
+    draft.value = value === 'amount' ? amendmentTotalAmount.value : amendmentShareQuantity.value / (draft.unit === 'wan' ? 10000 : 1)
     return
   }
   showsFraction.value = false; changeOrderMode(draft, value)
@@ -275,10 +277,13 @@ function selectFraction(value) {
   const maximum = isClose.value || (isAmend.value && props.context.record.side === 'sell') ? estimate.value.maxSell : estimate.value.maxBuy
   const quantity = quantityForAmount(decimalProduct(maximum, fraction, .01), 1, estimate.value.lot)
   // 与 Customer size() 一致地保存实际数量/金额，界面单独展示当前比例。
-  draft.value = usesAmount.value ? orderNotional(quantity, estimate.value.price) : draft.unit === 'wan' ? quantity / 10000 : quantity
-  if (props.fullCapabilities && isAmend.value && usesAmount.value) amendmentTotalAmount.value = decimalSum(amendmentFilledAmount(props.context.record), orderNotional(quantity, estimate.value.price))
+  const amount = isAmend.value
+    ? decimalSum(amendmentFilledAmount(props.context.record), orderNotional(quantity - Number(props.context.record.filledQuantity || 0), estimate.value.price))
+    : orderNotional(quantity, estimate.value.price)
+  draft.value = usesAmount.value ? amount : draft.unit === 'wan' ? quantity / 10000 : quantity
+  if (props.fullCapabilities && isAmend.value && usesAmount.value) amendmentTotalAmount.value = amount
   draft.fraction = fraction
-  showsFraction.value = !(props.fullCapabilities && isAmend.value)
+  showsFraction.value = !isAmend.value
   error.value = ''
 }
 function normalizeInput(field, precision) { if (draft[field] !== '' && Number.isFinite(Number(draft[field]))) draft[field] = truncateDecimal(draft[field], precision) }
@@ -327,7 +332,7 @@ function preview(side, event) {
     snapshot.value = { side: row.side, symbol: { ...symbol.value }, account: row.account, execution: draft.execution, type: draft.type,
       price: estimate.value.price, quantity: amendment.quantity, amount: orderNotional(estimate.value[row.side], estimate.value.price),
       algorithm: algorithmLabel.value, pov: { ...draft.pov }, inputAmount: amendment.inputAmount, note: draft.note.trim(),
-      remaining: estimate.value[row.side], filled: Number(row.filledQuantity || 0), amendment }
+      filled: Number(row.filledQuantity || 0), amendment }
     navigate('confirm', event); return
   }
   if (isLocked.value && side !== (isClose.value ? 'sell' : 'buy')) return
@@ -383,7 +388,16 @@ function handleKeyboard(event) {
     <template v-if="page === 'form' || page === 'algorithm'">
       <div class="order-entry-scroll ticket-workspace" :inert="isPaused ? true : undefined" :aria-disabled="isPaused || undefined">
         <div v-if="isExecutionSwitchVisible && !isAmend" class="ticket-segment ticket-execution" role="group" aria-label="订单类型"><button v-for="item in [['lowTouch', '系统单'], ['highTouch', '手工单']]" :key="item[0]" type="button" :aria-pressed="draft.execution === item[0]" @click="changeExecution(item[0])">{{ item[1] }}</button></div>
-        <div v-if="isAmend" class="ticket-amend-original"><strong>{{ context.record.orderType }} · {{ context.record.side === 'buy' ? '买入' : '卖出' }}{{ context.record.openClose === '开' ? '开仓' : '平仓' }}</strong><span class="app-numeric">{{ context.record.orderNo }}</span><span>原数量 {{ number(context.record.quantity) }} 股 · 已成 {{ number(context.record.filledQuantity || 0) }} 股</span><span>未成交 {{ number(remainingQuantity(context.record)) }} 股；下方仅修改未成交部分。</span></div>
+        <div v-if="isAmend" class="ticket-amend-original"><strong>{{ context.record.orderType }} · {{ context.record.side === 'buy' ? '买入' : '卖出' }}{{ context.record.openClose === '开' ? '开仓' : '平仓' }}</strong><span class="app-numeric">{{ context.record.orderNo }}</span><span>原数量 {{ number(context.record.quantity) }} 股 · 已成 {{ number(context.record.filledQuantity || 0) }} 股</span><span>下方填写修改后的订单总数量，已成交部分保持不变。</span></div>
+        <section v-else-if="isClose" class="ticket-amend-original ticket-close-original" aria-label="持仓信息">
+          <strong>持仓信息</strong>
+          <dl class="app-numeric">
+            <div><dt>持仓股数(股)</dt><dd>{{ number(context.record.qty) }}</dd></div>
+            <div><dt>持仓市值(CNY)</dt><dd>{{ money(orderNotional(context.record.qty, context.record.price)) }}</dd></div>
+            <div><dt>可平股数(股)</dt><dd>{{ number(context.record.available) }}</dd></div>
+            <div><dt>持仓均价(CNY)</dt><dd>{{ money(context.record.cost) }}</dd></div>
+          </dl>
+        </section>
         <section class="ticket-order-context ticket-module" aria-label="下单标的与行情">
           <section class="ticket-field ticket-symbol-field">
             <div class="ticket-symbol-control">
@@ -410,7 +424,7 @@ function handleKeyboard(event) {
                 <div v-else class="ticket-market-price">以市场价格成交</div><p v-if="draft.type === 'limit' && draft.price !== '' && !(draft.price > 0)" id="ticket-price-error" class="ticket-error">订单价格须大于 0</p>
               </section>
               <section class="ticket-field">
-                <div class="ticket-caption"><label class="app-form-label" for="mobile-order-quantity">{{ isAmend ? (usesAmount ? '未成交部分金额' : '未成交部分数量') : usesAmount ? '订单金额' : '订单数量' }}</label><div class="ticket-segment" role="group" aria-label="下单单位类型"><button type="button" :aria-pressed="!usesAmount" @click="setMode('quantity')">数量</button><button v-if="draft.type === 'limit'" type="button" :aria-pressed="usesAmount" @click="setMode('amount')">金额</button></div></div>
+                <div class="ticket-caption"><label class="app-form-label" for="mobile-order-quantity">{{ usesAmount ? '订单金额' : '订单数量' }}</label><div class="ticket-segment" role="group" aria-label="下单单位类型"><button type="button" :aria-pressed="!usesAmount" @click="setMode('quantity')">数量</button><button v-if="draft.type === 'limit'" type="button" :aria-pressed="usesAmount" @click="setMode('amount')">金额</button></div></div>
                 <div class="ticket-number-control ticket-quantity-control" :class="{ 'has-error': lotError }">
                   <div class="ticket-size-value">
                     <input :key="showsFraction ? 'fraction' : 'quantity'" id="mobile-order-quantity" ref="sizeInput" v-model="sizeInputValue" :disabled="!symbol" :readonly="showsFraction" :type="showsFraction ? 'text' : 'number'" :inputmode="usesAmount || draft.unit === 'wan' ? 'decimal' : 'numeric'" min="0" :step="showsFraction ? 1 : usesAmount ? '.01' : draft.unit === 'wan' ? '.0001' : estimate.lot" placeholder="请输入" :aria-label="showsFraction ? '下单比例，点击输入实际数量或金额' : usesAmount ? '订单金额' : '订单数量'" :aria-valuetext="showsFraction ? `${draft.fraction}%` : undefined" @focus="editSize" @blur="normalizeSize">
@@ -474,8 +488,8 @@ function handleKeyboard(event) {
       <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="navigate('symbols')">取消</button><button type="button" class="ticket-primary" @click="addManualSymbol">新增标的</button></footer>
     </template>
     <template v-else-if="page === 'confirm' && snapshot">
-      <div class="order-entry-scroll ticket-confirm"><h3><span :class="snapshot.side === 'buy' ? 'equity-positive' : 'equity-negative'">{{ snapshot.side === 'buy' ? '买入' : '卖出' }}</span> {{ snapshot.symbol.name }} <small>{{ snapshot.symbol.code }}</small></h3><dl><div><dt>订单价格 ({{ symbolCurrency }})</dt><dd>{{ snapshot.type === 'limit' ? priceText(snapshot.price) : '市价' }}</dd></div><div><dt>{{ isAmend ? '改后订单总数量 (股)' : '订单数量 (股)' }}</dt><dd>{{ number(snapshot.quantity) }}</dd></div><div><dt>{{ isAmend ? '未成交部分预估金额' : '预估金额' }} ({{ symbolCurrency }})</dt><dd>{{ snapshot.price > 0 ? money(snapshot.amount) : '--' }}</dd></div><div><dt>下单账户</dt><dd>{{ accountLabel(snapshot.account) }}</dd></div><div><dt>订单类型</dt><dd>{{ snapshot.execution === 'highTouch' ? '手工单' : '系统单' }}</dd></div><div><dt>执行算法</dt><dd>{{ snapshot.algorithm }}</dd></div><div><dt>订单方式</dt><dd>{{ snapshot.type === 'limit' ? '限价单' : '市价单' }}</dd></div><template v-if="snapshot.algorithm === 'POV'"><div><dt>运行时间</dt><dd>{{ snapshot.pov.hours }} 时 {{ snapshot.pov.minutes }} 分</dd></div><div><dt>市场成交占比</dt><dd>{{ snapshot.pov.participation }}%</dd></div></template><div v-if="snapshot.inputAmount !== null"><dt>订单金额 ({{ symbolCurrency }})</dt><dd>{{ money(snapshot.inputAmount) }}</dd></div><div v-if="snapshot.note"><dt>备注</dt><dd>{{ snapshot.note }}</dd></div></dl></div>
-      <div v-if="isAmend" class="ticket-amend-confirm app-numeric">已成 {{ number(snapshot.filled) }} 股不变 · 改后未成交 {{ number(snapshot.remaining) }} 股</div><p v-if="error" class="ticket-error" role="alert">{{ error }}</p>
+      <div class="order-entry-scroll ticket-confirm"><h3><span :class="snapshot.side === 'buy' ? 'equity-positive' : 'equity-negative'">{{ snapshot.side === 'buy' ? '买入' : '卖出' }}</span> {{ snapshot.symbol.name }} <small>{{ snapshot.symbol.code }}</small></h3><dl><div><dt>订单价格 ({{ symbolCurrency }})</dt><dd>{{ snapshot.type === 'limit' ? priceText(snapshot.price) : '市价' }}</dd></div><div><dt>{{ isAmend ? '改后订单总数量 (股)' : '订单数量 (股)' }}</dt><dd>{{ number(snapshot.quantity) }}</dd></div><div><dt>预估金额 ({{ symbolCurrency }})</dt><dd>{{ snapshot.price > 0 ? money(snapshot.amount) : '--' }}</dd></div><div><dt>下单账户</dt><dd>{{ accountLabel(snapshot.account) }}</dd></div><div><dt>订单类型</dt><dd>{{ snapshot.execution === 'highTouch' ? '手工单' : '系统单' }}</dd></div><div><dt>执行算法</dt><dd>{{ snapshot.algorithm }}</dd></div><div><dt>订单方式</dt><dd>{{ snapshot.type === 'limit' ? '限价单' : '市价单' }}</dd></div><template v-if="snapshot.algorithm === 'POV'"><div><dt>运行时间</dt><dd>{{ snapshot.pov.hours }} 时 {{ snapshot.pov.minutes }} 分</dd></div><div><dt>市场成交占比</dt><dd>{{ snapshot.pov.participation }}%</dd></div></template><div v-if="snapshot.inputAmount !== null"><dt>订单金额 ({{ symbolCurrency }})</dt><dd>{{ money(snapshot.inputAmount) }}</dd></div><div v-if="snapshot.note"><dt>备注</dt><dd>{{ snapshot.note }}</dd></div></dl></div>
+      <div v-if="isAmend" class="ticket-amend-confirm app-numeric">已成 {{ number(snapshot.filled) }} 股保持不变</div><p v-if="error" class="ticket-error" role="alert">{{ error }}</p>
       <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">返回</button><button type="button" class="ticket-primary" :disabled="isPaused" @click="confirmDemo">确认{{ isAmend ? '改单' : snapshot.side === 'buy' ? '买入' : '卖出' }}</button></footer>
     </template>
     <template v-else-if="page === 'done'">
@@ -487,7 +501,7 @@ function handleKeyboard(event) {
     <div class="order-entry-scroll ticket-settings">
       <van-tabs v-model:active="algorithmDraft.value" type="card" :ellipsis="false" :duration="0" class="ticket-algorithm-tabs" @keydown="handleAlgorithmKeydown">
         <van-tab v-for="option in algorithmDialogOptions" :key="option.value" :name="option.value" :title="option.label">
-          <div v-if="option.value === 'POV'" class="ticket-algorithm-params"><label class="app-form-label">运行时间</label><div class="ticket-duration"><label><select v-model="algorithmDraft.hours" aria-label="POV运行小时"><option v-for="hour in 24" :key="hour" :value="hour - 1">{{ String(hour - 1).padStart(2, '0') }}</option></select><span>时</span></label><label><select v-model="algorithmDraft.minutes" aria-label="POV运行分钟"><option v-for="minute in 60" :key="minute" :value="minute - 1">{{ String(minute - 1).padStart(2, '0') }}</option></select><span>分</span></label></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model="algorithmDraft.participation" type="number" inputmode="numeric" min="1" max="25" step="1"><span>%</span></div><p v-if="!validPov(algorithmDraft)" class="ticket-error" role="alert">请填写有效的运行时间和成交占比</p></div>
+          <div v-if="option.value === 'POV'" class="ticket-algorithm-params"><label class="app-form-label">运行时间</label><div class="ticket-duration"><label><select v-model="algorithmDraft.hours" aria-label="POV运行小时"><option v-for="hour in 7" :key="hour" :value="hour - 1">{{ String(hour - 1).padStart(2, '0') }}</option></select><span>时</span></label><label><select v-model="algorithmDraft.minutes" aria-label="POV运行分钟"><option v-for="minute in (Number(algorithmDraft.hours) === 6 ? 31 : 60)" :key="minute" :value="minute - 1">{{ String(minute - 1).padStart(2, '0') }}</option></select><span>分</span></label></div><EquityPovDeadline :symbol="symbol" :hours="algorithmDraft.hours" :minutes="algorithmDraft.minutes" :active="show && page === 'algorithm'" /><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model="algorithmDraft.participation" type="number" inputmode="numeric" min="1" max="25" step="1"><span>%</span></div><p v-if="!validPov(algorithmDraft)" class="ticket-error" role="alert">运行时间须大于 0 且不超过 6 小时 30 分钟，成交占比须为 1%–25%</p></div>
         </van-tab>
       </van-tabs>
     </div>

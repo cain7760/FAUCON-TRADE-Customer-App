@@ -35,12 +35,16 @@ test('新版订单所有排序方向均异常置顶并保留组内稳定排序',
 })
 
 test('CSV 列数和完整字段与 PC 导出一致，数量金额分列，不受表格列选择影响', () => {
-  for (const [kind, count] of [['positions', 19], ['orders', 26], ['trades', 19]]) {
+  for (const [kind, count] of [['positions', 19], ['orders', 26], ['trades', 16]]) {
     const data = focusExportData(kind, demoRecords[kind].slice(0, 2))
     assert.equal(data.header.length, count)
     assert.equal(data.records.length, 2)
     assert.ok(data.records.every(row => row.length === count))
     assert.ok(data.header.includes('币种'))
+  }
+  for (const label of ['执行算法', '下单备注', '订单动态']) {
+    assert.ok(!focusExportData('trades', demoRecords.trades).header.includes(label))
+    assert.ok(focusExportData('orders', demoRecords.orders).header.includes(label))
   }
   const orders = focusExportData('orders', [{ code: '001', name: '测试', quantity: 100, price: 2, canceledQuantity: 20 }])
   assert.equal(orders.records[0][orders.header.indexOf('订单数量')], '100')

@@ -22,7 +22,9 @@ import { focusDefaultColumnKeys } from './focusTableColumns.js'
 import { applyDemoOrderAction, canConvertOrder, orderActionReason } from './orderActions.js'
 import { demoAvailableCash, demoLedgerError, demoPositionRows, demoTradeRows, loadDemoOrders, saveDemoOrders, submitDemoOrder } from './demoLedger.js'
 import ExceptionState from '../../../components/ExceptionState.vue'
+import { flushLunchOperations } from '../../../domain/orders/lunchBreak.js'
 import { useOrderSessionExpiry } from '../../../composables/useOrderSessionExpiry.js'
+import { useTradingTime } from '../../../composables/useTradingTime.js'
 import './equity.css'
 
 const props = defineProps({ orderLayout: { type: String, default: 'split' }, orderReview: Boolean, design: { type: String, default: 'baseline' }, appReview: Boolean })
@@ -37,6 +39,7 @@ const focusColumns = reactive(Object.fromEntries(listTabs.map(tab => [tab.key, f
 const focusRecordOrder = reactive({ list: {}, table: {} })
 const refreshKeys = reactive({ positions: 0, orders: 0, trades: 0 })
 const systemRunning = ref(true)
+const { tradingTimeMode, setTradingTimeMode, tradingTimeError } = useTradingTime()
 const toolsVisible = ref(false)
 const historyVisible = ref(false), historyContext = ref(null)
 const selectedAccounts = ref(['TZS_T0'])
@@ -48,7 +51,7 @@ const orderEntryContext = ref(props.orderReview ? { action: 'new' } : null)
 let demoStorage
 try { demoStorage = globalThis.localStorage } catch { /* 禁用存储时保留本次页面状态。 */ }
 const demoOrders = ref(loadDemoOrders(demoStorage))
-const syncOrderClose = useOrderSessionExpiry(demoOrders)
+const syncOrderClose = useOrderSessionExpiry(demoOrders, { demoMode: tradingTimeMode, onTick: processLunchOperations })
 watch(demoOrders, rows => saveDemoOrders(demoStorage, rows), { deep: true, immediate: true })
 function readHistorySource() { syncOrderClose(); return { orders: demoOrders.value, trades: demoTradeRows(demoOrders.value) } }
 function openMessageOrder(id, event) {
@@ -153,14 +156,19 @@ function openTableAction(kind, { record, action, event }) {
   }
 }
 function confirmOperation(payload) {
+  if (operationContext.value?.action === 'cancel' && tradingTimeError()) { operationError.value = tradingTimeError(); return }
   if (isFocusDesign.value && !systemRunning.value) { operationError.value = '系统已中断，暂不可执行交易操作'; return }
   try {
     operationResult.value = applyOrderAction(operationContext.value.record.id, operationContext.value.action, payload)
   } catch (error) { operationError.value = error.message }
 }
+function processLunchOperations() {
+  if (!systemRunning.value) return
+  flushLunchOperations(demoOrders.value, (row, pending) => applyOrderAction(row.id, pending.action, pending.payload), new Date(), tradingTimeMode.value)
+}
 function applyOrderAction(id, action, payload) {
   const nextOrders = JSON.parse(JSON.stringify(demoOrders.value))
-  const message = applyDemoOrderAction(nextOrders, id, action, payload, new Date(), { pcParity: usesPcRules.value })
+  const message = applyDemoOrderAction(nextOrders, id, action, payload, new Date(), { pcParity: usesPcRules.value, demoTimeMode: tradingTimeMode.value })
   const error = demoLedgerError(nextOrders)
   if (error) throw new Error(error)
   const currentById = new Map(demoOrders.value.map(row => [row.id, row]))
@@ -168,11 +176,13 @@ function applyOrderAction(id, action, payload) {
   return message
 }
 function confirmAmendment(payload, respond) {
+  if (tradingTimeError()) { respond({ error: tradingTimeError() }); return }
   if (isFocusDesign.value && !systemRunning.value) { respond({ error: '系统已中断，暂不可执行交易操作' }); return }
   try { respond({ message: applyOrderAction(payload.orderId, 'amend', payload) }) }
   catch (error) { respond({ error: error.message }) }
 }
 function confirmOrder(snapshot, respond) {
+  if (tradingTimeError()) { respond({ error: tradingTimeError() }); return }
   if (isFocusDesign.value && !systemRunning.value) { respond({ error: '系统已中断，暂不可执行交易操作' }); return }
   try {
     submitDemoOrder(demoOrders.value, snapshot)
@@ -240,6 +250,7 @@ function confirmOrder(snapshot, respond) {
           </div>
         </van-tab>
       </van-tabs>
+      <div v-show="!isOverlayOpen" class="equity-demo-time-controls" role="group" aria-label="演示交易时间"><button type="button" :aria-pressed="tradingTimeMode === 'trading'" @click="setTradingTimeMode('trading')">交易时间</button><button type="button" :aria-pressed="tradingTimeMode === 'non-trading'" @click="setTradingTimeMode('non-trading')">非交易时间</button></div>
       <div v-if="isFocusDesign" class="focus-trade-rail"><button type="button" class="focus-system-control" :aria-pressed="systemRunning" :aria-label="systemRunning ? '系统运行中，切换为中断' : '系统已中断，恢复运行'" @click="systemRunning = !systemRunning"><b>{{ systemRunning ? '运行中' : '系统已中断' }}</b></button><button type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg><span>下单</span></button></div>
       <div v-else-if="isConceptC" class="concept-c-trade-rail"><button type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><DocumentAdd aria-hidden="true" />下单</button></div>
       <button v-else-if="design === 'baseline'" v-show="!isOverlayOpen" type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><DocumentAdd aria-hidden="true" /><span>下单</span></button>
@@ -257,3 +268,9 @@ function confirmOrder(snapshot, respond) {
     <EquityOrderOperation v-if="operationContext" v-model:show="operationVisible" :context="operationContext" :result="operationResult" :error="operationError" @confirm="confirmOperation" @closed="restoreFocus" />
   </section>
 </template>
+
+<style scoped>
+.equity-demo-time-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; padding: 6px 16px; border-top: 1px solid var(--app-color-border); background: var(--app-color-surface); }
+.equity-demo-time-controls button { min-height: 28px; padding: 0 6px; border: 0; border-radius: 3px; background: transparent; color: var(--app-color-text-secondary); font-size: 12px; }
+.equity-demo-time-controls button[aria-pressed="true"] { color: var(--app-color-accent); }
+</style>

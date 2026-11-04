@@ -302,3 +302,8 @@
   .ticket-segment button::after { position: absolute; inset: -6px 0; content: ''; }
   .ticket-baseline-order-entry :is(.ticket-book, .ticket-caption) .ticket-segment button::after { inset: -7px 0; }
 }
+
+/* 平仓沿用改单的信息摘要容器，四项持仓指标按移动端两列排布。 */
+.ticket-close-original dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; }
+.ticket-close-original dt { color: var(--app-color-text-secondary); font-size: 12px; }
+.ticket-close-original dd { margin: 4px 0 0; color: var(--app-color-text); font-size: 14px; }

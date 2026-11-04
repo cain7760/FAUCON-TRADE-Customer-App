@@ -3,10 +3,34 @@ import assert from 'node:assert/strict'
 import { amendmentDraft, amendmentError, amendmentEstimate, amendmentPayload, applyDemoOrderAction, canConvertOrder, createDemoOrder, orderActionReason } from './orderActions.js'
 import { orderTableColumns } from './orderTableColumns.js'
 import { orderStatusVisual } from './orderStatus.js'
+import { flushLunchOperations } from '../../../domain/orders/lunchBreak.js'
 
 const symbol = { name: '平安银行', code: '000001', market: 'SZ', price: 12, lotSize: 100 }
 const order = (extra = {}) => ({ ...symbol, id: 'one', orderNo: 'WT1', account: 'TZS_T0', orderType: '系统单', status: '已报', side: 'buy', openClose: '开', type: 'limit', price: 12, quantity: 1000, filledQuantity: 0, filledPrice: null, inputAmount: null, reportQuantity: 1000, frozenMargin: 4800, marginRate: 40, algorithm: 'DMA', orderRemark: '', ...extra })
 const date = new Date('2026-10-20T02:00:00Z')
+test('午休新单和平仓为待报，撤改单保留原数据直到复市处理', () => {
+  const lunch = new Date('2026-11-04T12:00:00+08:00'), reopen = new Date('2026-11-04T13:00:00+08:00')
+  for (const side of ['buy', 'sell']) {
+    const created = createDemoOrder({ symbol, account: 'TZS_T0', side, openClose: side === 'sell' ? '平' : '开', type: 'limit', price: 12, quantity: 100, amount: 1200, algorithmCode: 'DMA' }, 1, lunch)
+    assert.equal(created.status, '待报')
+    assert.equal(created.filledQuantity, 0)
+  }
+  for (const action of ['amend', 'cancel']) {
+    const row = order({ status: '部成', filledQuantity: 400, filledPrice: 11.9, reportQuantity: 600, frozenMargin: 2880 }), rows = [row]
+    const payload = action === 'amend' ? amendment(row, { value: 900, price: 12.1 }).payload : {}
+    applyDemoOrderAction(rows, row.id, action, payload, lunch)
+    assert.equal(row.status, action === 'amend' ? '待改' : '待撤')
+    assert.equal(row.quantity, 1000); assert.equal(row.filledQuantity, 400)
+    assert.equal(row.price, 12); assert.equal(row.reportQuantity, 600); assert.equal(row.frozenMargin, 2880)
+    assert.equal(rows.length, 1)
+    flushLunchOperations(rows, (item, pending) => applyDemoOrderAction(rows, item.id, pending.action, pending.payload, reopen), reopen)
+    assert.equal(row.status, '部撤'); assert.equal(row.canceledQuantity, 600); assert.equal(row.frozenMargin, 0)
+    assert.equal(row.filledQuantity, 400); assert.equal(row.filledPrice, 11.9)
+    assert.equal(row.pendingLunchOperation, undefined)
+    assert.equal(rows.length, action === 'amend' ? 2 : 1)
+    if (action === 'amend') { assert.equal(rows[1].quantity, 500); assert.equal(rows[1].status, '待报') }
+  }
+})
 test('港股市价新单及改单提交均被拒绝，且拒绝后不修改订单', () => {
   const hk = { ...symbol, market: 'HK', code: '00700', currency: 'HKD', price: 320 }
   const snapshot = { symbol: hk, account: 'TZS_T0', side: 'buy', algorithmCode: 'DMA', execution: 'lowTouch', type: 'market', price: 320, quantity: 100, amount: 32000 }
@@ -45,7 +69,7 @@ test('操作结果、订单动态和历史不附加演示说明，原有状态�
   const messages = [created.feedback,
     applyDemoOrderAction([canceled], canceled.id, 'cancel', {}, date),
     applyDemoOrderAction([converted], converted.id, 'convert', {}, date),
-    applyDemoOrderAction(rows, amended.id, 'amend', amendment(amended, { value: 500, price: 12.1 }).payload, date)]
+    applyDemoOrderAction(rows, amended.id, 'amend', amendment(amended, { value: 900, price: 12.1 }).payload, date)]
   for (const row of [canceled, converted, ...rows]) messages.push(row.feedback, ...(row.history || []).map(item => item.message))
   for (const message of messages) assert.doesNotMatch(message, /模拟|演示|本地|真实委托/)
   assert.equal(canceled.status, '撤单'); assert.equal(converted.orderType, '手工单')
@@ -88,17 +112,17 @@ test('conversion preserves exceptional order identity, status and values', () =>
   assert.equal(row.orderRemark, '交由交易员'); assert.equal(canConvertOrder(row), false)
   assert.match(row.feedback, /通道回报超时/)
 })
-test('amend initializes and validates unfilled quantities and limits', () => {
+test('amend initializes and validates total quantities and limits', () => {
   const row = order({ status: '部成', filledQuantity: 400, side: 'sell' })
-  assert.equal(amendmentDraft(row).value, 600)
+  assert.equal(amendmentDraft(row).value, 1000)
   let next = amendment(row)
   assert.match(amendmentError(next.draft, row, symbol, next.estimate), /先修改/)
-  next = amendment(row, { value: 700 })
+  next = amendment(row, { value: 1100 })
   assert.match(amendmentError(next.draft, row, symbol, next.estimate), /最大可卖/)
-  next = amendment(row, { value: 300, price: 12.01 })
+  next = amendment(row, { value: 700, price: 12.01 })
   assert.equal(amendmentError(next.draft, row, symbol, next.estimate), '')
   assert.equal(next.payload.quantity, 700)
-  for (const changes of [{ value: 99 }, { price: 12.001 }, { algorithm: 'POV', pov: { hours: 0, minutes: 0, participation: 30 } }]) {
+  for (const changes of [{ value: 300 }, { value: 99 }, { price: 12.001 }, { algorithm: 'POV', pov: { hours: 0, minutes: 0, participation: 30 } }]) {
     next = amendment(row, changes)
     assert.ok(amendmentError(next.draft, row, symbol, next.estimate))
   }
@@ -107,7 +131,7 @@ test('amend initializes and validates unfilled quantities and limits', () => {
 })
 test('part-filled amendment replaces unfilled portion without changing fills', () => {
   const row = order({ status: '部成', filledQuantity: 400, filledPrice: 11.9 })
-  const orders = [row], next = amendment(row, { value: 500, price: 12.1 })
+  const orders = [row], next = amendment(row, { value: 900, price: 12.1 })
   applyDemoOrderAction(orders, row.id, 'amend', next.payload, date)
   assert.equal(row.status, '部撤'); assert.equal(row.quantity, 1000); assert.equal(row.filledQuantity, 400)
   assert.equal(row.filledPrice, 11.9); assert.equal(row.price, 12); assert.equal(row.canceledQuantity, 600)
@@ -116,7 +140,7 @@ test('part-filled amendment replaces unfilled portion without changing fills', (
 })
 test('zero outstanding amendment cancels remainder without a replacement', () => {
   const row = order({ status: '部成', filledQuantity: 400 }), orders = [row]
-  const next = amendment(row, { value: 0 })
+  const next = amendment(row, { value: 400 })
   assert.equal(amendmentError(next.draft, row, symbol, next.estimate), '')
   applyDemoOrderAction(orders, row.id, 'amend', next.payload, date)
   assert.equal(orders.length, 1); assert.equal(row.status, '部撤')
@@ -134,12 +158,12 @@ test('unfilled amendment quantity increases create child, reductions update orig
 })
 test('amount and percentage amendment use the original side and preserve total semantics', () => {
   const row = order({ status: '部成', filledQuantity: 400, inputAmount: 12000 })
-  assert.equal(amendmentDraft(row).value, 7200)
-  const next = amendment(row, { mode: 'amount', value: 3600 })
+  assert.equal(amendmentDraft(row).value, 12000)
+  const next = amendment(row, { mode: 'amount', value: 8400 })
   assert.equal(next.payload.quantity, 700); assert.equal(next.payload.inputAmount, 8400)
   const sell = order({ side: 'sell', filledQuantity: 400 })
   const percentage = amendment(sell, { mode: 'percentage', fraction: 50 })
-  assert.equal(percentage.estimate.sell, 300); assert.equal(percentage.payload.quantity, 700)
+  assert.equal(percentage.estimate.sell, 500); assert.equal(percentage.payload.quantity, 500)
 })
 test('invalid or stale amendment confirmations leave records unchanged', () => {
   for (const change of [{ quantity: -100 }, { quantity: 99 }, { price: 0 }, { type: 'unknown' }, { algorithm: 'POV', algorithmParams: null }]) {

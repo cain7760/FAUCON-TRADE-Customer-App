@@ -16,7 +16,7 @@ function setup(context, layout = 'stacked', options = {}) {
   const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: 'mobile-market-test' }).content
   const imports = { ...vue, ...fixtures, ...model, ...orderModel, ...orderActions, ...rules, ...decimal, ...calculations, orderAccountOverview,
-    showSuccessToast() {}, document: { addEventListener() {}, removeEventListener() {} }, EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityAccountSummary: {} }
+    showSuccessToast() {}, document: { addEventListener() {}, removeEventListener() {} }, AppSelectField: {}, EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityPovDeadline: {}, EquityAccountSummary: {} }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   return component.setup(vue.reactive({ show: true, context, layout, fullCapabilities: false, systemRunning: true, overviewAccountIds: [], ...options }), { expose() {}, emit: options.emit || (() => {}) })
 }
@@ -122,26 +122,26 @@ test('单位菜单支持方向键、Esc仅收起菜单并恢复焦点', async t 
   assert.equal(stopped, 3)
 })
 
-test('金额改单保留总预算和已成金额，改价只重算未成交数量并保留余量', async () => {
+test('金额改单回填完整预算，保留实际已成金额且不重复累加数量', async () => {
   const scope = vue.effectScope()
   const record = { ...fixtures.orderInstruments[0], id: 'amend-amount-parity', account: 'TZS_T0', orderType: '系统单', type: 'limit', price: 11.78, quantity: 10000, inputAmount: 117850, filledQuantity: 2000, side: 'sell', status: '部成', algorithm: 'DMA' }
   const form = scope.run(() => setup({ action: 'amend', record }, 'split', { fullCapabilities: true }))
-  assert.equal(form.displayValue.value, 94290)
+  assert.equal(form.displayValue.value, 117850)
   form.preview('sell')
   assert.equal(form.error.value, '请先修改订单参数')
   form.draft.price = 12; await vue.nextTick()
   assert.equal(form.amendmentTotalAmount.value, 117850)
-  assert.equal(form.displayValue.value, 94290)
-  assert.equal(form.estimate.value.sell, 7800)
+  assert.equal(form.displayValue.value, 117850)
+  assert.equal(form.estimate.value.sell, 9800)
   form.preview('sell')
   assert.equal(form.snapshot.value.inputAmount, 117850)
   assert.equal(form.snapshot.value.quantity, 9800)
   form.back(); form.draft.amountUnit = 'wan'
-  assert.equal(form.displayValue.value, 9.429)
+  assert.equal(form.displayValue.value, 11.785)
   form.sizeInputValue.value = 6
-  assert.equal(form.amendmentTotalAmount.value, 83560)
+  assert.equal(form.amendmentTotalAmount.value, 60000)
   assert.equal(form.estimate.value.sell, 5000)
-  form.setMode('quantity'); assert.equal(form.draft.value, 8000)
+  form.setMode('quantity'); assert.equal(form.draft.value, 10000)
   form.setMode('amount'); assert.equal(form.displayValue.value, 6)
   form.draft.price = 13; await vue.nextTick()
   assert.equal(form.displayValue.value, 6)
@@ -177,26 +177,29 @@ test('无成交金额改单在两种展示中都保留提交预算，不丢弃�
   assert.equal(baselineOrders[0].inputAmount, 117850)
 })
 
-test('新版改单滑块回填未成交数量或金额，不使用普通下单百分比模式', async () => {
+test('新版改单输入和滑块按订单总量，提交不叠加已成数量', async () => {
   const scope = vue.effectScope()
   const record = { ...fixtures.orderInstruments[0], id: 'amend-parity', account: 'TZS_T0', orderType: '系统单', type: 'limit', price: 11.78, quantity: 10000, filledQuantity: 2000, side: 'sell', status: '部成', algorithm: 'DMA' }
   const form = scope.run(() => setup({ action: 'amend', record }, 'split', { fullCapabilities: true }))
+  assert.equal(form.draft.value, 10000)
+  assert.equal(form.estimate.value.sell, 10000)
+  assert.equal(form.estimate.value.maxSell, 10000)
   form.selectFraction(50); await vue.nextTick()
   assert.equal(form.draft.mode, 'quantity')
-  assert.equal(form.draft.value, 4000)
+  assert.equal(form.draft.value, 5000)
   assert.equal(form.showsFraction.value, false)
   form.draft.price = 12; await vue.nextTick()
-  assert.equal(form.draft.value, 4000)
-  assert.equal(form.estimate.value.sell, 4000)
+  assert.equal(form.draft.value, 5000)
+  assert.equal(form.estimate.value.sell, 5000)
   assert.equal(form.draft.fraction, 50)
   form.setMode('amount'); form.selectFraction(50); await vue.nextTick()
   assert.equal(form.draft.mode, 'amount')
-  assert.equal(form.draft.value, 48000)
-  assert.equal(form.estimate.value.sell, 4000)
+  assert.equal(form.draft.value, 59560)
+  assert.equal(form.estimate.value.sell, 5000)
   form.preview('sell')
-  assert.equal(form.snapshot.value.quantity, 6000)
-  assert.equal(form.snapshot.value.inputAmount, 71560)
-  assert.equal(form.snapshot.value.remaining, 4000)
+  assert.equal(form.snapshot.value.quantity, 5000)
+  assert.equal(form.snapshot.value.inputAmount, 59560)
+  assert.equal(form.snapshot.value.filled, 2000)
   scope.stop()
 })
 
@@ -205,20 +208,20 @@ test('新版改单万股支持两位小数，换单位保留实际股数且能�
   const record = { ...fixtures.orderInstruments[0], id: 'amend-unit', account: 'TZS_T0', orderType: '系统单', type: 'limit', price: 11.78, quantity: 10000, filledQuantity: 2000, side: 'sell', status: '部成', algorithm: 'DMA' }
   const form = scope.run(() => setup({ action: 'amend', record }, 'split', { fullCapabilities: true }))
   form.quantityUnit.value = 'wan'; form.changeQuantityUnit(); await vue.nextTick()
-  assert.equal(form.draft.value, .8)
-  assert.equal(form.estimate.value.sell, 8000)
+  assert.equal(form.draft.value, 1)
+  assert.equal(form.estimate.value.sell, 10000)
   form.sizeInputValue.value = .31; form.normalizeSize(); await vue.nextTick()
   assert.equal(form.draft.value, .31)
   assert.equal(form.estimate.value.sell, 3100)
-  assert.equal(form.draft.fraction, 39)
+  assert.equal(form.draft.fraction, 31)
   form.preview('sell')
   assert.equal(form.error.value, '')
-  assert.equal(form.snapshot.value.quantity, 5100)
+  assert.equal(form.snapshot.value.quantity, 3100)
   form.back(); form.selectFraction(50); await vue.nextTick()
-  assert.equal(form.draft.value, .4)
-  assert.equal(form.estimate.value.sell, 4000)
+  assert.equal(form.draft.value, .5)
+  assert.equal(form.estimate.value.sell, 5000)
   form.quantityUnit.value = 'shares'; form.changeQuantityUnit(); await vue.nextTick()
-  assert.equal(form.draft.value, 4000)
+  assert.equal(form.draft.value, 5000)
   const baseline = scope.run(() => setup({ action: 'amend', record }))
   baseline.quantityUnit.value = 'wan'; baseline.changeQuantityUnit()
   assert.equal(baseline.draft.value, '')
@@ -638,4 +641,19 @@ test('App 追单、平仓、改单共用面板均不显示港股市价选项', a
     assert.deepEqual(form.priceTypeOptions.value, [['limit', '限价']], action)
     scope.stop()
   }
+})
+
+
+test('App 六小时最多三十分，非法时长不能确认或绕过订单校验', async () => {
+  const scope = vue.effectScope()
+  const form = scope.run(() => setup({action:'new'}))
+  form.algorithmDraft.value = 'POV'; form.algorithmDraft.hours = 5; form.algorithmDraft.minutes = 59
+  form.applyAlgorithm()
+  assert.equal(form.draft.pov.hours, 5)
+  form.algorithmDraft.hours = 6; await vue.nextTick()
+  assert.equal(form.algorithmDraft.minutes, 30)
+  assert.equal(orderModel.validPov(form.algorithmDraft), true)
+  form.algorithmDraft.minutes = 31; form.applyAlgorithm()
+  assert.equal(form.draft.pov.hours, 5)
+  scope.stop()
 })

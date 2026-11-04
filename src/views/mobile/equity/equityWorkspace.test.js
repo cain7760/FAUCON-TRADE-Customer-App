@@ -1,3 +1,4 @@
+import { useTradingTime } from '../../../composables/useTradingTime.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -59,7 +60,7 @@ function setup(file, props = {}, environment = {}) {
   const events = []
   const componentStubs = Object.fromEntries([...descriptor.scriptSetup.content.matchAll(/^import (\w+) from ['"][^'"]+\.vue['"]/gm)].map(([, name]) => [name, {}]))
   // 这些工作台/导出用例冻结订单生命周期；收盘与快照行为由独立业务用例验证。
-  const imports = { useOrderSessionExpiry: () => () => [], ...vue, ...fixtures, ...model, ...orderActions, ...ledger, ...focusTableColumns, orderAccountOverview, recordTableColumns, ...componentStubs, showAppMessage() {}, document: { querySelector() {} }, ...environment }
+  const imports = { flushLunchOperations() {}, useTradingTime, useOrderSessionExpiry: () => () => [], ...vue, ...fixtures, ...model, ...orderActions, ...ledger, ...focusTableColumns, orderAccountOverview, recordTableColumns, ...componentStubs, showAppMessage() {}, document: { querySelector() {} }, ...environment }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   return { state: component.setup(vue.reactive(props), { emit: (...event) => events.push(event), expose() {} }), events }
 }
@@ -542,4 +543,22 @@ test('新版在确认前暂停会拦截撤改单且不改变订单，恢复后�
   state.confirmOperation({})
   assert.match(state.operationResult.value, /已撤回未成交部分/)
   assert.ok(['撤单', '部撤'].includes(row.status))
+})
+
+test('非交易时间只拦截正式下单改单撤单，切回交易时间后原入口可继续使用', () => {
+  const scope = vue.effectScope()
+  const { state } = scope.run(() => setup('./EquityTrading.vue', { design: 'focus' }))
+  const before = JSON.stringify(state.demoOrders.value)
+  state.setTradingTimeMode('non-trading')
+  const errors = []
+  state.confirmOrder({}, result => errors.push(result.error))
+  state.confirmAmendment({}, result => errors.push(result.error))
+  state.operationContext.value = { action: 'cancel', record: state.demoOrders.value[0] }
+  state.confirmOperation({})
+  assert.deepEqual(errors, ['当前非交易时间，不可进行操作。', '当前非交易时间，不可进行操作。'])
+  assert.equal(state.operationError.value, '当前非交易时间，不可进行操作。')
+  assert.equal(JSON.stringify(state.demoOrders.value), before)
+  state.setTradingTimeMode('trading')
+  assert.equal(state.tradingTimeError(), '')
+  scope.stop()
 })

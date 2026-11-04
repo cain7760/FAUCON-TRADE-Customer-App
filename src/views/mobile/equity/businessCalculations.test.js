@@ -116,9 +116,9 @@ test('金额委托撤回未使用预算；数量委托撤回股数不被误当�
 test('部成金额改单不按新价重估已成交金额，剩余预算和零头完整转入子委托', () => {
   const row = { ...createDemoOrder(snapshot({ quantity: 1000, inputAmount: 11780 }), 1, date), status: '部成', filledQuantity: 400, filledAmount: 4600, filledPrice: 11.5 }
   const draft = { ...amendmentDraft(row), price: 12 }
-  assert.equal(draft.value, 7180)
+  assert.equal(draft.value, 11780)
   const estimate = amendmentEstimate(draft, row, symbol, 100000)
-  assert.equal(estimate.buy, 500)
+  assert.equal(estimate.buy, 900)
   const payload = { ...amendmentPayload(draft, row, estimate), referencePrice: 12 }
   assert.equal(payload.inputAmount, 11780)
   const rows = [row]

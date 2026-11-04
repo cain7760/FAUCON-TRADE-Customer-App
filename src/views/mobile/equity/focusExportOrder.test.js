@@ -1,3 +1,4 @@
+import { useTradingTime } from '../../../composables/useTradingTime.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -18,7 +19,7 @@ function setup(file, props, onEmit = () => {}, environment = {}) {
   const script = compileScript(descriptor, { id: 'focus-export-order-test' }).content
   const stubs = Object.fromEntries([...descriptor.scriptSetup.content.matchAll(/^import (\w+) from ['"][^'"]+\.vue['"]/gm)].map(([, name]) => [name, {}]))
   // 这些工作台/导出用例冻结订单生命周期；收盘与快照行为由独立业务用例验证。
-  const imports = { useOrderSessionExpiry: () => () => [], ...vue, ...fixtures, ...model, ...orderActions, ...ledger, ...columns, ...tableColumns, ...tableSorting, orderAccountOverview, ...stubs, onMounted() {}, onBeforeUnmount() {}, useId: () => 'table-test', document: { querySelector() {} }, ...environment }
+  const imports = { flushLunchOperations() {}, useTradingTime, useOrderSessionExpiry: () => () => [], ...vue, ...fixtures, ...model, ...orderActions, ...ledger, ...columns, ...tableColumns, ...tableSorting, orderAccountOverview, ...stubs, onMounted() {}, onBeforeUnmount() {}, useId: () => 'table-test', document: { querySelector() {} }, ...environment }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   return component.setup(vue.reactive(props), { emit: onEmit, expose() {} })
 }

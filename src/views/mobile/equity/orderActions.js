@@ -1,3 +1,4 @@
+import { deferLunchOperation } from '../../../domain/orders/lunchBreak.js'
 import { orderError, orderEstimates, validPov } from './orderModel.js'
 import { normalizeOrderType, orderTypeError } from './orderMarketRules.js'
 import { decimalProduct, decimalSum, quantityForAmount, truncateDecimal } from './decimalMath.js'
@@ -39,23 +40,23 @@ export function createDemoOrder(snapshot, sequence, now = new Date()) {
 // 与 Customer 端的状态门禁一致。仅处理页面内演示订单，不调用交易服务。
 // 旧演示记录可能没有成交回报；仅为兼容该快照按原委托价估算，绝不按改单新价改写已成金额。
 export const amendmentFilledAmount = row => filledAmount(row) ?? orderNotional(row.filledQuantity || 0, row.price || 0)
-export function amendmentDraft(row, { pcParity = false } = {}) {
-  const quantity = remainingQuantity(row)
+export function amendmentDraft(row) {
   return {
     execution: row.orderType === '手工单' ? 'highTouch' : 'lowTouch', type: normalizeOrderType(row.type, row),
     price: row.price ?? '', mode: row.inputAmount != null && row.type !== 'market' ? 'amount' : 'quantity',
-    value: row.inputAmount != null && row.type !== 'market' ? Math.max(0, decimalSum(row.inputAmount, -amendmentFilledAmount(row))) : quantity,
+    value: row.inputAmount != null && row.type !== 'market' ? Number(row.inputAmount) : Number(row.quantity),
     unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: row.algorithm || 'none',
     pov: { hours: 1, minutes: 0, participation: 10, ...row.algorithmParams }, note: row.orderRemark || '',
   }
 }
 export function amendmentEstimate(draft, row, symbol, cash, { pcParity = false, totalAmount } = {}) {
-  const estimate = orderEstimates(draft, symbol, cash, remainingQuantity(row))
-  estimate.maxBuy = Math.max(remainingQuantity(row), estimate.maxBuy)
-  if (pcParity && draft.mode === 'amount') {
-    const quantity = quantityForAmount(decimalSum(totalAmount, -amendmentFilledAmount(row)), estimate.price, estimate.lot)
-    estimate.buy = estimate.sell = quantity
-    estimate.buyAmount = estimate.sellAmount = orderNotional(estimate.buy, estimate.price)
+  const estimate = orderEstimates(draft, symbol, cash, Number(row.quantity))
+  estimate.maxBuy = Math.max(Number(row.quantity), estimate.maxBuy)
+  if (draft.mode === 'amount') {
+    const budget = pcParity ? totalAmount ?? draft.value : draft.value
+    const quantity = quantityForAmount(Math.max(0, decimalSum(budget, -amendmentFilledAmount(row))), estimate.price, estimate.lot)
+    estimate.buy = estimate.sell = Number(row.filledQuantity || 0) + quantity
+    estimate.buyAmount = estimate.sellAmount = decimalSum(amendmentFilledAmount(row), orderNotional(quantity, estimate.price))
   }
   if (draft.mode === 'percentage') {
     estimate.buy = quantityForAmount(decimalProduct(estimate.maxBuy, draft.fraction, .01), 1, estimate.lot)
@@ -64,23 +65,21 @@ export function amendmentEstimate(draft, row, symbol, cash, { pcParity = false, 
   return estimate
 }
 export function amendmentPayload(draft, row, estimate, { pcParity = false, totalAmount } = {}) {
-  const unfilled = estimate[row.side]
-  const quantity = Number(row.filledQuantity || 0) + unfilled
+  const quantity = estimate[row.side]
   return { orderId: row.id, type: draft.type, price: draft.type === 'market' ? null : estimate.price, quantity,
-    inputAmount: draft.mode === 'amount' ? (pcParity ? Number(totalAmount) : decimalSum(amendmentFilledAmount(row), Number(draft.value))) : null,
+    inputAmount: draft.mode === 'amount' ? Number(pcParity ? totalAmount ?? draft.value : draft.value) : null,
     algorithm: draft.algorithm, algorithmParams: draft.algorithm === 'POV' ? { ...draft.pov } : null, note: draft.note.trim() }
 }
 export function amendmentError(draft, row, symbol, estimate, options = {}) {
   const reason = orderActionReason(row)
   if (reason) return reason
-  if (draft.mode !== 'percentage' && draft.value === '') return '请输入未成交部分的数量或金额'
-  // 部成订单允许未成交部分改为 0，表示仅撤回剩余部分。
-  const isCancelRemainder = estimate[row.side] === 0 && Number(row.filledQuantity) > 0
-  // 当前 PC 改单只限制卖方未成交量；买方容量用于滑块，不新增现金校验。
+  if (draft.mode !== 'percentage' && draft.value === '') return '请输入订单数量或金额'
+  if (draft.mode === 'amount' && Number(options.pcParity ? options.totalAmount ?? draft.value : draft.value) < amendmentFilledAmount(row)) return '修改后的订单金额不得低于已成交金额'
+  if (estimate[row.side] < Number(row.filledQuantity || 0)) return '修改后的订单数量不得低于已成数量'
+  // 当前 PC 改单只限制卖方总量；买方容量用于滑块，不新增现金校验。
   const validationEstimate = options.pcParity && row.side === 'buy' ? { ...estimate, maxBuy: Number.MAX_SAFE_INTEGER } : estimate
-  const message = orderError(draft, symbol, isCancelRemainder ? { ...validationEstimate, [row.side]: estimate.lot } : validationEstimate, row.side)
+  const message = orderError(draft, symbol, validationEstimate, row.side)
   if (message) return message
-  if (draft.mode === 'amount' && options.pcParity && Number(options.totalAmount) < amendmentFilledAmount(row)) return '修改后的订单金额不得低于已成交金额'
   const next = amendmentPayload(draft, row, estimate, options)
   const originalOptions = { ...options, totalAmount: row.inputAmount ?? Number(row.quantity) * Number(row.price || 0) }
   const originalDraft = amendmentDraft(row, originalOptions)
@@ -94,7 +93,7 @@ function appendHistory(row, action, message, time) {
   row.history = [...(row.history || []), { action, message, time }]
   row.feedback = message
 }
-export function applyDemoOrderAction(orders, id, action, payload = {}, now = new Date(), { pcParity = false } = {}) {
+export function applyDemoOrderAction(orders, id, action, payload = {}, now = new Date(), { pcParity = false, demoTimeMode = null } = {}) {
   const row = orders.find(order => order.id === id)
   if (!row) throw new Error('订单不存在，请关闭后重试')
   if (action === 'convert' ? !canConvertOrder(row) : orderActionReason(row, action === 'cancel' ? '撤单' : '改单')) throw new Error('订单状态已变化，当前不可执行此操作')
@@ -110,6 +109,7 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
     return '已转为手工单，原订单编号和状态保留。'
   }
   if (action === 'cancel') {
+    if (deferLunchOperation(row, action, payload, now, demoTimeMode)) return '撤单申请已受理，午间休市，复市后处理。'
     row.status = row.filledQuantity > 0 ? '部撤' : '撤单'
     row.canceledQuantity = remaining
     row.canceledAmount = row.inputAmount != null ? remainingAmount : orderNotional(remaining, row.price ?? row.referencePrice ?? 0)
@@ -130,6 +130,7 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
   if (nextQuantity % (row.lotSize || 100) !== 0) throw new Error('订单数量不符合每手股数要求')
   if (row.side === 'sell' && nextQuantity > row.quantity) throw new Error('改单数量超出最大可卖')
   if (!['DMA', 'POV', 'none'].includes(payload.algorithm) || (payload.algorithm === 'POV' && !validPov(payload.algorithmParams || {}))) throw new Error('执行算法参数无效')
+  if (deferLunchOperation(row, action, payload, now, demoTimeMode)) return '改单申请已受理，午间休市，复市后处理。'
   const originalQuantity = row.quantity, delta = nextQuantity - originalQuantity
   const nextRemaining = nextQuantity - filled
   // 分配失败必须发生在修改母单前，避免序列用尽时产生半次改单。

@@ -62,8 +62,8 @@ export function focusExportData(kind, rows) {
   }
   return {
     filename: '成交记录.csv',
-    header: ['方向', '证券代码', '证券名称', '成交均价', '成交数量', '成交金额', '成交时间', '订单时间', '成交编号', '订单编号', '交易日期', '下单账户', '市场', '币种', '订单类型', '执行算法', '下单备注', '订单动态', '开平方向'],
-    records: rows.map(row => [row.side === 'buy' ? '买' : '卖', row.code, row.name, price(averageFillPrice(row), row.market), quantities(row.filledQuantity), formatNumber(row.filledAmount), time(row.filledTime), time(row.orderTime), row.tradeNo, row.entrustNo, row.tradeDate, accountLabel(row.account), market(row), currency(row), row.orderType || '--', row.algorithm || '--', row.orderRemark || '--', activityText(row), row.openClose === '开' ? '开仓' : '平仓']),
+    header: ['方向', '证券代码', '证券名称', '成交均价', '成交数量', '成交金额', '成交时间', '订单时间', '成交编号', '订单编号', '交易日期', '下单账户', '市场', '币种', '订单类型', '开平方向'],
+    records: rows.map(row => [row.side === 'buy' ? '买' : '卖', row.code, row.name, price(averageFillPrice(row), row.market), quantities(row.filledQuantity), formatNumber(row.filledAmount), time(row.filledTime), time(row.orderTime), row.tradeNo, row.entrustNo, row.tradeDate, accountLabel(row.account), market(row), currency(row), row.orderType || '--', row.openClose === '开' ? '开仓' : '平仓']),
   }
 }
 

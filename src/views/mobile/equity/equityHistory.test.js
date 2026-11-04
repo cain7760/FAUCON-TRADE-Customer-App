@@ -7,7 +7,7 @@ const order = { side: 'buy', openClose: '开', type: 'limit', quantity: 900, ord
 test('历史演示回退保持 PC 下单和状态生成规则，并按时间倒序', () => {
   const original = structuredClone(order)
   assert.deepEqual(buildEquityHistory(order), [
-    { operator: '交易所', time: '2026-09-18 09:30:45', type: '部成', content: '订单已部分成交，成交数量 300 股。' },
+    { operator: '系统', time: '2026-09-18 09:30:45', type: '部成', content: '订单已部分成交，成交数量 300 股。' },
     { operator: '当前账户', time: '2026-09-18 09:30:00', type: '下单', content: '提交买入开仓限价订单：900 股。' },
   ])
   assert.deepEqual(order, original)
@@ -41,7 +41,9 @@ test('持仓与成交使用原记录，无记录时为空，非法时间不生�
   const position = { positionDate: '2026-09-18', qty: 100 }
   assert.equal(buildEquityHistory(position, 'positions')[1].content, '提交买入开仓限价订单：100 股。')
   assert.equal(equityHistorySource(position), 'demo')
-  assert.equal(buildEquityHistory({ ...order, status: '全成', filledQuantity: 900 })[0].content, '订单已全部成交，成交数量 900 股。')
+  const filled = buildEquityHistory({ ...order, status: '全成', filledQuantity: 900 })[0]
+  assert.equal(filled.operator, '系统')
+  assert.equal(filled.content, '订单已全部成交，成交数量 900 股。')
   assert.ok(buildEquityHistory({ ...order, orderTime: '未知时间' }).every(item => item.time === '未知时间'))
 })
 
@@ -58,4 +60,19 @@ test('CSV 包含全部四列，处理换行引号及公式前缀，不修改记�
   assert.ok(csv.startsWith('\ufeff"操作人","操作时间","操作类型","操作内容"\n'))
   assert.ok(csv.includes('"\'=1+1\n""注释"""'))
   assert.equal(record.content, '=1+1\n"注释"')
+})
+
+test('旧历史的交易所操作人统一显示为系统，导出相同且不修改原记录', () => {
+  const row = { ...order, history: [
+    { operator: '交易所', time: '2026-09-18 09:30:45', type: '部成', content: '成交回报' },
+    { operator: '客户', time: '2026-09-18 09:30:00', type: '下单', content: '客户提交' },
+  ] }
+  const original = structuredClone(row)
+  const records = buildEquityHistory(row)
+  assert.equal(records[0].operator, '系统')
+  assert.equal(records[1].operator, '客户')
+  const csv = equityHistoryCsv(records)
+  assert.ok(csv.includes('"系统"'))
+  assert.ok(!csv.includes('交易所'))
+  assert.deepEqual(row, original)
 })

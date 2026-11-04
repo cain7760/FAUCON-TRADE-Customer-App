@@ -11,7 +11,7 @@ import { orderRowActions, orderStatusVisual, orderStatuses } from './orderStatus
 
 // 来自 Customer Web tableFieldDefinitions / OrdersTable / TradesTable 的列契约快照。
 const orderKeys = ['index', 'code', 'name', 'status', 'fillProgress', 'attribute', 'price', 'orderValueNumber', 'filledQuantity', 'filledPrice', 'side', 'filledAmount', 'canceledValue', 'frozenMargin', 'marginRate', 'orderNo', 'orderTime', 'account', 'market', 'currency', 'orderType', 'algorithm', 'orderRemark', 'feedback', 'openClose', 'reportQuantity']
-const tradeKeys = ['index', 'side', 'code', 'name', 'filledPrice', 'filledQuantity', 'filledAmount', 'filledTime', 'orderTime', 'tradeNo', 'entrustNo', 'tradeDate', 'account', 'market', 'currency', 'orderType', 'algorithm', 'orderRemark', 'feedback', 'openClose']
+const tradeKeys = ['index', 'side', 'code', 'name', 'filledPrice', 'filledQuantity', 'filledAmount', 'filledTime', 'orderTime', 'tradeNo', 'entrustNo', 'tradeDate', 'account', 'market', 'currency', 'orderType', 'openClose']
 
 function setupTable(kind, rows, extra = {}) {
   const { descriptor } = parse(readFileSync(new URL('./EquityRecordsTable.vue', import.meta.url), 'utf8'))
@@ -23,7 +23,7 @@ function setupTable(kind, rows, extra = {}) {
   return { props, events, state: component.setup(props, { expose() {}, emit: (...args) => events.push(args) }) }
 }
 
-test('委托优先展示状态与成交进度，26项字段完整；成交20项顺序保持不变', () => {
+test('委托优先展示状态与成交进度，26项字段完整；成交移除算法和两项备注，其余17项顺序保持不变', () => {
   for (const [kind, expected] of [['orders', orderKeys], ['trades', tradeKeys]]) {
     const columns = recordTableColumns(kind, 'baseline')
     assert.deepEqual(columns.map(column => column.key), expected)
