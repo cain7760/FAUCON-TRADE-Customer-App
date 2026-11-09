@@ -1,4 +1,5 @@
 <script setup>
+import { version as solutionVersion } from '../../../package.json'
 import { computed, ref, watch } from 'vue'
 import { Bell, ArrowDown, Search, Refresh, Setting, Connection, TrendCharts, Document, DataAnalysis } from '@element-plus/icons-vue'
 import { accounts, positions } from './fixtures'
@@ -80,7 +81,7 @@ const depths = [86, 55, 71, 34, 48]
         <div class="position-context"><span>当前标的持仓</span><div><span>持仓数量</span><b>{{ number(selected.qty) }} 股</b></div><div><span>可卖数量</span><b>{{ number(selected.available) }} 股</b></div></div>
       </div></section>
     </div>
-    <footer class="app-status"><span><i class="status-dot" />演示环境 · 未连接交易服务</span><span>行情：静态快照</span><span>币种：CNY</span><span class="status-end">FAUCON TRADE · 工作台方案 V0.1</span></footer>
+    <footer class="app-status"><span><i class="status-dot" />演示环境 · 未连接交易服务</span><span>行情：静态快照</span><span>币种：CNY</span><span class="status-end">方案版本：v{{ solutionVersion }}</span></footer>
     <el-dialog v-model="confirmOpen" title="核对模拟委托" width="440px" align-center class="draft-confirm"><template v-if="confirmedOrder"><div class="confirm-direction" :class="confirmedOrder.side==='buy'?'up':'down'">{{ confirmedOrder.side==='buy'?'买入':'卖出' }} · {{ confirmedOrder.name }}</div><dl><dt>交易账户</dt><dd>{{ confirmedOrder.account }}</dd><dt>标的代码</dt><dd>{{ confirmedOrder.code }}</dd><dt>委托价格</dt><dd>{{ money(confirmedOrder.price) }} CNY</dd><dt>委托数量</dt><dd>{{ number(confirmedOrder.quantity) }} 股</dd><dt>预计金额</dt><dd>{{ money(confirmedOrder.price*confirmedOrder.quantity) }} CNY</dd></dl><p class="muted">本次仅生成演示记录，不会提交真实交易。</p></template><template #footer><el-button @click="confirmOpen=false">返回修改</el-button><el-button type="primary" @click="submitDemo">确认模拟委托</el-button></template></el-dialog>
   </main>
 </template>

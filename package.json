@@ -1,7 +1,7 @@
 {
   "name": "faucon-trade-customer-mobile",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.26.1109",
   "type": "module",
   "scripts": {
     "dev": "vite",

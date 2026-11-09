@@ -15,7 +15,7 @@ const isConfigured = computed(() => props.columnKeys !== null)
 const useContentColumnWidths = computed(() => props.design === 'baseline' && !isConfigured.value && !props.columnWidths)
 const isLedgerTable = computed(() => ['orders', 'trades'].includes(props.kind))
 const hasSymbolColumn = computed(() => !isConfigured.value || isLedgerTable.value)
-const hasHistoryColumn = computed(() => !props.readonly && isLedgerTable.value)
+const hasHistoryColumn = computed(() => !props.readonly && props.kind === 'orders')
 const hasExpandableActions = computed(() => !props.readonly && (props.kind === 'orders' || (!props.detailOnClick && props.kind === 'positions')))
 const expandedRecordId = ref(null)
 const tableElement = ref(null), accountColumnWidth = ref(60)
@@ -24,7 +24,9 @@ const columns = computed(() => {
   const source = props.customColumns ?? (isConfigured.value ? resolveFocusColumns(props.kind, props.columnKeys) : recordTableColumns(props.kind, props.design))
   // 移动端委托/成交复用持仓的固定标的列；底层字段及导出契约不变。
   const fields = isLedgerTable.value ? source.filter(column => !['index', 'code', 'name'].includes(column.key)) : source
-  return fields.map(column => ({ ...column, width: (column.key === 'account' ? accountColumnWidth.value : props.columnWidths?.[column.key] ?? column.width) + (column.gapBefore || 0) }))
+  const sized = fields.map(column => ({ ...column, width: (column.key === 'account' ? accountColumnWidth.value : props.columnWidths?.[column.key] ?? column.width) + (column.gapBefore || 0) }))
+  if (hasSymbolColumn.value) return sized
+  return [...sized.filter(column => ['code','name'].includes(column.key)), ...sized.filter(column => !['code','name'].includes(column.key))]
 })
 function fitAccountColumn() {
   if (useContentColumnWidths.value) return
@@ -73,23 +75,29 @@ function collapseActions(event) {
   expandedRecordId.value = null
 }
 const label = computed(() => props.labelOverride || listTabs.find(tab => tab.key === props.kind)?.label)
+// 合并标的列已固定；分列展示时按字段固定代码与名称，列设置隐藏/排序后重新计算偏移。
+function isFixedColumn(index) {
+  if (hasSymbolColumn.value) return false
+  const identitiesVisible = columns.value.some(column => ['code', 'name'].includes(column.key))
+  return identitiesVisible ? ['code', 'name'].includes(columns.value[index]?.key) : index < props.fixedColumnCount
+}
 function fixedColumnStyle(index) {
-  if (hasSymbolColumn.value || index >= props.fixedColumnCount) return {}
-  return { left: `${columns.value.slice(0, index).reduce((width, column) => width + column.width, 0)}px` }
+  if (!isFixedColumn(index)) return {}
+  return { left: `${columns.value.slice(0, index).reduce((width, column, i) => width + (isFixedColumn(i) ? column.width : 0), 0)}px` }
 }
 const tableWidth = computed(() => (hasSymbolColumn.value ? symbolColumnWidth.value : 0) + columns.value.reduce((sum, column) => sum + column.width, 0) + (hasHistoryColumn.value ? 48 : 0))
 </script>
 
 <template>
   <div class="equity-table-view" :class="{ 'equity-table-view--baseline': design === 'baseline' }">
-    <div class="equity-table-scroll" :class="{ 'is-order-scroll': kind === 'orders', 'is-position-scroll': kind === 'positions' && !detailOnClick }" role="region" :aria-label="`${label}表格，可横向滚动，${hasSymbolColumn ? '标的列' : fixedColumnCount > 1 ? `前${fixedColumnCount}列` : '首列'}固定${hasExpandableActions ? '，点击行展开操作' : ''}`" tabindex="0">
+    <div class="equity-table-scroll" :class="{ 'is-order-scroll': kind === 'orders', 'is-position-scroll': kind === 'positions' && !detailOnClick }" role="region" :aria-label="`${label}表格，可横向滚动，${hasSymbolColumn ? '标的列' : columns.some(column => ['code','name'].includes(column.key)) ? '证券代码与名称列' : fixedColumnCount > 1 ? `前${fixedColumnCount}列` : '首列'}固定${hasExpandableActions ? '，点击行展开操作' : ''}`" tabindex="0">
       <p v-if="isConfigured && !columns.length" class="table-no-columns">未选择展示列，请在更多操作中自定义表格列。</p>
       <table ref="tableElement" class="equity-data-table" :class="{ 'is-positions': kind === 'positions', 'is-orders': kind === 'orders', 'is-configured': isConfigured, 'is-content-sized': useContentColumnWidths }" :style="{ width: useContentColumnWidths ? 'max-content' : `${tableWidth}px` }" :aria-label="label">
         <colgroup><col v-if="hasSymbolColumn" :style="{ width: `${symbolColumnWidth}px` }"><col v-for="column in columns" :key="column.key" :style="{ width: useContentColumnWidths ? undefined : `${column.width}px` }"><col v-if="hasHistoryColumn" :style="{ width: useContentColumnWidths ? undefined : '48px' }"></colgroup>
         <thead>
           <tr>
             <th v-if="hasSymbolColumn" scope="col" class="table-symbol" :style="{ minWidth: `${symbolColumnWidth}px` }" :aria-sort="sortDirection('name')"><button type="button" class="table-sort-button" :aria-label="sortLabel('name', '标的名称')" @click="sortBy('name')"><span>{{ design === 'baseline' ? '标的名称' : '标的' }}<span class="table-header-secondary">{{ design === 'baseline' ? '代码' : '名称 / 代码' }}</span></span><i class="table-sort-indicator" aria-hidden="true"><i class="ascending" :class="{ 'is-active': sortDirection('name') === 'ascending' }"></i><i class="descending" :class="{ 'is-active': sortDirection('name') === 'descending' }"></i></i></button></th>
-            <th v-for="(column, columnIndex) in columns" :key="column.key" scope="col" :class="{ 'table-text-cell': column.text, 'table-progress-cell': column.key === 'fillProgress', 'table-account-cell': column.key === 'account', 'table-configured-first': !hasSymbolColumn && columnIndex < fixedColumnCount }" :style="{ ...fixedColumnStyle(columnIndex), minWidth: useContentColumnWidths ? undefined : `${column.width}px`, '--table-column-gap-before': `${column.gapBefore || 0}px` }" :aria-sort="column.key === 'index' ? undefined : sortDirection(column.key)">
+            <th v-for="(column, columnIndex) in columns" :key="column.key" scope="col" :class="{ 'table-text-cell': column.text, 'table-progress-cell': column.key === 'fillProgress', 'table-account-cell': column.key === 'account', 'table-configured-first': isFixedColumn(columnIndex) }" :style="{ ...fixedColumnStyle(columnIndex), minWidth: useContentColumnWidths ? undefined : `${column.width}px`, '--table-column-gap-before': `${column.gapBefore || 0}px` }" :aria-sort="column.key === 'index' ? undefined : sortDirection(column.key)">
               <slot :name="`header-${column.key}`" :column="column"><template v-if="column.key === 'index'">{{ column.title }}</template>
               <button v-else type="button" class="table-sort-button" :aria-label="sortLabel(column.key, column.title)" @click="sortBy(column.key)"><span>{{ column.title }}<span v-if="column.secondTitle" class="table-header-secondary">{{ column.secondTitle }}</span></span><i class="table-sort-indicator" aria-hidden="true"><i class="ascending" :class="{ 'is-active': sortDirection(column.key) === 'ascending' }"></i><i class="descending" :class="{ 'is-active': sortDirection(column.key) === 'descending' }"></i></i></button></slot>
             </th>
@@ -106,7 +114,7 @@ const tableWidth = computed(() => (hasSymbolColumn.value ? symbolColumnWidth.val
               </button>
               <div v-else class="table-detail-trigger"><span class="table-symbol-name">{{ record.name }}</span><span class="table-symbol-code app-numeric">{{ record.code }}.{{ record.market }}</span></div>
             </th>
-            <td v-for="(column, columnIndex) in columns" :key="column.key" :class="[column.text ? 'table-text-cell' : 'app-numeric', { 'table-progress-cell': column.key === 'fillProgress', 'table-readable-cell': column.readable, 'table-wrap-cell': column.wrap, 'table-truncate-cell': column.truncate, 'table-account-cell': column.key === 'account', 'table-configured-first': !hasSymbolColumn && columnIndex < fixedColumnCount }]" :style="{ ...fixedColumnStyle(columnIndex), '--table-column-gap-before': `${column.gapBefore || 0}px` }" :title="column.truncate ? column.value(record, index) : undefined">
+            <td v-for="(column, columnIndex) in columns" :key="column.key" :class="[column.text ? 'table-text-cell' : 'app-numeric', { 'table-progress-cell': column.key === 'fillProgress', 'table-readable-cell': column.readable, 'table-wrap-cell': column.wrap, 'table-truncate-cell': column.truncate, 'table-account-cell': column.key === 'account', 'table-configured-first': isFixedColumn(columnIndex) }]" :style="{ ...fixedColumnStyle(columnIndex), '--table-column-gap-before': `${column.gapBefore || 0}px` }" :title="column.truncate ? column.value(record, index) : undefined">
               <button v-if="!readonly && !hasSymbolColumn && columnIndex === 0" type="button" class="table-configured-trigger" :aria-label="`查看${record.name}${kind === 'positions' ? '持仓' : kind === 'orders' ? '订单' : '成交'}详情`" @click.stop="handleRecordClick(record, index, $event)"><span :class="column.tone?.(record)">{{ column.value(record, index) }}</span><span v-if="column.second" class="table-cell-secondary" :class="column.secondTone?.(record)">{{ column.second(record) }}</span></button>
               <template v-else><EquityOrderStatus v-if="column.key === 'status'" :status="record.status" /><template v-else-if="column.key === 'fillProgress'"><span v-if="Number.isFinite(progressPercent(record))" class="order-fill-progress" role="progressbar" aria-label="成交进度" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progressPercent(record)" :aria-valuetext="fillProgress(record)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="order-fill-progress-track" cx="12" cy="12" r="9"/><circle class="order-fill-progress-value" cx="12" cy="12" r="9" pathLength="100" :stroke-dasharray="`${progressPercent(record)} 100`"/></svg><span>{{ fillProgress(record) }}</span></span><span v-else>--</span></template><slot v-else :name="`cell-${column.key}`" :record="record" :index="index"><span :class="column.tone?.(record)">{{ column.value(record, index) }}</span><span v-if="column.second" class="table-cell-secondary" :class="[column.secondTone?.(record), { 'app-numeric': column.secondNumeric }]">{{ column.second(record) }}</span></slot></template>
             </td>
@@ -132,6 +140,7 @@ const tableWidth = computed(() => (hasSymbolColumn.value ? symbolColumnWidth.val
           </template>
         </tbody>
       </table>
+      <slot name="append" />
     </div>
   </div>
 </template>

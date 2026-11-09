@@ -34,12 +34,12 @@ test('委托优先展示状态与成交进度，26项字段完整；成交移除
   assert.equal(recordTableColumns('trades').find(column => column.key === 'filledQuantity').value({ filledQuantity: 300 }), '300')
 })
 
-test('两表复用固定标的列，委托操作点击行展开，成交保留详情入口', () => {
+test('两表复用固定标的列，仅委托保留历史列，委托操作点击行展开，成交保留详情入口', () => {
   const scope = vue.effectScope()
   for (const [kind, expected] of [['orders', orderKeys], ['trades', tradeKeys]]) for (const columnKeys of [null, expected.filter(key => key !== 'index')]) {
     const { state, events } = scope.run(() => setupTable(kind, [], { columnKeys }))
     assert.deepEqual(state.columns.value.map(column => column.key), expected.filter(key => !['index', 'code', 'name'].includes(key)))
-    assert.equal(state.hasHistoryColumn.value, true)
+    assert.equal(state.hasHistoryColumn.value, kind === 'orders')
     assert.equal(state.hasSymbolColumn.value, true)
     assert.equal(state.symbolColumnWidth.value, 96)
     assert.equal(state.hasExpandableActions.value, kind === 'orders')
@@ -57,6 +57,7 @@ test('两表复用固定标的列，委托操作点击行展开，成交保留�
   assert.match(source, /<EquityOrderActions :record="record" :system-running="systemRunning"/)
   assert.doesNotMatch(source, /table-operation-cell/)
   const { state: history, events: historyEvents } = scope.run(() => setupTable('orders', [], { readonly: true }))
+  assert.equal(history.hasHistoryColumn.value, false)
   assert.equal(history.hasExpandableActions.value, false)
   history.handleRecordClick({ id: 'historical' }, 0, {})
   assert.equal(history.expandedRecordId.value, null)
