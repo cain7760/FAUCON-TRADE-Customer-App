@@ -1,11 +1,6 @@
-/* 与 PC Customer 下单面板共用现有字体文件及回退顺序。 */
-@font-face {
-  font-family: 'D-DIN Exp';
-  src: url('/fonts/D-DINExp.otf') format('opentype');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
+@import '../numeric-font.css';
+/* 数字字体与 Customer PC、Trader PC 保持一致。 */
+
 
 :root {
   /* 与 Customer 权益页 theme.css / theme-tokens.css 对齐；移动端只复用视觉令牌。 */
@@ -29,7 +24,7 @@
   --app-font-size-caption: .75rem;
   --app-font-size-form-label: 14px;
   --app-font-size-tabbar: .6875rem;
-  --app-font-family-numeric: 'D-DIN Exp', 'DIN Alternate', 'Arial Narrow', sans-serif;
+  --app-font-family-numeric: var(--ft-font-numeric);
   --app-chevron-size: 20px;
   --app-chevron-inset: 12px;
   --app-radius-button: 999px;
@@ -80,10 +75,9 @@ main.mobile-app :is(
 .app-numeric { font-family: var(--app-font-family-numeric); font-variant-numeric: tabular-nums; }
 /* 表单字段标题共用；不改变输入值、占位符、辅助信息和只读数据标签。 */
 .app-form-label { color: var(--app-color-text); font-size: var(--app-font-size-form-label); font-weight: 400; line-height: 20px; }
-/* 下拉/折叠指示共用同一图形；原生 select 仍保留系统选项面板和键盘行为。 */
+/* 下拉/折叠指示共用同一图形，选项面板统一使用 Vant Picker。 */
 .app-chevron { display: inline-block; width: var(--app-chevron-size); height: var(--app-chevron-size); flex: 0 0 var(--app-chevron-size); align-self: center; color: var(--app-color-text-secondary); background-color: currentColor; -webkit-mask: var(--app-chevron-image) center / contain no-repeat; mask: var(--app-chevron-image) center / contain no-repeat; vertical-align: middle; pointer-events: none; }
 .app-chevron--up { transform: rotate(180deg); }
-select:not([multiple]):not([size]) { appearance: none; -webkit-appearance: none; padding-inline-end: calc(var(--app-chevron-size) + var(--app-chevron-inset) + 8px); background-image: var(--app-chevron-image); background-repeat: no-repeat; background-position: right var(--app-chevron-inset) center; background-size: var(--app-chevron-size) var(--app-chevron-size); }
 
 .mobile-tabbar .van-tabbar-item {
   min-width: 0;
@@ -232,3 +226,22 @@ select:not([multiple]):not([size]) { appearance: none; -webkit-appearance: none;
 .equity-pagination .van-pagination__item::after { display: none; }
 .equity-pagination .van-pagination__item button { color: inherit; }
 .equity-pagination .van-pagination__item button:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; border-radius: inherit; }
+
+/* App 选择控件适配层：统一外观和弹层，不调用浏览器原生选择面板。 */
+.app-select-field, .app-date-range-field { display: flex; width: 100%; min-width: 0; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--app-color-frame); border-radius: var(--app-radius-filter-control); background: var(--app-color-control); color: var(--app-color-text); font: inherit; text-align: left; cursor: pointer; }
+.app-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-select-field .app-chevron { --app-chevron-size: 16px; }
+.app-select-field:disabled { opacity: .45; cursor: not-allowed; }
+.app-date-range-field { font-size: 13px; font-family: var(--app-font-family-numeric); }
+.app-date-range-field.is-empty { color: var(--app-color-text-secondary); }
+.app-date-range-field svg { flex: none; }
+.app-select-field:focus-visible, .app-date-range-field:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
+.app-control-sheet.van-popup { padding-bottom: env(safe-area-inset-bottom); background: var(--app-color-card); }
+.app-control-sheet { --van-picker-background: var(--app-color-card); --van-picker-option-text-color: var(--app-color-text); --van-picker-mask-color: linear-gradient(180deg, rgba(30,32,35,.95), rgba(30,32,35,.4)), linear-gradient(0deg, rgba(30,32,35,.95), rgba(30,32,35,.4)); --van-picker-cancel-action-color: var(--app-color-text-secondary); --van-picker-confirm-action-color: var(--app-color-accent); }
+.app-control-calendar { --van-calendar-background: var(--app-color-card); --van-calendar-selected-day-background: var(--app-color-accent); --van-calendar-range-edge-background: var(--app-color-accent); --van-calendar-range-middle-background-opacity: .12; --van-calendar-range-middle-color: var(--app-color-accent); --van-calendar-selected-day-color: #fff; }
+
+.app-calendar-sheet.van-popup { height: min(80%, 580px); }
+.app-calendar-sheet .van-popup__close-icon { top: 14px; font-size: 20px; color: var(--app-color-text-secondary); }
+.app-calendar-sheet .van-calendar__header-title { padding: 0 44px; }
+
+.equity-position-error { position: absolute; --van-dialog-background: var(--app-color-card); --van-dialog-confirm-button-text-color: var(--app-color-accent); --van-button-default-background: var(--app-color-card); --van-text-color: var(--app-color-text); }

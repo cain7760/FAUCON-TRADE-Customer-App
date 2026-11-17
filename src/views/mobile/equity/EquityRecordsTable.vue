@@ -183,9 +183,9 @@ thead .table-symbol .table-sort-button { justify-content: space-between; }
 .table-symbol-name { display: block; font-size: inherit; font-weight: 600; line-height: 18px; white-space: nowrap; }
 .table-symbol-code { display: block; margin-top: 2px; color: var(--app-color-text-secondary); font-size: inherit; font-weight: 400; line-height: 16px; }
 .table-cell-secondary { display: block; color: var(--app-color-text-secondary); font-size: inherit; }
-.equity-data-table tbody tr.is-exception > :is(td, th) { background: #302529; }
-.equity-table-view--baseline .equity-data-table tbody tr.is-exception > :is(td, th) { background: #302529; }
-.equity-data-table tbody tr.is-exception { --table-row-surface: #302529; }
+.equity-data-table tbody tr.is-exception > :is(td, th) { background: linear-gradient(rgba(67,35,32,.2),rgba(67,35,32,.2)), var(--app-color-card); }
+.equity-table-view--baseline .equity-data-table tbody tr.is-exception > :is(td, th) { background: linear-gradient(rgba(67,35,32,.2),rgba(67,35,32,.2)), var(--app-color-card); }
+.equity-data-table tbody tr.is-exception { --table-row-surface: #252020; }
 .table-cell-secondary.equity-positive { color: var(--app-color-rise); }
 .table-cell-secondary.equity-negative { color: var(--app-color-fall); }
 .table-cell-secondary.equity-accent { color: var(--app-color-accent); }
@@ -295,4 +295,5 @@ td .record-tag { font-size: inherit; }
 .order-fill-progress circle { fill: none; stroke-width: 2.5; }
 .order-fill-progress-track { stroke: #41464e; }
 .order-fill-progress-value { stroke: #bb984a; stroke-linecap: round; }
+.equity-data-table tbody tr.is-exception:hover > :is(td, th) { background: linear-gradient(rgba(67,35,32,.3),rgba(67,35,32,.3)), var(--app-color-control); }
 </style>

@@ -1,0 +1,16 @@
+Roboto — local numeric font assets
+Package: @fontsource/roboto 5.3.0
+Google Fonts revision: v51 (package metadata lastModified: 2026-02-19)
+Source: https://fontsource.org/fonts/roboto
+Archive: https://registry.npmjs.org/@fontsource/roboto/-/roboto-5.3.0.tgz
+Archive SHA-1: fd0dcdaa0c6ef3a1621253ea702db933ca1b573a
+License: SIL Open Font License 1.1; see Roboto-LICENSE.txt.
+Subset: Latin, for numeric text and currency symbols. Chinese uses the existing UI fallback.
+Styles: normal; weights 400, 500, 600, 700, mapped to Regular, Medium, SemiBold, Bold.
+Files are copied unchanged from the pinned package. No runtime CDN dependency.
+
+SHA-256:
+425c0713a8176f92273d378599c7eac57de7fafabd4bd0ed457b70eb8f80d371  Roboto-Regular.woff2
+5bcc3aa180e7f26f643cd5b2621cd7c2de193d0661d913a94afd3d4881a7a34b  Roboto-Medium.woff2
+3eac5e2f468629b4673394bb25a387aba117e0dfa646b7f371a2cbd2bbf91d87  Roboto-SemiBold.woff2
+b9d66d1708156f765ada51939bc24ed259dafa69eb631b36e443680fe9e15879  Roboto-Bold.woff2

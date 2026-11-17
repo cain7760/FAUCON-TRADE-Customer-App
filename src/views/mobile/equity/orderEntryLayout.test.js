@@ -156,7 +156,7 @@ test('图稿主面板输入 44px、固定买卖按钮 48px，算法弹窗不缩�
   const css = readFileSync(new URL('./order-entry.css', import.meta.url), 'utf8')
   const input = css.match(/\.ticket-reference-layout \.ticket-number-control\s*\{([^}]+)\}/)[1]
   const trade = css.match(/\.ticket-trade-buttons button\s*\{([^}]+)\}/)[1]
-  const settings = css.match(/\.ticket-settings :is\(select, input\)\s*\{([^}]+)\}/)[1]
+  const settings = css.match(/\.ticket-settings :is\(\.app-select-field, input\)\s*\{([^}]+)\}/)[1]
   assert.match(input, /height:\s*44px/)
   assert.match(trade, /min-height:\s*48px/)
   assert.match(settings, /min-height:\s*44px/)
@@ -181,8 +181,8 @@ test('主表单标题56px、市价金色、容量36px算法44px，算法在滑�
   const fields = elements(descriptor.template.ast).find(node => attribute(node, 'class') === 'ticket-order-fields')
   const children = fields.children.filter(node => node.type === 1)
   const index = name => children.findIndex(node => attribute(node, 'class') === name)
-  assert.ok(index('ticket-input-pair') < index('ticket-algorithm-row'))
-  assert.ok(index('ticket-algorithm-row') < index('ticket-fractions'))
+  assert.ok(index('ticket-input-pair') < index('ticket-fractions'))
+  assert.ok(index('ticket-fractions') < index('ticket-algorithm-row'))
   assert.ok(index('ticket-fractions') < index('ticket-estimates ticket-capacity'))
 })
 
@@ -222,12 +222,12 @@ test('账户进入标题行，标的选择区集中名称代码、标签及唯�
   assert.ok(elements(context).some(node => attribute(node, 'class') === 'ticket-symbol-control'))
   assert.ok(elements(context).some(node => attribute(node, 'class') === 'ticket-symbol-tags'))
   assert.equal(nodes.filter(node => attribute(node, 'aria-label') === '标的参考行情').length, 1)
-  const slider = nodes.find(node => node.tag === 'input' && attribute(node, 'type') === 'range')
+  const slider = nodes.find(node => node.tag === 'van-slider')
   assert.equal(attribute(slider, 'aria-label'), '下单比例')
-  assert.equal(attribute(slider, 'min'), '0')
-  assert.equal(attribute(slider, 'max'), '100')
-  assert.equal(attribute(slider, 'step'), '1')
-  assert.ok(slider.props.some(prop => prop.type === 7 && prop.name === 'on' && prop.arg?.content === 'input' && prop.exp?.content === 'selectFraction($event.target.value)'))
+  assert.ok(slider.props.some(prop => prop.name === 'bind' && prop.arg?.content === 'min' && prop.exp?.content === '0'))
+  assert.ok(slider.props.some(prop => prop.name === 'bind' && prop.arg?.content === 'max' && prop.exp?.content === '100'))
+  assert.ok(slider.props.some(prop => prop.name === 'bind' && prop.arg?.content === 'step' && prop.exp?.content === '1'))
+  assert.ok(slider.props.some(prop => prop.type === 7 && prop.name === 'on' && prop.arg?.content === 'update:model-value' && prop.exp?.content === 'selectFraction'))
   assert.ok(slider.props.some(prop => prop.type === 7 && prop.name === 'bind' && prop.arg?.content === 'disabled' && prop.exp?.content === '!symbol'))
   const marks = nodes.find(node => attribute(node, 'class') === 'ticket-fraction-marks')
   assert.equal(attribute(marks, 'aria-hidden'), undefined)
@@ -289,43 +289,22 @@ test('标的参数不再写死在模板，空标的保留每手数量占位', ()
   assert.match(source, /\{\{ symbolIaLabel \}\}/)
 })
 
-test('算法入口整行可点，当前算法及 POV 参数摘要分层且关联可访问描述', () => {
-  const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
-  const elements = node => [node, ...(node.children || []).flatMap(elements)]
-  const attribute = (node, name) => node.props?.find(prop => prop.type === 6 && prop.name === name)?.value?.content
-  const row = elements(descriptor.template.ast).find(node => attribute(node, 'class') === 'ticket-algorithm-row')
-  const button = row.children.find(node => node.tag === 'button' && attribute(node, 'aria-haspopup') === 'dialog')
-  assert.ok(button.props.some(prop => prop.type === 7 && prop.name === 'else'))
-  assert.ok(button.props.some(prop => prop.type === 7 && prop.name === 'bind' && prop.arg?.content === 'aria-describedby'))
-  const summary = elements(button).find(node => attribute(node, 'id') === 'ticket-algorithm-summary')
-  assert.ok(summary.props.some(prop => prop.type === 7 && prop.name === 'if' && prop.exp?.content === "draft.algorithm === 'POV'"))
-  assert.equal(summary.children.filter(node => node.tag === 'span').length, 2)
-  const css = readFileSync(new URL('./order-entry.css', import.meta.url), 'utf8')
-  assert.match(css, /\.ticket-algorithm-row > button\s*\{[^}]*width:\s*100%/)
-  assert.match(css, /\.ticket-algorithm-summary\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/)
+test('算法按钮四项同序且移除参数回显', () => {
+ const source = readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8')
+ assert.match(source, /ticket-algorithm-trigger/)
+ assert.match(source, /v-for="option in algorithmDialogOptions"/)
+ assert.doesNotMatch(source, /id="ticket-algorithm-summary"|ticket-pov-tag/)
+ const css = readFileSync(new URL('./order-entry.css', import.meta.url), 'utf8')
+ assert.match(css, /ticket-algorithm-tabs \.van-tab\{[^}]*height:28px/)
 })
 
-test('基线算法下拉选择，仅 POV 弹窗配置；其他方案保留完整配置入口', () => {
-  const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
-  const elements = node => [node, ...(node.children || []).flatMap(elements)]
-  const attribute = (node, name) => node.props?.find(prop => prop.type === 6 && prop.name === name)?.value?.content
-  const binding = (node, name) => node.props?.find(prop => prop.type === 7 && prop.name === 'bind' && prop.arg?.content === name)?.exp?.content
-  const nodes = elements(descriptor.template.ast)
-  const row = nodes.find(node => attribute(node, 'class') === 'ticket-algorithm-row')
-  assert.ok(!nodes.some(node => attribute(node, 'class') === 'ticket-algorithm-direct'))
-  const menu = elements(row).find(node => node.tag === 'van-popover')
-  assert.ok(menu.props.some(prop => prop.type === 7 && prop.name === 'if' && prop.exp?.content === "design === 'baseline'"))
-  const select = elements(menu).find(node => attribute(node, 'class') === 'ticket-algorithm-select')
-  assert.equal(attribute(select, 'aria-haspopup'), 'menu')
-  assert.ok(elements(select).some(node => attribute(node, 'class') === 'ticket-pov-tag app-numeric'))
-  const trigger = row.children.find(node => node.tag === 'button')
-  assert.equal(attribute(trigger, 'aria-haspopup'), 'dialog')
-  assert.ok(trigger.props.some(prop => prop.type === 7 && prop.name === 'on' && prop.arg?.content === 'click' && prop.exp?.content === "navigate('algorithm', $event)"))
-  const dialog = nodes.find(node => attribute(node, 'class') === 'equity-order-sheet equity-algorithm-dialog ticket-entry-sheet')
-  assert.equal(binding(dialog, 'show'), "show && page === 'algorithm'")
-  assert.ok(elements(dialog).some(node => node.tag === 'van-tab' && node.props.some(prop => prop.type === 7 && prop.name === 'for' && prop.exp?.content === 'option in algorithmDialogOptions')))
-  const confirm = elements(dialog).find(node => node.tag === 'button' && attribute(node, 'class') === 'ticket-primary')
-  assert.equal(binding(confirm, 'disabled'), "algorithmDraft.value === 'POV' && !validPov(algorithmDraft)")
+test('三个定时算法复用参数弹窗和可选起止时间', () => {
+ const source = readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8')
+ assert.match(source, /algorithmDraft.executionTime\[0\]/)
+ assert.match(source, /algorithmDraft.executionTime\[1\]/)
+ assert.match(source, /系统提交时间/)
+ assert.match(source, /标的收盘/)
+ assert.match(source, /AppSelectField/)
 })
 
 test('基线概要栏压缩上下留白但保留 36px 触控标题行', () => {

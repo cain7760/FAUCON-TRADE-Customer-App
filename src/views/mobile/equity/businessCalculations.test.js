@@ -156,11 +156,26 @@ test('连续卖出按剩余可用股数校验，未成交卖单不改变持仓�
 
 test('确认时再次校验资金、账户和参数；失败不追加订单', () => {
   const orders = freshOrders(), length = orders.length
-  for (const input of [snapshot({ account: 'TZS_T2' }), snapshot({ quantity: 1000000 }), snapshot({ account: 'UNKNOWN' }), snapshot({ quantity: -100 }), snapshot({ inputAmount: 99999999 })]) assert.throws(() => submitDemoOrder(orders, input, date))
+  for (const input of [snapshot({ account: 'TZS_T2' }), snapshot({ quantity: 1000000 }), snapshot({ inputAmount: 99999999 })]) {
+    assert.throws(() => submitDemoOrder(orders, input, date), { message: '下单失败，最大可用不足' })
+  }
+  for (const input of [snapshot({ account: 'UNKNOWN' }), snapshot({ quantity: -100 })]) assert.throws(() => submitDemoOrder(orders, input, date))
   assert.equal(orders.length, length)
   const order = submitDemoOrder(orders, snapshot(), date)
   order.price = 1000000
   assert.match(demoLedgerError(orders), /超出可用资金/)
+})
+
+test('最终提交复算当前余额，不信任确认页的容量警告快照', () => {
+  const orders = freshOrders()
+  const pending = snapshot({ quantity: 80000, exceedsMaxBuy: false })
+  submitDemoOrder(orders, snapshot({ quantity: 1000 }), date)
+  const before = structuredClone(orders)
+  assert.throws(() => submitDemoOrder(orders, pending, date), { message: '下单失败，最大可用不足' })
+  assert.deepEqual(orders, before)
+  const order = submitDemoOrder(orders, snapshot({ quantity: 100, exceedsMaxBuy: true }), date)
+  assert.equal(order.quantity, 100)
+  assert.equal(order.status, '待报')
 })
 
 test('本地委托保存后可恢复，损坏缓存回退；概要余额同步委托占用', () => {

@@ -40,7 +40,7 @@ function onKeyboard(event) {
     </component>
     <footer class="concept-c-position-footer">
       <div class="concept-c-capacity"><span>{{ record.direction === '多' ? '可平仓' : '可用数量' }}</span><strong class="app-numeric">{{ shares(record.available) }}</strong></div>
-      <button v-if="record.direction === '多'" type="button" class="concept-c-close-position" :disabled="!canClose" :aria-label="`${record.name}平仓`" :title="canClose ? '进入平仓下单' : '暂无可平仓数量'" @click="emit('action', { action: 'close', event: $event })">平仓</button>
+      <button v-if="record.direction === '多'" type="button" class="concept-c-close-position" :aria-label="`${record.name}平仓`" :title="canClose ? '进入平仓下单' : '暂无可平仓数量'" @click="emit('action', { action: 'close', event: $event })">平仓</button>
     </footer>
   </section>
 </template>

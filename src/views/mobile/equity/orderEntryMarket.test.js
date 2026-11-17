@@ -11,6 +11,7 @@ import * as rules from './orderMarketRules.js'
 import * as decimal from './decimalMath.js'
 import * as calculations from './orderCalculations.js'
 import { orderAccountOverview } from './accountOverview.js'
+import { submitDemoOrder } from './demoLedger.js'
 
 function setup(context, layout = 'stacked', options = {}) {
   const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
@@ -29,51 +30,113 @@ test('确认委托只有父层成功回执才进入完成页，失败保留参�
   form.draft.algorithm = 'DMA'; form.draft.value = 100
   form.preview('buy'); form.confirmDemo()
   assert.equal(form.page.value, 'confirm')
-  respond({ error: '订单数量超出最大可买' })
+  respond({ error: '下单失败，最大可用不足' })
   assert.equal(form.page.value, 'confirm'); assert.equal(form.draft.value, 100)
-  assert.match(form.error.value, /超出最大可买/)
+  assert.equal(form.error.value, '下单失败，最大可用不足')
   form.confirmDemo(); respond({ message: '委托已保存' })
   assert.equal(form.page.value, 'done'); assert.equal(form.doneMessage.value, '委托已保存')
   scope.stop()
 })
 
-test('基线算法下拉直接应用 DMA/无需算法，POV 确认才生效，取消不改原值', async t => {
+test('三种展示的新单与追单超最大可买可进入确认，数量和金额订单均由提交层拒绝且保留草稿', async t => {
   const scope = vue.effectScope()
   t.after(() => scope.stop())
-  const form = scope.run(() => setup({ action: 'new' }, 'split', { design: 'baseline' }))
-  assert.deepEqual(form.algorithmDialogOptions.value.map(option => option.value), ['POV'])
-  for (const value of ['DMA', 'none']) {
-    form.algorithmMenuOpen.value = true
-    form.selectAlgorithm(value)
-    assert.equal(form.algorithmMenuOpen.value, false)
-    assert.equal(form.draft.algorithm, value)
-    assert.equal(form.page.value, 'form')
+  for (const design of ['baseline', 'focus', 'c']) for (const action of ['new', 'chase']) for (const mode of ['quantity', 'amount']) {
+    const orders = structuredClone(fixtures.demoRecords.orders), original = structuredClone(orders)
+    let submitted = 0
+    const form = scope.run(() => setup({ action, record: action === 'chase' ? fixtures.demoRecords.positions[0] : undefined }, 'split', {
+      design, fullCapabilities: design !== 'baseline',
+      emit(event, snapshot, respond) {
+        if (event !== 'order') return
+        submitted++
+        try { submitDemoOrder(orders, snapshot); respond({ message: '委托已保存' }) }
+        catch (error) { respond({ error: error.message }) }
+      },
+    }))
+    form.draft.algorithm = 'DMA'
+    form.setMode(mode)
+    form.draft.value = mode === 'quantity' ? 100000 : 1178000
+    await vue.nextTick()
+    assert.equal(orderModel.canPreviewOrder(form.draft, form.symbol.value, form.estimate.value, 'buy'), true)
+    form.preview('buy')
+    assert.equal(form.page.value, 'confirm')
+    assert.equal(form.snapshot.value.quantity, 100000)
+    assert.equal(form.snapshot.value.exceedsMaxBuy, true)
+    form.confirmDemo()
+    assert.equal(submitted, 1, '警告不得拦截最终提交调用')
+    assert.equal(form.page.value, 'confirm')
+    assert.equal(form.error.value, '下单失败，最大可用不足')
+    assert.equal(form.draft.value, mode === 'quantity' ? 100000 : 1178000)
+    assert.deepEqual(orders, original, '拒绝不插入订单或占用资金')
   }
-  form.selectAlgorithm('POV')
-  assert.equal(form.page.value, 'algorithm')
-  assert.equal(form.algorithmDraft.value, 'POV')
-  assert.equal(form.draft.algorithm, 'none')
-  Object.assign(form.algorithmDraft, { hours: 2, minutes: 0, participation: 10 })
-  form.back()
-  assert.equal(form.draft.algorithm, 'none')
-  assert.equal(form.draft.pov.hours, 1)
-  form.selectAlgorithm('POV')
-  assert.equal(form.algorithmDraft.hours, 1)
-  Object.assign(form.algorithmDraft, { hours: 2, minutes: 0, participation: 26 })
-  form.applyAlgorithm()
-  assert.equal(form.page.value, 'algorithm')
-  assert.equal(form.draft.algorithm, 'none')
-  form.algorithmDraft.participation = 10
-  form.applyAlgorithm()
-  assert.equal(form.page.value, 'form')
-  assert.equal(form.draft.algorithm, 'POV')
-  assert.deepEqual({ ...form.draft.pov }, { hours: 2, minutes: 0, participation: 10 })
-  form.selectAlgorithm('POV')
-  assert.equal(form.algorithmDraft.hours, 2)
-  form.algorithmDraft.hours = 3
-  form.back()
-  assert.equal(form.draft.pov.hours, 2)
+})
+
+test('买入警告随重新预览更新，卖出容量与整手限制保持不变', async t => {
+  const scope = vue.effectScope()
+  t.after(() => scope.stop())
+  const form = scope.run(() => setup({ action: 'new' }))
+  form.draft.algorithm = 'DMA'; form.draft.value = 100000
   await vue.nextTick()
+  form.preview('buy')
+  assert.equal(form.snapshot.value.exceedsMaxBuy, true)
+  form.back(); form.draft.value = form.estimate.value.maxBuy
+  await vue.nextTick()
+  form.preview('buy')
+  assert.equal(form.page.value, 'confirm')
+  assert.equal(form.snapshot.value.exceedsMaxBuy, false, '恰好等于最大可买不警告')
+  form.back(); form.draft.value = form.estimate.value.maxSell + 100
+  await vue.nextTick()
+  form.preview('sell')
+  assert.equal(form.page.value, 'form')
+  assert.match(form.error.value, /超出最大可卖/)
+  form.draft.value = 100001
+  await vue.nextTick()
+  form.preview('buy')
+  assert.equal(form.page.value, 'form')
+  assert.match(form.error.value, /整数倍/)
+})
+
+test('预览警告不决定成交结果，提交时资金充足仍可成功', async t => {
+  const scope = vue.effectScope()
+  t.after(() => scope.stop())
+  const orders = structuredClone(fixtures.demoRecords.orders), count = orders.length
+  const form = scope.run(() => setup({ action: 'new' }, 'split', {
+    accountCash: { TZS_T0: 0 },
+    emit(event, snapshot, respond) {
+      if (event !== 'order') return
+      submitDemoOrder(orders, snapshot)
+      respond({ message: '委托已保存' })
+    },
+  }))
+  form.draft.algorithm = 'DMA'; form.draft.value = 100
+  await vue.nextTick()
+  form.preview('buy')
+  assert.equal(form.snapshot.value.exceedsMaxBuy, true)
+  form.confirmDemo()
+  assert.equal(form.page.value, 'done')
+  assert.equal(orders.length, count + 1)
+})
+
+test('DMA直接应用，POV和TWAP及VWAP确认保存并支持取消', async () => {
+ const scope = vue.effectScope()
+ const form = scope.run(() => setup({action:'new'}, 'split', {design:'baseline'}))
+ form.selectAlgorithm('DMA')
+ for (const algorithm of ['POV','TWAP','VWAP']) {
+  form.selectAlgorithm(algorithm)
+  assert.equal(form.page.value, 'algorithm')
+  form.algorithmDraft.executionTime = ['13:00','14:00']
+  form.algorithmDraft.participation = 20
+  form.back()
+  assert.equal(form.draft.algorithm, 'DMA')
+  form.selectAlgorithm(algorithm)
+  assert.deepEqual(form.algorithmDraft.executionTime, form.draft.pov.executionTime || ['', ''])
+  form.algorithmDraft.executionTime = ['13:00','14:00']
+  form.applyAlgorithm()
+  assert.equal(form.draft.algorithm, algorithm)
+  assert.deepEqual(form.draft.pov.executionTime, ['13:00','14:00'])
+  form.selectAlgorithm('DMA')
+ }
+ scope.stop()
 })
 
 test('单位菜单保持数量切换、同项重选、金额换算的原规则', async t => {
@@ -327,7 +390,7 @@ test('新版平仓手工数量反映可卖比例，比例模式保留卖出容�
 test('新版资产概要按列表多选账户汇总，切换交易账户不改变概要范围', async () => {
   const scope = vue.effectScope(), form = scope.run(() => setup({ action: 'new' }, 'split', { fullCapabilities: true, overviewAccountIds: ['TZS_T0', 'TZS_T1'] }))
   const summary = form.accountOverview.value
-  assert.deepEqual(summary, { available: 1566327.41, marketValue: 11065461, floatingProfit: 78036 })
+  assert.deepEqual(summary, { available: 1566327.41, marketValue: 11359861, floatingProfit: 78036 })
   form.changeAccount('TZS_T1'); await vue.nextTick()
   assert.deepEqual(form.accountOverview.value, summary)
   form.props.overviewAccountIds = ['TZS_T1']
@@ -555,26 +618,18 @@ test('移除数量加减不改变股、万股、金额单位与比例的计算�
   scope.stop()
 })
 
-test('算法弹窗取消丢弃临时参数，确认仅应用算法且保留下单草稿', async () => {
-  const scope = vue.effectScope(), form = scope.run(() => setup({ action: 'new' }))
-  Object.assign(form.draft, { algorithm: 'POV', price: 11.78, value: 900, pov: { hours: 1, minutes: 0, participation: 10 } })
-  form.navigate('algorithm')
-  assert.equal(form.page.value, 'algorithm')
-  assert.equal(form.title.value, '下单')
-  Object.assign(form.algorithmDraft, { value: 'DMA', participation: 20 })
-  form.back(); await vue.nextTick()
-  assert.equal(form.draft.algorithm, 'POV')
-  assert.equal(form.draft.pov.participation, 10)
-  form.navigate('algorithm')
-  assert.equal(form.algorithmDraft.value, 'POV')
-  assert.equal(form.algorithmDraft.participation, 10)
-  Object.assign(form.algorithmDraft, { hours: 2, minutes: 30, participation: 25 })
-  form.applyAlgorithm(); await vue.nextTick()
-  assert.equal(form.page.value, 'form')
-  assert.deepEqual(form.draft.pov, { hours: 2, minutes: 30, participation: 25 })
-  assert.equal(form.draft.price, 11.78)
-  assert.equal(form.draft.value, 900)
-  scope.stop()
+test('算法参数取消丢弃临时起止时间和成交占比', () => {
+ const scope = vue.effectScope()
+ const form = scope.run(() => setup({action:'new'}))
+ form.draft.algorithm = 'TWAP';form.draft.value = 900
+ form.navigate('algorithm')
+ form.algorithmDraft.executionTime = ['11:00','12:00'];form.algorithmDraft.participation = 20
+ form.back()
+ assert.equal(form.draft.pov.participation, 25)
+ assert.equal(form.draft.value, 900)
+ form.navigate('algorithm')
+ assert.deepEqual(form.algorithmDraft.executionTime, ['', ''])
+ scope.stop()
 })
 
 test('算法弹窗无效POV不能保存，Escape只取消弹窗且保留草稿', async () => {
@@ -584,7 +639,7 @@ test('算法弹窗无效POV不能保存，Escape只取消弹窗且保留草稿',
   Object.assign(form.algorithmDraft, { hours: 0, minutes: 0, participation: 26 })
   form.applyAlgorithm()
   assert.equal(form.page.value, 'algorithm')
-  assert.equal(form.draft.pov.participation, 10)
+  assert.equal(form.draft.pov.participation, 25)
   let prevented = false
   form.handleKeyboard({ key: 'Escape', preventDefault() { prevented = true } })
   await vue.nextTick()
@@ -644,16 +699,16 @@ test('App 追单、平仓、改单共用面板均不显示港股市价选项', a
 })
 
 
-test('App 六小时最多三十分，非法时长不能确认或绕过订单校验', async () => {
-  const scope = vue.effectScope()
-  const form = scope.run(() => setup({action:'new'}))
-  form.algorithmDraft.value = 'POV'; form.algorithmDraft.hours = 5; form.algorithmDraft.minutes = 59
-  form.applyAlgorithm()
-  assert.equal(form.draft.pov.hours, 5)
-  form.algorithmDraft.hours = 6; await vue.nextTick()
-  assert.equal(form.algorithmDraft.minutes, 30)
-  assert.equal(orderModel.validPov(form.algorithmDraft), true)
-  form.algorithmDraft.minutes = 31; form.applyAlgorithm()
-  assert.equal(form.draft.pov.hours, 5)
-  scope.stop()
+test('可选时间允许留空，时间倒序与非法成交占比阻止保存', () => {
+ const scope = vue.effectScope()
+ const form = scope.run(() => setup({action:'new'}))
+ form.selectAlgorithm('VWAP')
+ form.algorithmDraft.executionTime = ['14:00','13:00'];form.applyAlgorithm()
+ assert.equal(form.page.value, 'algorithm')
+ form.algorithmDraft.executionTime = ['', ''];form.algorithmDraft.participation = 26;form.applyAlgorithm()
+ assert.equal(form.page.value, 'algorithm')
+ form.algorithmDraft.participation = 20;form.applyAlgorithm()
+ assert.equal(form.page.value, 'form')
+ assert.equal(form.draft.algorithm, 'VWAP')
+ scope.stop()
 })

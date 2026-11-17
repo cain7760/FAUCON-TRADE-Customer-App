@@ -40,14 +40,14 @@ test('扩展为八个演示账户，新增账户无持仓且买入额度为零',
   }
 })
 
-test('Customer 两个持仓账户补齐各状态样例及对应成交，持仓数保持不变', () => {
+test('Customer 两个持仓账户保留状态样例，第一账户额外增加一条零可用持仓', () => {
   const counts = accountIds => Object.entries(demoRecords).map(([kind, rows]) => filterRecords(kind, rows, defaultFilters(), accountIds).length)
-  assert.deepEqual(counts(['TZS_T0']), [12, 47, 12])
-  assert.deepEqual(counts(['TZS_T0', 'TZS_T1']), [24, 82, 22])
+  assert.deepEqual(counts(['TZS_T0']), [13, 47, 12])
+  assert.deepEqual(counts(['TZS_T0', 'TZS_T1']), [25, 82, 22])
   assert.deepEqual(counts(['TZS_T1']), [12, 35, 10])
 })
 test('持仓字段按日初、当日成交、在途卖出及 FIFO 计算，第二账户保持相同口径', () => {
-  const firstAccount = demoRecords.positions.filter(row => row.account === 'TZS_T0')
+  const firstAccount = demoRecords.positions.filter(row => row.account === 'TZS_T0' && row.market !== 'HK')
   for (const row of firstAccount) {
     const buys = (row.todayExecutions || []).filter(item => item.side === 'buy').reduce((total, item) => total + item.quantity, 0)
     const sells = (row.todayExecutions || []).filter(item => item.side === 'sell').reduce((total, item) => total + item.quantity, 0)
@@ -69,10 +69,22 @@ test('持仓保留名称/代码与多空筛选，不再按市场过滤', () => {
   assert.equal(rows({ symbol: ' 平安 ' })[0].code, '000001')
   assert.equal(rows({ symbol: '000001.sz' }).length, 1)
   // 兼容旧筛选状态：市场条件不再生效，沪深持仓都可见。
-  assert.equal(rows({ market: 'SH' }).length, 12)
+  assert.equal(rows({ market: 'SH' }).length, 13)
   assert.equal(Object.hasOwn(defaultFilters(), 'market'), false)
   assert.equal(rows({ direction: '空' }).length, 0)
   assert.equal(rows({ symbol: '不存在' }).length, 0)
+})
+test('零可用样例保留真实持仓量，按原港股标的和冻结数量计算', () => {
+  const rows = demoRecords.positions.filter(row => row.qty > 0 && row.available === 0)
+  assert.equal(rows.length, 1)
+  const row = rows[0]
+  assert.deepEqual([row.code, row.market, row.currency, row.account], ['00700', 'HK', 'HKD', 'TZS_T0'])
+  assert.deepEqual(calculatePositionMetrics(row), {
+    opening: 1000, qty: 1000, available: 0, cost: 320, value: 320000,
+    floatingProfit: 0, marginOccupied: 32000, dailyRealizedProfit: 0, totalProfit: 0,
+  })
+  assert.equal(row.pendingSell, row.qty)
+  assert.equal(filterRecords('positions', rows, defaultFilters(), ['TZS_T0']).length, 1)
 })
 test('演示持仓仅保留做多数据，多空方向统一使用做多/做空文案', () => {
   assert.ok(demoRecords.positions.length > 0)

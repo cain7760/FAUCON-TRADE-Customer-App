@@ -90,7 +90,7 @@ test('筛选只导出当前记录，清空结果及旧排序事件都不会带�
   assert.equal(await scope.run(() => exportedCsv(parent, 'positions')), columns.focusCsv('positions', []).content.slice(1))
   parent.resetFilters()
   assert.deepEqual(ids(parent.focusExportRecords.value.positions), ids(list.sortedRecords.value))
-  assert.equal(parent.focusExportRecords.value.positions.length, 12)
+  assert.equal(parent.focusExportRecords.value.positions.length, 13)
   parent.selectedAccounts.value = []
   assert.deepEqual(parent.focusExportRecords.value.positions, [])
 })

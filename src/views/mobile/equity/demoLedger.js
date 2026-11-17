@@ -58,10 +58,11 @@ export function submitDemoOrder(orders, snapshot, now = new Date()) {
   const position = demoPositionRows(orders).find(row => samePosition(row, { ...snapshot.symbol, account: snapshot.account }))
   const draft = { type: snapshot.type, price: snapshot.price, mode: 'quantity', value: snapshot.quantity, unit: 'shares', algorithm: snapshot.algorithmCode, pov: snapshot.pov }
   const estimate = orderEstimates(draft, snapshot.symbol, cash, position?.available)
-  const error = orderError(draft, snapshot.symbol, estimate, snapshot.side)
+  const validationEstimate = snapshot.side === 'buy' ? { ...estimate, maxBuy: Number.MAX_SAFE_INTEGER } : estimate
+  const error = orderError(draft, snapshot.symbol, validationEstimate, snapshot.side)
   if (error) throw new Error(error)
-  if (!snapshot.symbol.isManual && snapshot.side === 'buy' && snapshot.inputAmount != null
-    && decimalProduct(snapshot.inputAmount, demoCnyExchangeRates[currencyFor(snapshot.symbol)]) > cash) throw new Error('订单金额超出可用资金')
+  if (!snapshot.symbol.isManual && snapshot.side === 'buy' && (snapshot.quantity > estimate.maxBuy || (snapshot.inputAmount != null
+    && decimalProduct(snapshot.inputAmount, demoCnyExchangeRates[currencyFor(snapshot.symbol)]) > cash))) throw new Error('下单失败，最大可用不足')
   const number = nextOrderNumber(orders, snapshot.symbol.market, marketClock(now).date)
   const order = createDemoOrder(snapshot, Number(number.slice(-3)) - 1, now)
   orders.unshift(order)

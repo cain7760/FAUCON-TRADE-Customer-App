@@ -36,6 +36,8 @@
 .ticket-execution button { min-height: 32px; }
 .ticket-order-context { margin-bottom: 16px; padding-bottom: 0; }
 .ticket-header-account { min-width: 0; margin: 0 0 0 auto; }
+.ticket-header-account .equity-account:disabled .app-chevron { display: none; }
+.ticket-header-account .equity-account:disabled b { margin-left: auto; }
 .ticket-reference-layout > .order-sheet-heading > .equity-icon-button:last-child { margin-left: 0; }
 .ticket-field { margin-bottom: 8px; }
 .ticket-caption { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-bottom: 6px; color: var(--app-color-text-secondary); font-size: 12px; }
@@ -88,15 +90,10 @@
 .ticket-algorithm-choice { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; margin-left: auto; }
 .ticket-algorithm-choice > b { color: var(--app-color-text); font-size: 14px; font-weight: 400; }
 .ticket-pov-tag { box-sizing: border-box; display: inline-flex; min-width: 76px; height: 22px; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 2px; background: #26282e; color: var(--app-color-accent); font-size: 12px; line-height: 18px; white-space: nowrap; }
-.ticket-pov-dialog .van-tabs__wrap { display: none; }
+.ticket-pov-dialog .van-tabs__wrap { display: block; }
 .ticket-fractions { display: grid; grid-template-rows: 16px 12px; height: 28px; margin-top: 6px; }
-.ticket-fractions input[type="range"] { appearance: none; width: 100%; height: 16px; margin: 0; padding: 0; border: 0; border-radius: 0; background: linear-gradient(to right, var(--app-color-accent) 0 var(--ticket-fraction), var(--app-color-frame) var(--ticket-fraction) 100%) center / 100% 4px no-repeat; cursor: pointer; }
-.ticket-fractions input[type="range"]::-webkit-slider-runnable-track { height: 4px; border: 0; background: transparent; }
-.ticket-fractions input[type="range"]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-surface); }
-.ticket-fractions input[type="range"]::-moz-range-track { height: 4px; border: 0; background: var(--app-color-frame); }
-.ticket-fractions input[type="range"]::-moz-range-progress { height: 4px; background: var(--app-color-accent); }
-.ticket-fractions input[type="range"]::-moz-range-thumb { width: 8px; height: 8px; border: 2px solid var(--app-color-accent); border-radius: 50%; background: var(--app-color-surface); }
-.ticket-fractions input[type="range"]:disabled { cursor: not-allowed; opacity: .45; }
+.ticket-fractions .van-slider { align-self: center; --van-slider-bar-height: 4px; --van-slider-active-background: var(--app-color-accent); --van-slider-inactive-background: var(--app-color-frame); --van-slider-button-width: 12px; --van-slider-button-height: 12px; --van-slider-button-background: var(--app-color-surface); }
+.ticket-fractions .van-slider__button { border: 2px solid var(--app-color-accent); box-shadow: none; }
 .ticket-fraction-marks { display: flex; justify-content: space-between; color: var(--app-color-text-secondary); font-family: var(--app-font-family-numeric); font-size: 11px; line-height: 12px; }
 .ticket-fraction-marks > button { position: relative; min-height: 12px; padding: 0; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .ticket-fraction-marks > button::after { position: absolute; inset: 0 -3px -8px; content: ''; }
@@ -219,7 +216,7 @@
 .ticket-trade-buttons button > span { font-size: 11px; }
 .ticket-footer > p { margin: 8px 0 0; color: var(--app-color-text-secondary); font-size: 10px; text-align: center; }
 .ticket-footer > .ticket-error { margin: 0 0 8px; color: var(--app-color-rise); font-size: 12px; text-align: left; }
-.ticket-algorithm-tabs { --van-tabs-card-height: 44px; --van-tab-font-size: 14px; --van-tabs-default-color: var(--app-color-accent); --van-tabs-nav-background: var(--app-color-control); }
+.ticket-algorithm-tabs { --van-tabs-card-height: 28px; --van-tab-font-size: 14px; --van-tabs-default-color: var(--app-color-accent); --van-tabs-nav-background: var(--app-color-control); }
 .ticket-algorithm-tabs .van-tabs__nav--card { margin: 0; overflow: visible; border: 1px solid var(--app-color-frame); border-radius: 4px; background: var(--app-color-control); }
 .ticket-algorithm-tabs .van-tab--card { min-width: 0; flex: 1 0 0; border: 0; border-radius: 0; color: var(--app-color-text-secondary); }
 .ticket-algorithm-tabs .van-tab--card:first-child { border-radius: 3px 0 0 3px; }
@@ -227,18 +224,18 @@
 .ticket-algorithm-tabs .van-tab--active { z-index: 1; outline: 1px solid var(--app-color-accent); outline-offset: 0; background: var(--app-color-accent-soft); color: var(--app-color-accent); font-weight: 600; }
 .ticket-algorithm-tabs [role="tab"]:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
 .ticket-settings > label, .ticket-algorithm-params > label { display: block; margin: 20px 0 8px; }
-.ticket-settings :is(select, input) { min-height: 44px; padding: 0 12px; }
-.ticket-settings > :is(input, select) { width: 100%; }
+.ticket-settings :is(.app-select-field, input) { min-height: 44px; padding: 0 12px; }
+.ticket-settings > :is(input, .app-select-field) { width: 100%; }
 .ticket-duration { display: flex; gap: 20px; }
 .ticket-duration label, .ticket-participation { display: flex; flex: 1; align-items: center; gap: 8px; }
-.ticket-duration select, .ticket-participation input { min-width: 0; flex: 1; }
+.ticket-duration .app-select-field, .ticket-participation input { min-width: 0; flex: 1; }
 .ticket-pov-dialog .ticket-algorithm-params > label:first-child { margin-top: 0; }
 .ticket-pov-dialog .ticket-duration { gap: 12px; }
 .ticket-pov-dialog :is(.ticket-duration label, .ticket-participation) { min-width: 0; gap: 0; padding-right: 12px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); }
-.ticket-pov-dialog :is(.ticket-duration select, .ticket-participation input) { width: 0; min-height: 42px; border: 0; background-color: transparent; }
-.ticket-pov-dialog .ticket-duration select { padding-right: 32px; }
+.ticket-pov-dialog :is(.ticket-duration .app-select-field, .ticket-participation input) { width: 0; min-height: 42px; border: 0; background-color: transparent; }
+.ticket-pov-dialog .ticket-duration .app-select-field { padding-right: 32px; }
 .ticket-pov-dialog :is(.ticket-duration label, .ticket-participation):focus-within { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }
-.ticket-pov-dialog :is(.ticket-duration select, .ticket-participation input):focus-visible { outline: none; }
+.ticket-pov-dialog :is(.ticket-duration .app-select-field, .ticket-participation input):focus-visible { outline: none; }
 .ticket-secondary-actions { display: flex; gap: 12px; }
 .ticket-secondary-actions button { min-height: 44px; flex: 1; padding: 8px 12px; border: 0; border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text); font-size: 14px; }
 .equity-order-sheet .ticket-primary { background: var(--app-color-accent); color: #fff; font-weight: 600; }
@@ -307,3 +304,18 @@
 .ticket-close-original dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; }
 .ticket-close-original dt { color: var(--app-color-text-secondary); font-size: 12px; }
 .ticket-close-original dd { margin: 4px 0 0; color: var(--app-color-text); font-size: 14px; }
+
+/* 算法按钮与 PC 同序，时间配置沿用移动端弹窗。 */
+.equity-order-sheet .ticket-time-caption,.equity-order-sheet .ticket-time-range{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.equity-order-sheet .ticket-time-caption small{color:#969da7;font-size:11px}
+.equity-order-sheet .ticket-time-range{margin-top:16px;padding:8px;border:1px solid #3b4149;border-radius:4px}
+.equity-order-sheet .ticket-time-range .app-select-field{min-width:0;width:45%;border:0;background:transparent;color:#e8eaed;color-scheme:dark;font:inherit}
+.equity-order-sheet .ticket-time-shortcuts{display:flex;gap:5px;margin:16px 0}
+.equity-order-sheet .ticket-time-shortcuts button{flex:1;min-width:0;padding:5px 3px;border:1px solid #3b4149;border-radius:3px;background:#272a30;color:#e8eaed;font-size:11px;white-space:nowrap}
+
+.equity-order-sheet .ticket-algorithm-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:32px;padding:0 8px;border:0;background:#25282d;color:#e8eaed;font:inherit}
+.equity-order-sheet .ticket-algorithm-tabs .van-tab{height:28px;min-height:28px;font-size:12px}
+
+.equity-algorithm-dialog.is-dma{height:auto;min-height:0}.equity-algorithm-dialog.is-dma .ticket-settings{min-height:0}
+
+.equity-algorithm-dialog .ticket-footer{display:flex;align-items:center;justify-content:center;padding-block:12px}

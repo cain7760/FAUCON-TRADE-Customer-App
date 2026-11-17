@@ -1,4 +1,4 @@
-import { isValidPovDuration } from '../../../domain/orders/povSchedule.js'
+import { isValidPovDuration, povParametersError } from '../../../domain/orders/povSchedule.js'
 import { normalizeOrderType, orderTypeError } from './orderMarketRules.js'
 import { decimalProduct, decimalSum, quantityForAmount, truncateDecimal } from './decimalMath.js'
 import { currencyFor, orderNotional, pricePrecision } from './orderCalculations.js'
@@ -11,7 +11,8 @@ export const largeOrderAmount = 8_000_000
 export const algorithmOptions = [
   { value: 'POV', label: 'POV' },
   { value: 'DMA', label: 'DMA' },
-  { value: 'none', label: '无需算法' },
+  { value: 'TWAP', label: 'TWAP' },
+  { value: 'VWAP', label: 'VWAP' },
 ]
 export function defaultOrderAlgorithm(market, now = new Date()) {
   const cutoff = { A: 895, SH: 895, SZ: 895, HK: 955 }[market]
@@ -19,6 +20,7 @@ export function defaultOrderAlgorithm(market, now = new Date()) {
   return cutoff != null && Number(parts.hour) * 60 + Number(parts.minute) >= cutoff ? 'DMA' : 'POV'
 }
 export function validPov(parameters) {
+  if (parameters?.executionTime) return !povParametersError({}, parameters)
   const { hours, minutes, participation } = parameters || {}
   return hours != null && minutes != null && participation != null
     && isValidPovDuration(hours, minutes)
@@ -52,8 +54,8 @@ export function orderError(draft, symbol, estimate, side) {
   if (!['quantity', 'amount', 'percentage'].includes(draft.mode)) return '订单数量模式无效'
   if (draft.mode === 'percentage' && !(Number.isFinite(Number(draft.fraction)) && draft.fraction > 0 && draft.fraction <= 100)) return '下单比例必须大于 0 且不超过 100%'
   if (draft.mode === 'quantity' && !Number.isInteger(decimalProduct(draft.value, draft.unit === 'wan' ? 10000 : 1))) return '订单数量请输入整数'
-  if (draft.algorithm === 'POV' && !validPov(draft.pov)) return '请检查 POV 运行时间和市场成交占比'
-  if (!algorithmOptions.some(option => option.value === draft.algorithm)) return '执行算法无效'
+  if (['POV', 'TWAP', 'VWAP'].includes(draft.algorithm) && !validPov(draft.pov)) return '请检查 POV 运行时间和市场成交占比'
+  if (draft.algorithm !== 'none' && !algorithmOptions.some(option => option.value === draft.algorithm)) return '执行算法无效'
   const quantity = estimate[side]
   if (!Number.isSafeInteger(quantity) || quantity <= 0) return '请输入有效的订单数量'
   if (!Number.isSafeInteger(Math.trunc(decimalProduct(quantity, estimate.price, 100)))) return '订单金额超出安全计算范围'

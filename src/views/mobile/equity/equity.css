@@ -16,8 +16,8 @@
 .equity-accent { color: var(--app-color-accent); }
 /* 标题和紧邻的 Tab 导航沿用同一底色。 */
 .equity-page-header { display: flex; min-height: 56px; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 4px 10px; border: 0; background: var(--app-color-card); }
-/* 收紧标题与 Tab 间的留白，标题和账户入口的位置保持不变。 */
-.mobile-app--baseline .equity-page-header { margin-bottom: -12px; }
+/* 数据与消息页共用标题到 Tab 的间距，保持主导航位置一致。 */
+.mobile-app--baseline :is(.equity-page-header, .messages-heading) { margin-bottom: -12px; }
 .equity-page-header h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: .02em; white-space: nowrap; }
 .equity-page-title { display: flex; min-width: 0; align-items: center; gap: 8px; }
 /* 独立主操作采用圆形，背景直接复用品牌主色，不混入页面底色。 */
@@ -188,9 +188,12 @@
 .filter-group legend, .filter-group > label { display: block; margin-bottom: 10px; padding: 0; }
 .filter-group small { margin-left: 6px; color: var(--app-color-text-secondary); font-size: 12px; font-weight: 400; }
 .filter-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.filter-options--tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-options--tags .filter-chip { padding-inline: 14px; }
 .filter-chip { min-height: 44px; padding: 6px 4px; border: 1px solid var(--app-color-frame); border-radius: 3px; background: var(--app-color-control); color: var(--app-color-text-secondary); font: inherit; font-size: 13px; }
 .filter-chip[aria-pressed="true"] { border-color: var(--app-color-accent); background: var(--app-color-accent-soft); color: #dfc890; }
 .account-options { overflow: hidden; border: 1px solid var(--app-color-border); border-radius: 4px; }
+.equity-filter-sheet .equity-filter-input + .account-options { margin-top: 12px; }
 .account-option { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--app-color-border); background: var(--app-color-control); color: var(--app-color-text); font: inherit; text-align: left; }
 .account-option:last-child { border-bottom: 0; }
 .option-check { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1px solid var(--app-color-frame); border-radius: 4px; color: var(--app-color-background); font-size: 13px; }

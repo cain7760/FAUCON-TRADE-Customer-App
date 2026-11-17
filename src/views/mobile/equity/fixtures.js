@@ -116,6 +116,8 @@ const basePositions = instruments.map((position, index) => {
 })
 
 // 保留 PC 快照的第二账户演示口径；不是可用于生产的损益计算规则。
+// 独立零可用样例：期初 1,000 股全部被在途卖出占用，不改原有持仓和订单样例。
+const zeroAvailablePosition = { ...hongKongDemoInstruments.find(row => row.code === '00700'), opening: 1000, pendingSell: 1000, marginRate: 10 }
 const positions = [...basePositions, ...basePositions.map(row => ({
   ...row, id: row.id.replace('T0', 'T1'), account: 'TZS_T1',
   opening: row.opening * 2, qty: row.qty * 2, available: row.available * 2,
@@ -123,7 +125,11 @@ const positions = [...basePositions, ...basePositions.map(row => ({
   todayExecutions: row.todayExecutions?.map(execution => ({ ...execution, quantity: execution.quantity * 2 })),
   value: row.value * 2, marginOccupied: row.marginOccupied * 2,
   floatingProfit: row.floatingProfit * 2, dailyRealizedProfit: row.dailyRealizedProfit * 2, totalProfit: row.totalProfit * 2,
-}))]
+})), {
+  ...zeroAvailablePosition, ...calculatePositionMetrics(zeroAvailablePosition),
+  id: 'T0-zero-available', account: 'TZS_T0', direction: '多', sourceOrderTypes: ['系统单'],
+  orderRemark: '演示持仓：全部数量已被在途卖出占用', traderRemark: '',
+}]
 
 // 新版补齐当前 4177 PC 快照元数据；不改旧版来源标签及原始记录。
 // 对齐 Customer 端 variantData.js，不从 sourceOrderTypes 猜测执行类型。

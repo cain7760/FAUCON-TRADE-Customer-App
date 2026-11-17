@@ -1,3 +1,4 @@
+import { resolvePovExecutionTime } from '../../../domain/orders/povSchedule.js'
 import { deferLunchOperation } from '../../../domain/orders/lunchBreak.js'
 import { orderError, orderEstimates, validPov } from './orderModel.js'
 import { normalizeOrderType, orderTypeError } from './orderMarketRules.js'
@@ -23,7 +24,7 @@ export function createDemoOrder(snapshot, sequence, now = new Date()) {
     ...snapshot.symbol, id: orderNo, orderNo, account: snapshot.account, currency: currencyFor(snapshot.symbol),
     executionType: snapshot.execution, orderType: snapshot.execution === 'highTouch' ? '手工单' : '系统单',
     type: snapshot.type, side: snapshot.side, openClose: snapshot.openClose || '开',
-    algorithm: snapshot.algorithmCode, algorithmParams: snapshot.algorithmCode === 'POV' ? { ...snapshot.pov } : null,
+    algorithm: snapshot.algorithmCode, algorithmParams: ['POV', 'TWAP', 'VWAP'].includes(snapshot.algorithmCode) ? { ...snapshot.pov } : null,
     price: snapshot.type === 'market' ? null : snapshot.price, quantity: snapshot.quantity,
     inputAmount: snapshot.inputAmount, orderValueNumber: snapshot.inputAmount ?? snapshot.quantity,
     attribute: `${snapshot.type === 'limit' ? '限价' : '市价'}·${snapshot.inputAmount == null ? '数量' : '金额'}`,
@@ -32,6 +33,11 @@ export function createDemoOrder(snapshot, sequence, now = new Date()) {
     canceledQuantity: 0, canceledAmount: 0, marginRate: snapshot.symbol.iaRate ?? null,
     orderTime: now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai', hour12: false }),
     orderRemark: snapshot.note, traderRemark: '', feedback: '待报',
+  }
+  if (row.algorithmParams?.executionTime) {
+    row.algorithmParams.executionTime = resolvePovExecutionTime(row, row.algorithmParams.executionTime, now)
+    const [start, end] = row.algorithmParams.executionTime
+    if (!start || !end || start >= end) throw new Error('结束时间须晚于开始时间')
   }
   row.frozenMargin = frozenMargin(row)
   return row
@@ -45,7 +51,7 @@ export function amendmentDraft(row) {
     execution: row.orderType === '手工单' ? 'highTouch' : 'lowTouch', type: normalizeOrderType(row.type, row),
     price: row.price ?? '', mode: row.inputAmount != null && row.type !== 'market' ? 'amount' : 'quantity',
     value: row.inputAmount != null && row.type !== 'market' ? Number(row.inputAmount) : Number(row.quantity),
-    unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: row.algorithm || 'none',
+    unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: row.algorithm === 'none' ? 'DMA' : row.algorithm || 'DMA',
     pov: { hours: 1, minutes: 0, participation: 10, ...row.algorithmParams }, note: row.orderRemark || '',
   }
 }
@@ -68,7 +74,7 @@ export function amendmentPayload(draft, row, estimate, { pcParity = false, total
   const quantity = estimate[row.side]
   return { orderId: row.id, type: draft.type, price: draft.type === 'market' ? null : estimate.price, quantity,
     inputAmount: draft.mode === 'amount' ? Number(pcParity ? totalAmount ?? draft.value : draft.value) : null,
-    algorithm: draft.algorithm, algorithmParams: draft.algorithm === 'POV' ? { ...draft.pov } : null, note: draft.note.trim() }
+    algorithm: draft.algorithm, algorithmParams: ['POV', 'TWAP', 'VWAP'].includes(draft.algorithm) ? { ...draft.pov } : null, note: draft.note.trim() }
 }
 export function amendmentError(draft, row, symbol, estimate, options = {}) {
   const reason = orderActionReason(row)
@@ -129,7 +135,7 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
   if (payload.inputAmount != null && (!Number.isFinite(Number(payload.inputAmount)) || Number(payload.inputAmount) < decimalSum(amendmentFilledAmount(row), orderNotional(nextQuantity - filled, referencePrice)))) throw new Error('委托金额不足以覆盖订单数量')
   if (nextQuantity % (row.lotSize || 100) !== 0) throw new Error('订单数量不符合每手股数要求')
   if (row.side === 'sell' && nextQuantity > row.quantity) throw new Error('改单数量超出最大可卖')
-  if (!['DMA', 'POV', 'none'].includes(payload.algorithm) || (payload.algorithm === 'POV' && !validPov(payload.algorithmParams || {}))) throw new Error('执行算法参数无效')
+  if (!['DMA', 'POV', 'TWAP', 'VWAP', 'none'].includes(payload.algorithm) || (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && !validPov(payload.algorithmParams || {}))) throw new Error('执行算法参数无效')
   if (deferLunchOperation(row, action, payload, now, demoTimeMode)) return '改单申请已受理，午间休市，复市后处理。'
   const originalQuantity = row.quantity, delta = nextQuantity - originalQuantity
   const nextRemaining = nextQuantity - filled

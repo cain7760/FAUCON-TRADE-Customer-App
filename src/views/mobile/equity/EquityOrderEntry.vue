@@ -1,7 +1,8 @@
 <script setup>
-import EquityPovDeadline from './EquityPovDeadline.vue'
+import { executionShortcut } from '../../../domain/orders/executionSchedule.js'
+import AppSelectField from '../../../components/ui/AppSelectField.vue'
 import EquitySheetClose from './EquitySheetClose.vue'
-import { computed, nextTick, reactive, ref, shallowRef, useId, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { showSuccessToast } from 'vant'
 import { accounts, demoRecords, orderInstruments } from './fixtures.js'
 import { accountLabel, formatNumber } from './model.js'
@@ -30,8 +31,12 @@ const isPaused = computed(() => props.fullCapabilities && props.systemRunning ==
 // 视图偏好不随下单子页面或账户切换重置，避免隐藏后的资金意外重新显示。
 const assetsVisible = ref(true), assetsCollapsed = ref(true)
 const accountId = ref(accounts[0].id), symbolCode = ref('000001'), manualSymbol = ref(null)
-const draft = reactive({ execution: 'lowTouch', type: 'limit', price: '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { hours: 1, minutes: 0, participation: 10 }, note: '' })
-const algorithmDraft = reactive({ value: 'DMA', hours: 1, minutes: 0, participation: 10 })
+const draft = reactive({ execution: 'lowTouch', type: 'limit', price: '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { hours: 1, minutes: 0, participation: 25 }, note: '' })
+const executionTimeOptions = Array.from({ length: 1440 }, (_, minute) => {
+  const value = `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
+  return { text: value, value }
+})
+const algorithmDraft = reactive({ executionTime: ['', ''], value: 'DMA', hours: 1, minutes: 0, participation: 25 })
 watch(() => algorithmDraft.hours, value => { if (Number(value) === 6 && Number(algorithmDraft.minutes) > 30) algorithmDraft.minutes = 30 })
 const customDraft = reactive({ name: '', code: '', market: 'A' })
 const instruments = orderInstruments
@@ -54,49 +59,16 @@ const estimate = computed(() => isAmend.value ? amendmentEstimate(draft, props.c
 const positionCodes = computed(() => positions.value.filter(row => row.account === accountId.value && row.qty > 0).map(row => row.code))
 const accountOverview = computed(() => orderAccountOverview(props.fullCapabilities && props.overviewAccountIds?.length ? props.overviewAccountIds : accountId.value, positions.value, cashBalances.value))
 const algorithmLabel = computed(() => algorithmOptions.find(option => option.value === draft.algorithm)?.label)
-const algorithmDialogOptions = computed(() => props.design === 'baseline' ? algorithmOptions.filter(option => option.value === 'POV') : algorithmOptions)
-const algorithmMenuOpen = ref(false), algorithmMenuTarget = shallowRef(null), algorithmTrigger = ref(null), algorithmOptionsElement = ref(null)
-const algorithmMenuId = `order-algorithm-${useId()}`
-function openAlgorithmMenu(event) {
-  algorithmMenuTarget.value = event.currentTarget.closest('.equity-order-sheet')
-  algorithmMenuOpen.value = event.type === 'keydown' || !algorithmMenuOpen.value
-  if (algorithmMenuOpen.value) nextTick(focusAlgorithmOption)
-}
-function focusAlgorithmOption() { algorithmOptionsElement.value?.querySelector('[aria-checked="true"]')?.focus({ preventScroll: true }) }
-function selectAlgorithm(value) {
+const algorithmDialogOptions = computed(() => algorithmOptions)
+function selectAlgorithm(value, event) {
   if (!algorithmOptions.some(option => option.value === value)) return
-  algorithmMenuOpen.value = false
-  if (value === 'POV') {
-    navigate('algorithm', { currentTarget: algorithmTrigger.value })
-    algorithmDraft.value = 'POV'
+  if (value !== 'DMA') {
+    navigate('algorithm', event)
+    algorithmDraft.value = value
   } else {
     draft.algorithm = value
-    nextTick(() => algorithmTrigger.value?.focus({ preventScroll: true }))
   }
 }
-function handleAlgorithmMenuKeyboard(event) {
-  if (event.key === 'Escape' || event.key === 'Tab') {
-    event.stopPropagation()
-    if (event.key === 'Escape') event.preventDefault()
-    algorithmMenuOpen.value = false
-    algorithmTrigger.value?.focus({ preventScroll: true })
-    return
-  }
-  const options = [...(algorithmOptionsElement.value?.querySelectorAll('button') || [])]
-  const index = options.indexOf(event.target)
-  const next = { ArrowDown: (index + 1) % options.length, ArrowUp: (index + options.length - 1) % options.length, Home: 0, End: options.length - 1 }[event.key]
-  if (next === undefined) return
-  event.preventDefault(); event.stopPropagation(); options[next]?.focus()
-}
-watch([() => props.show, page, symbolCode], () => { algorithmMenuOpen.value = false })
-watch(algorithmMenuOpen, (open, _, onCleanup) => {
-  if (!open) return
-  const dismiss = event => {
-    if (!algorithmTrigger.value?.contains(event.target) && !algorithmOptionsElement.value?.contains(event.target)) algorithmMenuOpen.value = false
-  }
-  document.addEventListener('pointerdown', dismiss)
-  onCleanup(() => document.removeEventListener('pointerdown', dismiss))
-})
 const usesAmount = computed(() => draft.mode === 'amount')
 // 金额始终以元保存，单位切换只转换输入框的显示值。
 const displayValue = computed({
@@ -183,7 +155,7 @@ function initialize() {
   accountId.value = record?.account || props.overviewAccountIds?.[0] || accounts[0].id
   symbolCode.value = record?.code || instruments[0].code
   manualSymbol.value = null
-  Object.assign(draft, { execution: 'lowTouch', type: 'limit', price: symbol.value?.price || '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: defaultOrderAlgorithm(symbol.value?.market), pov: { hours: 1, minutes: 0, participation: 10 }, note: '' })
+  Object.assign(draft, { execution: 'lowTouch', type: 'limit', price: symbol.value?.price || '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: defaultOrderAlgorithm(symbol.value?.market), pov: { hours: 1, minutes: 0, participation: 25 }, note: '' })
   // PC 持仓点“下单”只继承明确执行类型，来源集合不等同于本次委托类型。
   if (props.fullCapabilities && props.context.action === 'new') {
     draft.execution = (record?.executionType || (record?.orderType === '手工单' ? 'highTouch' : 'lowTouch')) === 'highTouch' ? 'highTouch' : 'lowTouch'
@@ -213,7 +185,7 @@ watch(() => [draft.value, draft.unit, draft.mode, estimate.value.maxSell, estima
 function navigate(next, event) {
   formReturnFocus = event?.currentTarget || formReturnFocus
   error.value = ''
-  if (next === 'algorithm') Object.assign(algorithmDraft, { value: draft.algorithm, ...draft.pov })
+  if (next === 'algorithm') Object.assign(algorithmDraft, { value: draft.algorithm, ...draft.pov, executionTime: draft.pov.executionTime?.slice() || ['', ''] })
   page.value = next
   if (next !== 'algorithm') nextTick(() => next === 'symbols' ? symbolPicker.value?.focusSearch() : heading.value?.focus())
 }
@@ -266,6 +238,12 @@ function setBookPrice(price) {
   showsFraction.value = props.fullCapabilities && draft.mode === 'percentage'
 }
 function stepPrice(direction) { draft.price = Math.max(0, decimalSum(Number(draft.price) || 0, decimalProduct(direction, 10 ** -pricePrecision(symbol.value)))) }
+function onFractionKeydown(event) {
+  const next = { ArrowLeft: draft.fraction - 1, ArrowDown: draft.fraction - 1, ArrowRight: draft.fraction + 1, ArrowUp: draft.fraction + 1, Home: 0, End: 100 }[event.key]
+  if (next === undefined || !symbol.value) return
+  event.preventDefault()
+  selectFraction(next)
+}
 function selectFraction(value) {
   if (!symbol.value) return
   const fraction = Math.max(0, Math.min(100, Math.round(Number(value) || 0)))
@@ -311,10 +289,14 @@ function handleAlgorithmKeydown(event) {
   algorithmDraft.value = algorithmOptions[next].value
   nextTick(() => tabs[next]?.focus())
 }
+function chooseExecutionTime(value) {
+  const range = executionShortcut(symbol.value, value, new Date(), 3, true, true)
+  if (range) algorithmDraft.executionTime = range
+}
 function applyAlgorithm() {
-  if (algorithmDraft.value === 'POV' && !validPov(algorithmDraft)) return
+  if (algorithmDraft.value !== 'DMA' && !validPov(algorithmDraft)) return
   draft.algorithm = algorithmDraft.value
-  draft.pov = { hours: Number(algorithmDraft.hours), minutes: Number(algorithmDraft.minutes), participation: Number(algorithmDraft.participation) }
+  draft.pov = { executionTime: algorithmDraft.executionTime?.slice() || ['', ''], hours: Number(algorithmDraft.hours), minutes: Number(algorithmDraft.minutes), participation: Number(algorithmDraft.participation) }
   back()
 }
 function addManualSymbol() {
@@ -336,9 +318,11 @@ function preview(side, event) {
     navigate('confirm', event); return
   }
   if (isLocked.value && side !== (isClose.value ? 'sell' : 'buy')) return
-  const message = orderError(draft, symbol.value, estimate.value, side)
+  // 买入容量在确认页提示，由最终提交按当前可用资金决定是否受理。
+  const validationEstimate = side === 'buy' ? { ...estimate.value, maxBuy: Number.MAX_SAFE_INTEGER } : estimate.value
+  const message = orderError(draft, symbol.value, validationEstimate, side)
   if (message) { error.value = message; return }
-  snapshot.value = { side, symbol: { ...symbol.value }, account: accountId.value, execution: draft.execution, type: draft.type, price: estimate.value.price, quantity: estimate.value[side], amount: side === 'buy' ? estimate.value.buyAmount : estimate.value.sellAmount, algorithm: algorithmLabel.value, algorithmCode: draft.algorithm, pov: { ...draft.pov }, inputAmount: usesAmount.value ? estimate.value.inputAmount : null, note: draft.note.trim(), openClose: isClose.value ? '平' : '开' }
+  snapshot.value = { side, symbol: { ...symbol.value }, account: accountId.value, execution: draft.execution, type: draft.type, price: estimate.value.price, quantity: estimate.value[side], amount: side === 'buy' ? estimate.value.buyAmount : estimate.value.sellAmount, algorithm: algorithmLabel.value, algorithmCode: draft.algorithm, pov: { ...draft.pov }, inputAmount: usesAmount.value ? estimate.value.inputAmount : null, note: draft.note.trim(), openClose: isClose.value ? '平' : '开', exceedsMaxBuy: side === 'buy' && !symbol.value.isManual && estimate.value.buy > estimate.value.maxBuy }
   navigate('confirm', event)
 }
 function confirmDemo() {
@@ -362,7 +346,6 @@ function confirmDemo() {
   })
 }
 function handleKeyboard(event) {
-  if (algorithmMenuOpen.value) { handleAlgorithmMenuKeyboard(event); return }
   if (event.key === 'Escape') { event.preventDefault(); page.value === 'form' ? close() : back(); return }
   if (event.key !== 'Tab') return
   const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length)
@@ -420,14 +403,14 @@ function handleKeyboard(event) {
               <div class="ticket-input-pair">
               <section class="ticket-field">
                 <div class="ticket-caption"><label class="app-form-label" for="mobile-order-price">订单价格</label><div class="ticket-segment" role="group" aria-label="价格类型"><button v-for="item in priceTypeOptions" :key="item[0]" type="button" :aria-pressed="draft.type === item[0]" @click="setType(item[0])">{{ item[1] }}</button></div></div>
-                <div v-if="draft.type === 'limit'" class="ticket-number-control ticket-price-control" :class="{ 'has-error': draft.price !== '' && !(draft.price > 0) }"><button type="button" aria-label="减少订单价格" :disabled="!symbol || !(draft.price > 0)" @click="stepPrice(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><input id="mobile-order-price" v-model="draft.price" :disabled="!symbol" type="number" inputmode="decimal" min="0" :step="10 ** -pricePrecision(symbol)" placeholder="请输入" :aria-describedby="draft.price !== '' && !(draft.price > 0) ? 'ticket-price-error' : undefined" @blur="normalizeInput('price', pricePrecision(symbol))"><button type="button" aria-label="增加订单价格" :disabled="!symbol" @click="stepPrice(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
+                <div v-if="draft.type === 'limit'" class="ticket-number-control ticket-price-control" :class="{ 'has-error': draft.price !== '' && !(draft.price > 0) }"><button type="button" aria-label="减少订单价格" :disabled="!symbol || !(draft.price > 0)" @click="stepPrice(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><input id="mobile-order-price" v-model.number="draft.price" :disabled="!symbol" type="text" inputmode="decimal" placeholder="请输入" :aria-describedby="draft.price !== '' && !(draft.price > 0) ? 'ticket-price-error' : undefined" @blur="normalizeInput('price', pricePrecision(symbol))"><button type="button" aria-label="增加订单价格" :disabled="!symbol" @click="stepPrice(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
                 <div v-else class="ticket-market-price">以市场价格成交</div><p v-if="draft.type === 'limit' && draft.price !== '' && !(draft.price > 0)" id="ticket-price-error" class="ticket-error">订单价格须大于 0</p>
               </section>
               <section class="ticket-field">
                 <div class="ticket-caption"><label class="app-form-label" for="mobile-order-quantity">{{ usesAmount ? '订单金额' : '订单数量' }}</label><div class="ticket-segment" role="group" aria-label="下单单位类型"><button type="button" :aria-pressed="!usesAmount" @click="setMode('quantity')">数量</button><button v-if="draft.type === 'limit'" type="button" :aria-pressed="usesAmount" @click="setMode('amount')">金额</button></div></div>
                 <div class="ticket-number-control ticket-quantity-control" :class="{ 'has-error': lotError }">
                   <div class="ticket-size-value">
-                    <input :key="showsFraction ? 'fraction' : 'quantity'" id="mobile-order-quantity" ref="sizeInput" v-model="sizeInputValue" :disabled="!symbol" :readonly="showsFraction" :type="showsFraction ? 'text' : 'number'" :inputmode="usesAmount || draft.unit === 'wan' ? 'decimal' : 'numeric'" min="0" :step="showsFraction ? 1 : usesAmount ? '.01' : draft.unit === 'wan' ? '.0001' : estimate.lot" placeholder="请输入" :aria-label="showsFraction ? '下单比例，点击输入实际数量或金额' : usesAmount ? '订单金额' : '订单数量'" :aria-valuetext="showsFraction ? `${draft.fraction}%` : undefined" @focus="editSize" @blur="normalizeSize">
+                    <input :key="showsFraction ? 'fraction' : 'quantity'" id="mobile-order-quantity" ref="sizeInput" v-model.number="sizeInputValue" :disabled="!symbol" :readonly="showsFraction" type="text" :inputmode="usesAmount || draft.unit === 'wan' ? 'decimal' : 'numeric'" placeholder="请输入" :aria-label="showsFraction ? '下单比例，点击输入实际数量或金额' : usesAmount ? '订单金额' : '订单数量'" :aria-valuetext="showsFraction ? `${draft.fraction}%` : undefined" @focus="editSize" @blur="normalizeSize">
                     <span v-if="showsFraction" class="ticket-size-capacity-label">最大可买/可卖</span>
                     <van-popover v-else v-model:show="unitMenuOpen" :id="unitMenuId" class="ticket-unit-popover" theme="dark" placement="bottom-end" trigger="manual" :teleport="unitMenuTarget" :show-arrow="false" :offset="[0, 6]" :duration=".12" role="presentation" @opened="focusUnitOption" @keydown="handleUnitKeyboard">
                       <div ref="unitOptionsElement" class="ticket-unit-options" role="group" :aria-label="unitLabel">
@@ -440,24 +423,13 @@ function handleKeyboard(event) {
                 <p v-if="lotError" class="ticket-error" role="alert">订单数量须为 {{ estimate.lot }} 股的整数倍</p><p v-if="usesAmount && estimate.inputAmount > largeOrderAmount" class="ticket-warning">大额订单，请核对委托金额</p>
               </section>
               </div>
-              <div class="ticket-algorithm-row">
-                <van-popover v-if="design === 'baseline'" v-model:show="algorithmMenuOpen" :id="algorithmMenuId" class="ticket-unit-popover" theme="dark" placement="bottom-end" trigger="manual" :teleport="algorithmMenuTarget" :show-arrow="false" :offset="[0, 6]" :duration=".12" @opened="focusAlgorithmOption" @keydown="handleAlgorithmMenuKeyboard">
-                  <div ref="algorithmOptionsElement" class="ticket-unit-options ticket-algorithm-options" role="menu" aria-label="执行算法选项">
-                    <button v-for="option in algorithmOptions" :key="option.value" type="button" role="menuitemradio" :aria-checked="draft.algorithm === option.value" @click="selectAlgorithm(option.value)"><span>{{ option.label }}</span><svg v-if="draft.algorithm === option.value" viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button>
-                  </div>
-                  <template #reference><button ref="algorithmTrigger" type="button" class="ticket-algorithm-select" :aria-label="`选择执行算法 ${algorithmLabel}`" aria-haspopup="menu" :aria-expanded="algorithmMenuOpen" :aria-controls="algorithmMenuOpen ? algorithmMenuId : undefined" @click="openAlgorithmMenu" @keydown.down.prevent.stop="openAlgorithmMenu" @keydown.up.prevent.stop="openAlgorithmMenu">
-                    <span class="app-form-label">算法</span><span class="ticket-algorithm-choice"><b class="app-numeric">{{ algorithmLabel }}</b><span v-if="draft.algorithm === 'POV'" class="ticket-pov-tag app-numeric">{{ draft.pov.hours }}时{{ draft.pov.minutes }}分/{{ draft.pov.participation }}%</span></span><span class="app-chevron" aria-hidden="true"></span>
-                  </button></template>
-                </van-popover>
-                <button v-else type="button" :aria-label="`配置执行算法 ${algorithmLabel}`" :aria-describedby="draft.algorithm === 'POV' ? 'ticket-algorithm-summary' : undefined" aria-haspopup="dialog" :aria-expanded="page === 'algorithm'" @click="navigate('algorithm', $event)">
-                  <span class="ticket-algorithm-heading"><span class="app-form-label">算法</span><b class="app-numeric">{{ algorithmLabel }}</b><span class="app-chevron" aria-hidden="true"></span></span>
-                  <span v-if="draft.algorithm === 'POV'" id="ticket-algorithm-summary" class="ticket-algorithm-summary"><span>运行时间<b class="app-numeric">{{ draft.pov.hours }}时{{ draft.pov.minutes }}分</b></span><span>市场成交占比<b class="app-numeric">{{ draft.pov.participation }}%</b></span></span>
-                </button>
-              </div>
               <div v-if="!isManual" class="ticket-fractions" role="group" aria-label="下单比例">
                 <!-- 原生 range 保留鼠标拖动、触控和方向键；Vant 4 当前滑块没有鼠标拖动或方向键处理。 -->
-                <input type="range" min="0" max="100" step="1" :value="draft.fraction" :disabled="!symbol" :style="{ '--ticket-fraction': `${draft.fraction}%` }" aria-label="下单比例" :aria-valuetext="`${draft.fraction}%`" @input="selectFraction($event.target.value)">
+                <van-slider :model-value="draft.fraction" :min="0" :max="100" :step="1" :disabled="!symbol" aria-label="下单比例" :aria-valuetext="`${draft.fraction}%`" @update:model-value="selectFraction" @keydown="onFractionKeydown" />
                 <div class="ticket-fraction-marks"><button v-for="value in [0, 25, 50, 75, 100]" :key="value" type="button" :disabled="!symbol" :aria-pressed="showsFraction && draft.fraction === value" @click="selectFraction(value)">{{ value }}%</button></div>
+              </div>
+              <div v-if="!isManual" class="ticket-algorithm-row">
+                <button type="button" class="ticket-algorithm-trigger" :aria-label="`执行算法：${algorithmLabel}，点击配置`" aria-haspopup="dialog" :aria-expanded="page === 'algorithm'" @click="navigate('algorithm', $event)"><span class="app-form-label">算法</span><span>{{ algorithmLabel }} <span aria-hidden="true">⌄</span></span></button>
               </div>
               <label v-if="isManual" class="ticket-note"><span class="app-form-label">备注 <small>{{ draft.note.length }}/200</small></span><textarea v-model="draft.note" maxlength="200" rows="3" placeholder="请输入备注"></textarea></label>
               <dl v-if="!isManual" class="ticket-estimates ticket-capacity" aria-label="下单可用数量"><div v-if="showBuy"><dt>最大可买</dt><dd>{{ number(estimate.maxBuy) }} 股</dd></div><div v-if="showSell"><dt>最大可卖</dt><dd>{{ number(estimate.maxSell) }} 股</dd></div></dl>
@@ -484,11 +456,13 @@ function handleKeyboard(event) {
     </template>
     <EquityAccountPicker v-else-if="page === 'accounts'" :accounts="accounts" :selected-id="accountId" @select="changeAccount" />
     <template v-else-if="page === 'custom'">
-      <div class="order-entry-scroll ticket-settings"><label class="app-form-label" for="mobile-custom-name">标的名称</label><input id="mobile-custom-name" v-model="customDraft.name" maxlength="40" placeholder="请输入标的名称"><label class="app-form-label" for="mobile-custom-code">标的代码</label><input id="mobile-custom-code" v-model="customDraft.code" maxlength="24" placeholder="请输入标的代码"><label class="app-form-label" for="mobile-custom-market">所属市场</label><select id="mobile-custom-market" v-model="customDraft.market"><option value="A">A股</option><option value="HK">港股</option><option value="US">美股</option></select><p v-if="error" class="ticket-error" role="alert">{{ error }}</p></div>
+      <div class="order-entry-scroll ticket-settings"><label class="app-form-label" for="mobile-custom-name">标的名称</label><input id="mobile-custom-name" v-model="customDraft.name" maxlength="40" placeholder="请输入标的名称"><label class="app-form-label" for="mobile-custom-code">标的代码</label><input id="mobile-custom-code" v-model="customDraft.code" maxlength="24" placeholder="请输入标的代码"><label class="app-form-label" for="mobile-custom-market">所属市场</label><AppSelectField id="mobile-custom-market" v-model="customDraft.market" label="所属市场" :options="[{ text: 'A股', value: 'A' }, { text: '港股', value: 'HK' }, { text: '美股', value: 'US' }]" /><p v-if="error" class="ticket-error" role="alert">{{ error }}</p></div>
       <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="navigate('symbols')">取消</button><button type="button" class="ticket-primary" @click="addManualSymbol">新增标的</button></footer>
     </template>
     <template v-else-if="page === 'confirm' && snapshot">
-      <div class="order-entry-scroll ticket-confirm"><h3><span :class="snapshot.side === 'buy' ? 'equity-positive' : 'equity-negative'">{{ snapshot.side === 'buy' ? '买入' : '卖出' }}</span> {{ snapshot.symbol.name }} <small>{{ snapshot.symbol.code }}</small></h3><dl><div><dt>订单价格 ({{ symbolCurrency }})</dt><dd>{{ snapshot.type === 'limit' ? priceText(snapshot.price) : '市价' }}</dd></div><div><dt>{{ isAmend ? '改后订单总数量 (股)' : '订单数量 (股)' }}</dt><dd>{{ number(snapshot.quantity) }}</dd></div><div><dt>预估金额 ({{ symbolCurrency }})</dt><dd>{{ snapshot.price > 0 ? money(snapshot.amount) : '--' }}</dd></div><div><dt>下单账户</dt><dd>{{ accountLabel(snapshot.account) }}</dd></div><div><dt>订单类型</dt><dd>{{ snapshot.execution === 'highTouch' ? '手工单' : '系统单' }}</dd></div><div><dt>执行算法</dt><dd>{{ snapshot.algorithm }}</dd></div><div><dt>订单方式</dt><dd>{{ snapshot.type === 'limit' ? '限价单' : '市价单' }}</dd></div><template v-if="snapshot.algorithm === 'POV'"><div><dt>运行时间</dt><dd>{{ snapshot.pov.hours }} 时 {{ snapshot.pov.minutes }} 分</dd></div><div><dt>市场成交占比</dt><dd>{{ snapshot.pov.participation }}%</dd></div></template><div v-if="snapshot.inputAmount !== null"><dt>订单金额 ({{ symbolCurrency }})</dt><dd>{{ money(snapshot.inputAmount) }}</dd></div><div v-if="snapshot.note"><dt>备注</dt><dd>{{ snapshot.note }}</dd></div></dl></div>
+      <div class="order-entry-scroll ticket-confirm">
+        <p v-if="snapshot.exceedsMaxBuy" class="ticket-error" role="alert">订单数量大于最大可买数量，委托可能不会成功，请确认。</p>
+        <h3><span :class="snapshot.side === 'buy' ? 'equity-positive' : 'equity-negative'">{{ snapshot.side === 'buy' ? '买入' : '卖出' }}</span> {{ snapshot.symbol.name }} <small>{{ snapshot.symbol.code }}</small></h3><dl><div><dt>订单价格 ({{ symbolCurrency }})</dt><dd>{{ snapshot.type === 'limit' ? priceText(snapshot.price) : '市价' }}</dd></div><div><dt>{{ isAmend ? '改后订单总数量 (股)' : '订单数量 (股)' }}</dt><dd>{{ number(snapshot.quantity) }}</dd></div><div><dt>预估金额 ({{ symbolCurrency }})</dt><dd>{{ snapshot.price > 0 ? money(snapshot.amount) : '--' }}</dd></div><div><dt>下单账户</dt><dd>{{ accountLabel(snapshot.account) }}</dd></div><div><dt>订单类型</dt><dd>{{ snapshot.execution === 'highTouch' ? '手工单' : '系统单' }}</dd></div><div><dt>执行算法</dt><dd>{{ snapshot.algorithm }}</dd></div><div><dt>订单方式</dt><dd>{{ snapshot.type === 'limit' ? '限价单' : '市价单' }}</dd></div><template v-if="['POV', 'TWAP', 'VWAP'].includes(snapshot.algorithm)"><div><dt>运行时间</dt><dd>{{ snapshot.pov.executionTime ? `${snapshot.pov.executionTime[0] || '即时'}–${snapshot.pov.executionTime[1] || '收盘'}` : `${snapshot.pov.hours} 时 ${snapshot.pov.minutes} 分` }}</dd></div><div><dt>市场成交占比</dt><dd>{{ snapshot.pov.participation }}%</dd></div></template><div v-if="snapshot.inputAmount !== null"><dt>订单金额 ({{ symbolCurrency }})</dt><dd>{{ money(snapshot.inputAmount) }}</dd></div><div v-if="snapshot.note"><dt>备注</dt><dd>{{ snapshot.note }}</dd></div></dl></div>
       <div v-if="isAmend" class="ticket-amend-confirm app-numeric">已成 {{ number(snapshot.filled) }} 股保持不变</div><p v-if="error" class="ticket-error" role="alert">{{ error }}</p>
       <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">返回</button><button type="button" class="ticket-primary" :disabled="isPaused" @click="confirmDemo">确认{{ isAmend ? '改单' : snapshot.side === 'buy' ? '买入' : '卖出' }}</button></footer>
     </template>
@@ -496,15 +470,15 @@ function handleKeyboard(event) {
       <div class="order-entry-scroll ticket-complete"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><path d="m14 24 7 7 14-14"/></svg><h3>{{ isAmend ? '改单已完成' : '订单已确认' }}</h3><p v-if="doneMessage">{{ doneMessage }}</p><p v-if="snapshot">{{ snapshot.symbol.name }} · {{ snapshot.side === 'buy' ? '买入' : '卖出' }} {{ number(snapshot.quantity) }} 股</p></div><footer class="ticket-footer ticket-secondary-actions"><button type="button" class="ticket-primary" @click="close">完成</button></footer>
     </template>
   </van-popup>
-  <van-popup :show="show && page === 'algorithm'" position="center" round class="equity-order-sheet equity-algorithm-dialog ticket-entry-sheet" :class="{ 'ticket-pov-dialog': design === 'baseline' }" overlay-class="equity-sheet-overlay equity-algorithm-overlay" :overlay-props="{ 'aria-hidden': 'true', tabindex: -1 }" :duration=".2" :aria-label="design === 'baseline' ? 'POV 参数' : '执行算法'" aria-modal="true" @update:show="value => { if (!value) back() }" @opened="algorithmHeading?.focus()" @keydown.stop="handleKeyboard">
-    <header class="order-sheet-heading"><h2 ref="algorithmHeading" tabindex="-1">{{ design === 'baseline' ? 'POV 参数' : '执行算法' }}</h2><EquitySheetClose aria-label="关闭执行算法弹窗" @click="back" /></header>
+  <van-popup :show="show && page === 'algorithm'" position="center" round class="equity-order-sheet equity-algorithm-dialog ticket-entry-sheet" :class="{ 'ticket-pov-dialog': design === 'baseline', 'is-dma': algorithmDraft.value === 'DMA' }" overlay-class="equity-sheet-overlay equity-algorithm-overlay" :overlay-props="{ 'aria-hidden': 'true', tabindex: -1 }" :duration=".2" :aria-label="'执行算法'" aria-modal="true" @update:show="value => { if (!value) back() }" @opened="algorithmHeading?.focus()" @keydown.stop="handleKeyboard">
+    <header class="order-sheet-heading"><h2 ref="algorithmHeading" tabindex="-1">{{ '执行算法' }}</h2><EquitySheetClose aria-label="关闭执行算法弹窗" @click="back" /></header>
     <div class="order-entry-scroll ticket-settings">
       <van-tabs v-model:active="algorithmDraft.value" type="card" :ellipsis="false" :duration="0" class="ticket-algorithm-tabs" @keydown="handleAlgorithmKeydown">
         <van-tab v-for="option in algorithmDialogOptions" :key="option.value" :name="option.value" :title="option.label">
-          <div v-if="option.value === 'POV'" class="ticket-algorithm-params"><label class="app-form-label">运行时间</label><div class="ticket-duration"><label><select v-model="algorithmDraft.hours" aria-label="POV运行小时"><option v-for="hour in 7" :key="hour" :value="hour - 1">{{ String(hour - 1).padStart(2, '0') }}</option></select><span>时</span></label><label><select v-model="algorithmDraft.minutes" aria-label="POV运行分钟"><option v-for="minute in (Number(algorithmDraft.hours) === 6 ? 31 : 60)" :key="minute" :value="minute - 1">{{ String(minute - 1).padStart(2, '0') }}</option></select><span>分</span></label></div><EquityPovDeadline :symbol="symbol" :hours="algorithmDraft.hours" :minutes="algorithmDraft.minutes" :active="show && page === 'algorithm'" /><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model="algorithmDraft.participation" type="number" inputmode="numeric" min="1" max="25" step="1"><span>%</span></div><p v-if="!validPov(algorithmDraft)" class="ticket-error" role="alert">运行时间须大于 0 且不超过 6 小时 30 分钟，成交占比须为 1%–25%</p></div>
+          <div v-if="option.value !== 'DMA'" class="ticket-algorithm-params"><div class="ticket-time-caption"><label class="app-form-label">选择时间</label><small>建议执行时长：大于10m</small></div><div class="ticket-time-range"><AppSelectField v-model="algorithmDraft.executionTime[0]" label="开始时间" :options="[{ text: '系统提交时间', value: '' }, ...executionTimeOptions]" /><span>–</span><AppSelectField v-model="algorithmDraft.executionTime[1]" label="结束时间" :options="[{ text: '标的收盘', value: '' }, ...executionTimeOptions]" /></div><div class="ticket-time-shortcuts"><button v-for="shortcut in [[10, '10m'], [20, '20m'], [60, '1h'], ['morning', '到中午收盘'], ['close', '到下午收盘']]" :key="shortcut[0]" type="button" @click="chooseExecutionTime(shortcut[0])">{{ shortcut[1] }}</button></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model.number="algorithmDraft.participation" type="text" inputmode="numeric"><span>%</span></div><p v-if="!validPov(algorithmDraft)" class="ticket-error" role="alert">运行时间须大于 0 且不超过 6 小时 30 分钟，成交占比须为 1%–25%</p></div>
         </van-tab>
       </van-tabs>
     </div>
-    <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">取消</button><button type="button" class="ticket-primary" :disabled="algorithmDraft.value === 'POV' && !validPov(algorithmDraft)" @click="applyAlgorithm">确认配置</button></footer>
+    <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">取消</button><button type="button" class="ticket-primary" :disabled="algorithmDraft.value !== 'DMA' && !validPov(algorithmDraft)" @click="applyAlgorithm">确认配置</button></footer>
   </van-popup>
 </template>

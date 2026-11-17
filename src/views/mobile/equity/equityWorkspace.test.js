@@ -84,13 +84,13 @@ test('品牌背景随权益详情进入和返回切换，不影响首页', () =>
 test('首页三项资金按列表账户汇总，独立于搜索并随委托占用同步更新', () => {
   const scope = vue.effectScope()
   const { state } = scope.run(() => setup('./EquityTrading.vue', { design: 'baseline' }))
-  assert.deepEqual(state.portfolioOverview.value, { available: 945527.41, marketValue: 3688487, floatingProfit: 26012 })
+  assert.deepEqual(state.portfolioOverview.value, { available: 945527.41, marketValue: 3982887, floatingProfit: 26012 })
   state.applied.positions.symbol = '不存在的证券'
   assert.equal(state.records.value.positions.length, 0)
-  assert.equal(state.portfolioOverview.value.marketValue, 3688487, '标的筛选不改变账户资产范围')
+  assert.equal(state.portfolioOverview.value.marketValue, 3982887, '标的筛选不改变账户资产范围')
   state.selectedAccounts.value = ['TZS_T0', 'TZS_T1']
   assert.equal(state.accountSummary.value, '2个账户')
-  assert.deepEqual(state.portfolioOverview.value, { available: 1566327.41, marketValue: 11065461, floatingProfit: 78036 })
+  assert.deepEqual(state.portfolioOverview.value, { available: 1566327.41, marketValue: 11359861, floatingProfit: 78036 })
   state.demoOrders.value.push({ id: 'overview-buy', account: 'TZS_T0', code: '000001', market: 'SZ', currency: 'CNY', side: 'buy', type: 'limit', status: '待报', price: 11.78, quantity: 100, filledQuantity: 0 })
   assert.equal(state.portfolioOverview.value.available, 1565149.41, '只扣除新增委托占用的1178元')
   state.demoOrders.value.at(-1).status = '撤单'
@@ -142,7 +142,7 @@ test('提交后清除会隐藏新委托的旧条件、切换实际账户并显�
   assert.ok(state.records.value.orders.some(row => row.quantity === 100 && /^\d{18}$/.test(row.orderNo)))
   const count = state.demoOrders.value.length
   state.confirmOrder({ ...snapshot, account: 'TZS_T2' }, value => { reply = value })
-  assert.match(reply.error, /超出最大可买/)
+  assert.equal(reply.error, '下单失败，最大可用不足')
   assert.equal(state.demoOrders.value.length, count)
   scope.stop()
 })
@@ -298,12 +298,12 @@ test('输入不自动筛选，提交后搜索，清空只重置本列表标的�
   state.searchDrafts.positions = '000001'
   state.searchDrafts.orders = '002459'
   state.applied.orders.symbol = '002459'
-  assert.equal(state.records.value.positions.length, 12)
+  assert.equal(state.records.value.positions.length, 13)
   state.search('positions')
   assert.equal(state.records.value.positions.length, 1)
   let focused = false
   state.clearSearch('positions', { currentTarget: { closest: () => ({ querySelector: () => ({ focus() { focused = true } }) }) } })
-  assert.equal(state.records.value.positions.length, 12)
+  assert.equal(state.records.value.positions.length, 13)
   assert.equal(state.applied.positions.direction, '多')
   assert.equal(state.searchDrafts.positions, '')
   assert.equal(state.searchDrafts.orders, '002459')
@@ -372,6 +372,62 @@ test('持仓抽屉平仓复用原操作上下文，待抽屉关闭后打开并�
   await vue.nextTick()
   assert.ok(focused)
   scope.stop()
+})
+
+test('三种方案的卡片、表格和详情零可用平仓共用提示，保留详情且不打开面板', async t => {
+  for (const design of ['baseline', 'focus', 'c']) {
+    const scope = vue.effectScope()
+    t.after(() => scope.stop())
+    const { state } = scope.run(() => setup('./EquityTrading.vue', { design, orderReview: false }))
+    const record = state.records.value.positions.find(row => row.available === 0)
+    let focused = false
+    const event = { currentTarget: { isConnected: true, focus() { focused = true } } }
+    for (const open of [
+      () => state.openPositionAction(record, { action: 'close', event }),
+      () => state.openTableAction('positions', { record, action: 'close', event }),
+      () => {
+        state.openDetail('positions', record, 1, event)
+        if (design === 'focus') state.openFocusAction({ action: 'close', event })
+        else state.openDetailAction({ action: 'close', event })
+        assert.equal(state.selectedRecord.value.row.id, record.id)
+        if (design !== 'focus') assert.equal(state.positionDetailVisible.value, true)
+      },
+    ]) {
+      open()
+      assert.equal(state.positionActionErrorVisible.value, true)
+      assert.equal(state.isOverlayOpen.value, true)
+      assert.equal(state.isActionVisible.value, false)
+      assert.equal(state.orderEntryContext.value, null)
+      assert.equal(state.pendingPositionAction.value, null)
+      state.positionActionErrorVisible.value = false
+      state.restorePositionActionFocus()
+      await vue.nextTick()
+      assert.ok(focused)
+    }
+  }
+  const nodes = elements(parse(read('./EquityTrading.vue')).descriptor.template.ast)
+  assert.equal(attribute(nodes.find(node => node.tag === 'van-dialog'), 'message'), '操作失败，当前标的无可用持仓。')
+  const close = elements(parse(read('./EquityConceptCPosition.vue')).descriptor.template.ast).find(node => attribute(node, 'class') === 'concept-c-close-position')
+  assert.equal(directive(close, 'bind', 'disabled'), undefined)
+})
+
+test('平仓检查实时可用量，正可用正常进入，系统中断仍优先阻止交易', t => {
+  const scope = vue.effectScope()
+  t.after(() => scope.stop())
+  const { state } = scope.run(() => setup('./EquityTrading.vue', { design: 'focus', orderReview: false }))
+  const zero = state.records.value.positions.find(row => row.available === 0)
+  state.openPositionAction({ ...zero, available: 1000 }, { action: 'close' })
+  assert.equal(state.positionActionErrorVisible.value, true, '详情旧快照不能绕过实时可用量')
+  state.positionActionErrorVisible.value = false
+  state.systemRunning.value = false
+  state.openPositionAction(zero, { action: 'close' })
+  assert.equal(state.positionActionErrorVisible.value, false)
+  assert.equal(state.isActionVisible.value, false)
+  state.systemRunning.value = true
+  const available = state.records.value.positions.find(row => row.available > 0)
+  state.openPositionAction(available, { action: 'close' })
+  assert.equal(state.isActionVisible.value, true)
+  assert.equal(state.orderEntryContext.value.record.id, available.id)
 })
 
 test('持仓抽屉字段和值完整保留，仅调整展示顺序；订单成交详情不变', () => {

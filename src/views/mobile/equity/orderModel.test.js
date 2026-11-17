@@ -5,8 +5,8 @@ import { algorithmOptions, applyBookPrice, canPreviewOrder, changeOrderMode, cha
 const symbol = { code: '000001', market: 'SZ', price: 11.78 }
 const draft = { type: 'limit', price: 11.78, mode: 'quantity', value: 900, unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { hours: 1, minutes: 0, participation: 10 } }
 const estimate = d => orderEstimates(d, symbol, demoOrderCash.TZS_T0, 9300)
-test('执行算法仅保留 Customer 三个选项及名称，不添加解释文案', () => {
-  assert.deepEqual(algorithmOptions, [{ value: 'POV', label: 'POV' }, { value: 'DMA', label: 'DMA' }, { value: 'none', label: '无需算法' }])
+test('执行算法仅保留 Customer 四个选项及名称，不添加解释文案', () => {
+  assert.deepEqual(algorithmOptions, [{ value: 'POV', label: 'POV' }, { value: 'DMA', label: 'DMA' }, { value: 'TWAP', label: 'TWAP' }, { value: 'VWAP', label: 'VWAP' }])
 })
 test('港股标准与手工标的仅限价，隐藏选项之外仍拦截市价预览', () => {
   for (const isManual of [false, true]) {

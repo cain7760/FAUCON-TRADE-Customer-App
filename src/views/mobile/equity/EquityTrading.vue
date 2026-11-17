@@ -61,7 +61,7 @@ function openMessageOrder(id, event) {
   openDetail('orders', demoOrders.value[index], index, event)
   return true
 }
-defineExpose({ readHistorySource, readMessageSource: () => demoOrders.value, openMessageOrder })
+defineExpose({ readHistorySource, readMessageSource: () => demoOrders.value, openMessageOrder, tradingTimeMode, setTradingTimeMode })
 const positionRows = computed(() => demoPositionRows(demoOrders.value, usesPcRules.value ? focusPositions : demoRecords.positions))
 const orderCash = computed(() => Object.fromEntries(accounts.map(account => [account.id, demoAvailableCash(demoOrders.value, account.id)])))
 const portfolioOverview = computed(() => orderAccountOverview(selectedAccounts.value, positionRows.value, orderCash.value))
@@ -69,8 +69,10 @@ const operationVisible = ref(false), operationContext = ref(null), operationResu
 const selectedRecord = ref(null)
 watch(() => !selectedRecord.value, value => emit('home-change', value), { immediate: true, flush: 'sync' })
 const positionDetailVisible = ref(false), positionDetail = ref(null), pendingPositionAction = ref(null)
+const positionActionErrorVisible = ref(false)
+let positionActionErrorReturnFocus = null
 const isPositionDetail = computed(() => selectedRecord.value?.kind === 'positions')
-const isOverlayOpen = computed(() => filterVisible.value || isActionVisible.value || operationVisible.value || isPositionDetail.value || historyVisible.value || (isFocusDesign.value && (!!selectedRecord.value || toolsVisible.value)))
+const isOverlayOpen = computed(() => positionActionErrorVisible.value || filterVisible.value || isActionVisible.value || operationVisible.value || isPositionDetail.value || historyVisible.value || (isFocusDesign.value && (!!selectedRecord.value || toolsVisible.value)))
 watch(isOverlayOpen, value => emit('overlay-change', value), { immediate: true })
 const accountOnly = ref(false)
 const records = computed(() => Object.fromEntries(listTabs.map(tab => [tab.key, filterRecords(tab.key, tab.key === 'orders' ? demoOrders.value : tab.key === 'positions' ? positionRows.value : demoTradeRows(demoOrders.value), applied[tab.key], selectedAccounts.value)])))
@@ -114,7 +116,8 @@ function closeDetail() {
   if (action) openPositionAction(action.record, { action: action.action })
   else restoreFocus()
 }
-function openDetailAction({ action }) {
+function openDetailAction({ action, event }) {
+  if (!canOpenPositionAction(selectedRecord.value.row, action, event)) return
   pendingPositionAction.value = { record: selectedRecord.value.row, action }
   positionDetailVisible.value = false
 }
@@ -122,6 +125,7 @@ function openFocusAction({ action, event }) {
   const { kind, row } = selectedRecord.value
   if (action === 'history') { historyReturnFocus = event.currentTarget; historyContext.value = { kind, record: row }; historyVisible.value = true; return }
   if (!systemRunning.value) return
+  if (kind === 'positions' && action !== 'new' && !canOpenPositionAction(row, action, event)) return
   const listFocus = returnFocus
   selectedRecord.value = null
   if (kind === 'positions' && action === 'new') { orderEntryContext.value = { action: 'new', record: row }; isActionVisible.value = true }
@@ -134,8 +138,20 @@ function openOrderEntry(event) {
   orderEntryContext.value = { action: 'new' }
   isActionVisible.value = true
 }
+function canOpenPositionAction(record, action, event) {
+  if (isFocusDesign.value && !systemRunning.value) return false
+  if (record.direction !== '多' || !['chase', 'close'].includes(action)) return false
+  const current = positionRows.value.find(row => row.id === record.id) || record
+  if (action === 'close' && !(Number(current.available) > 0)) {
+    positionActionErrorReturnFocus = event?.currentTarget || document.activeElement
+    positionActionErrorVisible.value = true
+    return false
+  }
+  return true
+}
+function restorePositionActionFocus() { nextTick(() => positionActionErrorReturnFocus?.isConnected ? positionActionErrorReturnFocus.focus() : restoreFocus()) }
 function openPositionAction(record, { action, event }) {
-  if (record.direction !== '多' || !['chase', 'close'].includes(action)) return
+  if (!canOpenPositionAction(record, action, event)) return
   if (event) returnFocus = event.currentTarget
   orderEntryContext.value = { record, action }
   isActionVisible.value = true
@@ -250,14 +266,13 @@ function confirmOrder(snapshot, respond) {
           </div>
         </van-tab>
       </van-tabs>
-      <div v-show="!isOverlayOpen" class="equity-demo-time-controls" role="group" aria-label="演示交易时间"><button type="button" :aria-pressed="tradingTimeMode === 'trading'" @click="setTradingTimeMode('trading')">交易时间</button><button type="button" :aria-pressed="tradingTimeMode === 'non-trading'" @click="setTradingTimeMode('non-trading')">非交易时间</button></div>
       <div v-if="isFocusDesign" class="focus-trade-rail"><button type="button" class="focus-system-control" :aria-pressed="systemRunning" :aria-label="systemRunning ? '系统运行中，切换为中断' : '系统已中断，恢复运行'" @click="systemRunning = !systemRunning"><b>{{ systemRunning ? '运行中' : '系统已中断' }}</b></button><button type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg><span>下单</span></button></div>
       <div v-else-if="isConceptC" class="concept-c-trade-rail"><button type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><DocumentAdd aria-hidden="true" />下单</button></div>
       <button v-else-if="design === 'baseline'" v-show="!isOverlayOpen" type="button" class="equity-order-entry" aria-label="下单" aria-haspopup="dialog" @click="openOrderEntry"><DocumentAdd aria-hidden="true" /><span>下单</span></button>
     </div>
-    <EquityFocusDetail v-if="selectedRecord && isFocusDesign" :kind="selectedRecord.kind" :record="selectedRecord.row" :index="selectedRecord.index" :system-running="systemRunning" :inert="historyVisible ? true : undefined" @back="closeDetail" @action="openFocusAction" />
+    <EquityFocusDetail v-if="selectedRecord && isFocusDesign" :kind="selectedRecord.kind" :record="selectedRecord.row" :index="selectedRecord.index" :system-running="systemRunning" :inert="historyVisible || positionActionErrorVisible ? true : undefined" @back="closeDetail" @action="openFocusAction" />
     <EquityDetail v-else-if="selectedRecord && !isPositionDetail" :kind="selectedRecord.kind" :record="selectedRecord.row" :index="selectedRecord.index" @back="closeDetail" />
-    <van-popup v-if="isPositionDetail && !isFocusDesign" v-model:show="positionDetailVisible" position="bottom" round transition-appear class="equity-filter-sheet equity-position-sheet" :class="{ 'concept-c-position-sheet': isConceptC }" :overlay-class="isConceptC ? 'equity-sheet-overlay concept-c-position-overlay' : 'equity-sheet-overlay'" :duration=".2" aria-label="持仓详情" @opened="positionDetail?.focusClose()" @closed="closeDetail">
+    <van-popup v-if="isPositionDetail && !isFocusDesign" v-model:show="positionDetailVisible" position="bottom" round transition-appear class="equity-filter-sheet equity-position-sheet" :class="{ 'concept-c-position-sheet': isConceptC }" :overlay-class="isConceptC ? 'equity-sheet-overlay concept-c-position-overlay' : 'equity-sheet-overlay'" :duration=".2" aria-label="持仓详情" :inert="positionActionErrorVisible ? true : undefined" @opened="positionDetail?.focusClose()" @closed="closeDetail">
       <div class="sheet-handle" aria-hidden="true"></div>
       <EquityConceptCPosition v-if="isConceptC" ref="positionDetail" :record="selectedRecord.row" :index="selectedRecord.index" drawer @back="positionDetailVisible = false" @action="openDetailAction" />
       <EquityDetail v-else ref="positionDetail" kind="positions" :record="selectedRecord.row" :index="selectedRecord.index" drawer @back="positionDetailVisible = false" @action="openDetailAction" />
@@ -266,11 +281,6 @@ function confirmOrder(snapshot, respond) {
     <EquityFocusHistory v-if="historyContext" v-model:show="historyVisible" :kind="historyContext.kind" :record="historyContext.record" @closed="restoreHistoryFocus" />
     <EquityOrderEntry v-if="orderEntryContext" v-model:show="isActionVisible" :context="orderEntryContext" :layout="orderLayout" :design="design" :full-capabilities="usesPcRules" :overview-account-ids="selectedAccounts" :positions="positionRows" :account-cash="orderCash" :system-running="!isFocusDesign || systemRunning" @amend="confirmAmendment" @order="confirmOrder" @closed="restoreFocus" />
     <EquityOrderOperation v-if="operationContext" v-model:show="operationVisible" :context="operationContext" :result="operationResult" :error="operationError" @confirm="confirmOperation" @closed="restoreFocus" />
+    <van-dialog v-model:show="positionActionErrorVisible" class="equity-position-error" overlay-class="equity-sheet-overlay" message="操作失败，当前标的无可用持仓。" confirm-button-text="知道了" aria-label="操作失败" @keydown.esc="positionActionErrorVisible = false" @closed="restorePositionActionFocus" />
   </section>
 </template>
-
-<style scoped>
-.equity-demo-time-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; padding: 6px 16px; border-top: 1px solid var(--app-color-border); background: var(--app-color-surface); }
-.equity-demo-time-controls button { min-height: 28px; padding: 0 6px; border: 0; border-radius: 3px; background: transparent; color: var(--app-color-text-secondary); font-size: 12px; }
-.equity-demo-time-controls button[aria-pressed="true"] { color: var(--app-color-accent); }
-</style>
