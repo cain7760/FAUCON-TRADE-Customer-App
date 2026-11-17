@@ -176,3 +176,18 @@ test('invalid or stale amendment confirmations leave records unchanged', () => {
   row.status = '全成'
   assert.throws(() => applyDemoOrderAction([row], row.id, 'amend', amendment(row).payload), /状态已变化/)
 })
+
+for (const algorithm of ['POV', 'TWAP', 'VWAP']) {
+  test(`${algorithm} 新单和改单留空时间均在提交时解析，成交占比保留25%`, () => {
+    const pov = { executionTime: ['', ''], participation: 25 }
+    const created = createDemoOrder({ symbol, account: 'TZS_T0', side: 'buy', type: 'limit', price: 12, quantity: 100, amount: 1200, algorithmCode: algorithm, pov }, 30, date)
+    assert.equal(created.algorithm, algorithm)
+    assert.deepEqual(created.algorithmParams.executionTime, ['10:00:00', '15:00:00'])
+    assert.equal(created.algorithmParams.participation, 25)
+    const row = order(), rows = [row]
+    applyDemoOrderAction(rows, row.id, 'amend', amendment(row, { price: 12.01, algorithm, pov }).payload, date)
+    assert.equal(row.algorithm, algorithm)
+    assert.deepEqual(row.algorithmParams.executionTime, ['10:00:00', '15:00:00'])
+    assert.equal(row.algorithmParams.participation, 25)
+  })
+}

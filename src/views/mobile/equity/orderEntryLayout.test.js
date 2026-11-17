@@ -289,11 +289,11 @@ test('标的参数不再写死在模板，空标的保留每手数量占位', ()
   assert.match(source, /\{\{ symbolIaLabel \}\}/)
 })
 
-test('下拉算法四项同序且使用IA样式标签回显', () => {
+test('下拉算法四项同序且使用直角引号文本回显', () => {
  const source = readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8')
  assert.match(source, /ticket-algorithm-trigger/)
  assert.match(source, /v-for="option in algorithmDialogOptions"/)
- assert.match(source, /ticket-symbol-tags ticket-algorithm-tags/)
+ assert.match(source, /ticket-algorithm-summary-text/); assert.match(source, /「{{ algorithmSummary }}」/)
  const css = readFileSync(new URL('./order-entry.css', import.meta.url), 'utf8')
  assert.match(css, /ticket-algorithm-tabs \.van-tab\{[^}]*height:28px/)
 })

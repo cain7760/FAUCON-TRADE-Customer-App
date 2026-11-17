@@ -136,6 +136,11 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
   if (nextQuantity % (row.lotSize || 100) !== 0) throw new Error('订单数量不符合每手股数要求')
   if (row.side === 'sell' && nextQuantity > row.quantity) throw new Error('改单数量超出最大可卖')
   if (!['DMA', 'POV', 'TWAP', 'VWAP', 'none'].includes(payload.algorithm) || (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && !validPov(payload.algorithmParams || {}))) throw new Error('执行算法参数无效')
+  if (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && payload.algorithmParams?.executionTime) {
+    const executionTime = resolvePovExecutionTime(row, payload.algorithmParams.executionTime, now)
+    if (!executionTime[0] || !executionTime[1] || executionTime[0] >= executionTime[1]) throw new Error('结束时间须晚于开始时间')
+    payload = { ...payload, algorithmParams: { ...payload.algorithmParams, executionTime } }
+  }
   if (deferLunchOperation(row, action, payload, now, demoTimeMode)) return '改单申请已受理，午间休市，复市后处理。'
   const originalQuantity = row.quantity, delta = nextQuantity - originalQuantity
   const nextRemaining = nextQuantity - filled
