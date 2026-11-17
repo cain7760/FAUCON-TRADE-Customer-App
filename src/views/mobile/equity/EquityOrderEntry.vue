@@ -1,5 +1,6 @@
 <script setup>
 import { povParametersError, povExecutionTimeError, povParticipationError } from '../../../domain/orders/povSchedule.js'
+import { marketClock, orderMarket } from '../../../domain/orders/marketSession.js'
 import { executionShortcut } from '../../../domain/orders/executionSchedule.js'
 import AppSelectField from '../../../components/ui/AppSelectField.vue'
 import EquitySheetClose from './EquitySheetClose.vue'
@@ -39,6 +40,7 @@ const executionTimeOptions = Array.from({ length: 1440 }, (_, minute) => {
 })
 const algorithmDraft = reactive({ executionTime: ['', ''], value: 'DMA', hours: 1, minutes: 0, participation: 25 })
 const algorithmConfigNow = ref(new Date())
+const defaultStartTime = () => marketClock(new Date(), orderMarket(symbol.value || {}) || 'A').time.slice(0, 5)
 const algorithmParameterError = computed(() => algorithmDraft.value === 'DMA' ? '' : povParametersError(symbol.value, algorithmDraft, algorithmConfigNow.value, true))
 const algorithmTimeError = computed(() => algorithmDraft.value === 'DMA' ? '' : povExecutionTimeError(symbol.value, algorithmDraft.executionTime || ['', ''], algorithmConfigNow.value))
 const algorithmParticipationError = computed(() => algorithmDraft.value === 'DMA' ? '' : povParticipationError(algorithmDraft.participation))
@@ -488,7 +490,7 @@ function handleKeyboard(event) {
     <div class="order-entry-scroll ticket-settings">
       <van-tabs v-model:active="algorithmDraft.value" type="card" :ellipsis="false" :duration="0" class="ticket-algorithm-tabs" @keydown="handleAlgorithmKeydown">
         <van-tab v-for="option in algorithmDialogOptions" :key="option.value" :name="option.value" :title="option.label">
-          <div v-if="option.value !== 'DMA'" class="ticket-algorithm-params"><div class="ticket-time-caption"><label class="app-form-label">选择时间</label></div><div class="ticket-time-range"><AppSelectField v-model="algorithmDraft.executionTime[0]" label="开始时间" :options="[{ text: '系统提交时间', value: '' }, ...executionTimeOptions]" /><span>–</span><AppSelectField v-model="algorithmDraft.executionTime[1]" label="结束时间" :options="[{ text: '标的收盘', value: '' }, ...executionTimeOptions]" /></div><p v-if="algorithmTimeError" class="ticket-error" role="alert">{{ algorithmTimeError }}</p><div class="ticket-time-shortcuts"><button v-for="shortcut in [[10, '10m'], [20, '20m'], [60, '1h'], ['morning', '到中午收盘'], ['close', '到下午收盘']]" :key="shortcut[0]" type="button" @click="chooseExecutionTime(shortcut[0])">{{ shortcut[1] }}</button></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model.number="algorithmDraft.participation" type="text" inputmode="numeric"><span>%</span></div><p v-if="algorithmParticipationError" class="ticket-error" role="alert">{{ algorithmParticipationError }}</p></div>
+          <div v-if="option.value !== 'DMA'" class="ticket-algorithm-params"><div class="ticket-time-caption"><label class="app-form-label">选择时间</label></div><div class="ticket-time-range"><AppSelectField v-model="algorithmDraft.executionTime[0]" label="开始时间" :default-value="defaultStartTime" :options="[{ text: '系统提交时间', value: '' }, ...executionTimeOptions]" /><span>–</span><AppSelectField v-model="algorithmDraft.executionTime[1]" label="结束时间" :options="[{ text: '标的收盘', value: '' }, ...executionTimeOptions]" /></div><p v-if="algorithmTimeError" class="ticket-error" role="alert">{{ algorithmTimeError }}</p><div class="ticket-time-shortcuts"><button v-for="shortcut in [[10, '10m'], [20, '20m'], [60, '1h'], ['morning', '到中午收盘'], ['close', '到下午收盘']]" :key="shortcut[0]" type="button" @click="chooseExecutionTime(shortcut[0])">{{ shortcut[1] }}</button></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model.number="algorithmDraft.participation" type="text" inputmode="numeric"><span>%</span></div><p v-if="algorithmParticipationError" class="ticket-error" role="alert">{{ algorithmParticipationError }}</p></div>
         </van-tab>
       </van-tabs>
     </div>
