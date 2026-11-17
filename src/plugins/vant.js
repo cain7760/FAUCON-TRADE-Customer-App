@@ -1,9 +1,12 @@
-import { Button, Checkbox, ConfigProvider, Field, Pagination, Popover, Popup, Tab, Tabbar, TabbarItem, Tabs } from 'vant'
+import { Button, Checkbox, ConfigProvider, Dialog, Field, Picker, Slider, Pagination, Popover, Popup, Tab, Tabbar, TabbarItem, Tabs } from 'vant'
 import 'vant/es/style/base.css'
 import 'vant/es/tabbar/index.css'
 import 'vant/es/tabbar-item/index.css'
 import 'vant/es/badge/index.css'
 import 'vant/es/button/style'
+import 'vant/es/dialog/style'
+import 'vant/es/picker/style'
+import 'vant/es/slider/style'
 import 'vant/es/checkbox/style'
 import 'vant/es/field/style'
 import 'vant/es/pagination/style'
@@ -20,6 +23,7 @@ import 'vant/es/tabs/style'
 export default {
   install(app) {
     app.use(ConfigProvider).use(Tabbar).use(TabbarItem)
+    app.use(Dialog).use(Picker).use(Slider)
     app.use(Button).use(Checkbox).use(Field).use(Pagination).use(Popover).use(Popup).use(Tab).use(Tabs)
   },
 }

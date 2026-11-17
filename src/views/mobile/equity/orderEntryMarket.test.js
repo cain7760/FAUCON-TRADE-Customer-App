@@ -1,3 +1,4 @@
+import * as povSchedule from '../../../domain/orders/povSchedule.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -15,8 +16,10 @@ import { submitDemoOrder } from './demoLedger.js'
 
 function setup(context, layout = 'stacked', options = {}) {
   const { descriptor } = parse(readFileSync(new URL('./EquityOrderEntry.vue', import.meta.url), 'utf8'))
-  const script = compileScript(descriptor, { id: 'mobile-market-test' }).content
-  const imports = { ...vue, ...fixtures, ...model, ...orderModel, ...orderActions, ...rules, ...decimal, ...calculations, orderAccountOverview,
+  const compiled = compileScript(descriptor, { id: 'mobile-market-test' })
+  const script = compiled.content
+  const declaredVueImports = Object.fromEntries(compiled.scriptSetupAst.filter(node => node.type === 'ImportDeclaration' && node.source.value === 'vue').flatMap(node => node.specifiers.map(specifier => [specifier.local.name, vue[specifier.imported.name]])))
+  const imports = { ...povSchedule, povParametersError: (symbol, params, _now, required) => povSchedule.povParametersError(symbol, params, new Date('2026-11-12T10:00:00+08:00'), required), povExecutionTimeError: (symbol, range) => povSchedule.povExecutionTimeError(symbol, range, new Date('2026-11-12T10:00:00+08:00')), ...declaredVueImports, ...fixtures, ...model, ...orderModel, ...orderActions, ...rules, ...decimal, ...calculations, orderAccountOverview,
     showSuccessToast() {}, document: { addEventListener() {}, removeEventListener() {} }, AppSelectField: {}, EquityAccountTrigger: {}, EquitySheetClose: {}, EquitySymbolPicker: {}, EquityOrderBook: {}, EquityAccountPicker: {}, EquityPovDeadline: {}, EquityAccountSummary: {} }
   const component = new Function(...Object.keys(imports), script.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(imports))
   return component.setup(vue.reactive({ show: true, context, layout, fullCapabilities: false, systemRunning: true, overviewAccountIds: [], ...options }), { expose() {}, emit: options.emit || (() => {}) })

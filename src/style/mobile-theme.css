@@ -232,7 +232,7 @@ main.mobile-app :is(
 .app-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app-select-field .app-chevron { --app-chevron-size: 16px; }
 .app-select-field:disabled { opacity: .45; cursor: not-allowed; }
-.app-date-range-field { font-size: 13px; font-family: var(--app-font-family-numeric); }
+.app-date-range-field { font-size: 13px; font-family: var(--app-font-family-numeric); font-weight: 400; }
 .app-date-range-field.is-empty { color: var(--app-color-text-secondary); }
 .app-date-range-field svg { flex: none; }
 .app-select-field:focus-visible, .app-date-range-field:focus-visible { outline: 2px solid var(--app-color-accent); outline-offset: -2px; }

@@ -19,8 +19,8 @@ export function defaultOrderAlgorithm(market, now = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now).map(part => [part.type, part.value]))
   return cutoff != null && Number(parts.hour) * 60 + Number(parts.minute) >= cutoff ? 'DMA' : 'POV'
 }
-export function validPov(parameters) {
-  if (parameters?.executionTime) return !povParametersError({}, parameters)
+export function validPov(parameters, symbol = {}, now = new Date()) {
+  if (parameters?.executionTime) return !povParametersError(symbol, parameters, now)
   const { hours, minutes, participation } = parameters || {}
   return hours != null && minutes != null && participation != null
     && isValidPovDuration(hours, minutes)
@@ -44,7 +44,7 @@ export function orderEstimates(draft, symbol, cash, available) {
   const sell = draft.mode === 'percentage' ? byPercent(maxSell) : quantity
   return { price, lot, maxBuy, maxSell, buy, sell, inputAmount, buyAmount: orderNotional(buy, price), sellAmount: orderNotional(sell, price) }
 }
-export function orderError(draft, symbol, estimate, side) {
+export function orderError(draft, symbol, estimate, side, now = new Date()) {
   if (!symbol) return '请先选择下单标的'
   const typeError = orderTypeError(draft.type, symbol)
   if (typeError) return typeError
@@ -54,7 +54,7 @@ export function orderError(draft, symbol, estimate, side) {
   if (!['quantity', 'amount', 'percentage'].includes(draft.mode)) return '订单数量模式无效'
   if (draft.mode === 'percentage' && !(Number.isFinite(Number(draft.fraction)) && draft.fraction > 0 && draft.fraction <= 100)) return '下单比例必须大于 0 且不超过 100%'
   if (draft.mode === 'quantity' && !Number.isInteger(decimalProduct(draft.value, draft.unit === 'wan' ? 10000 : 1))) return '订单数量请输入整数'
-  if (['POV', 'TWAP', 'VWAP'].includes(draft.algorithm) && !validPov(draft.pov)) return '请检查 POV 运行时间和市场成交占比'
+  if (['POV', 'TWAP', 'VWAP'].includes(draft.algorithm) && !validPov(draft.pov, symbol, now)) return povParametersError(symbol, draft.pov || {}, now)
   if (draft.algorithm !== 'none' && !algorithmOptions.some(option => option.value === draft.algorithm)) return '执行算法无效'
   const quantity = estimate[side]
   if (!Number.isSafeInteger(quantity) || quantity <= 0) return '请输入有效的订单数量'

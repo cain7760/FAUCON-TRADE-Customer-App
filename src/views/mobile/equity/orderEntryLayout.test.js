@@ -376,3 +376,11 @@ test('数量与金额框移除加减按钮，单位仍可选且字号 14px，价
   const css = readFileSync(new URL('./order-entry.css', import.meta.url), 'utf8')
   assert.match(css, /\.ticket-reference-layout \.ticket-unit-trigger\s*\{[^}]*font-size:\s*14px/)
 })
+
+test('下单滑块、时间选择和提示弹窗在统一入口注册组件与样式', () => {
+  const plugin = readFileSync(new URL('../../../plugins/vant.js', import.meta.url), 'utf8')
+  for (const [component, style] of [['Picker', 'picker'], ['Slider', 'slider'], ['Dialog', 'dialog']]) {
+    assert.ok(plugin.includes(`.use(${component})`))
+    assert.ok(plugin.includes(`vant/es/${style}/style`))
+  }
+})

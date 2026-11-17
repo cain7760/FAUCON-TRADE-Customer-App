@@ -15,7 +15,7 @@ export function createDemoOrder(snapshot, sequence, now = new Date()) {
   if (typeError) throw new Error(typeError)
   const draft = { type: snapshot.type, price: snapshot.price, mode: 'quantity', value: snapshot.quantity, unit: 'shares', algorithm: snapshot.algorithmCode, pov: snapshot.pov }
   const estimate = orderEstimates(draft, snapshot.symbol, 0, 0)
-  const error = orderError(draft, snapshot.symbol, { ...estimate, maxBuy: Number.MAX_SAFE_INTEGER, maxSell: Number.MAX_SAFE_INTEGER }, snapshot.side)
+  const error = orderError(draft, snapshot.symbol, { ...estimate, maxBuy: Number.MAX_SAFE_INTEGER, maxSell: Number.MAX_SAFE_INTEGER }, snapshot.side, now)
   if (error) throw new Error(error)
   if (!snapshot.account || !['buy', 'sell'].includes(snapshot.side)) throw new Error('下单账户或买卖方向无效')
   if (snapshot.inputAmount != null && (!Number.isFinite(Number(snapshot.inputAmount)) || Number(snapshot.inputAmount) < orderNotional(snapshot.quantity, estimate.price))) throw new Error('委托金额不足以覆盖订单数量')
@@ -135,7 +135,7 @@ export function applyDemoOrderAction(orders, id, action, payload = {}, now = new
   if (payload.inputAmount != null && (!Number.isFinite(Number(payload.inputAmount)) || Number(payload.inputAmount) < decimalSum(amendmentFilledAmount(row), orderNotional(nextQuantity - filled, referencePrice)))) throw new Error('委托金额不足以覆盖订单数量')
   if (nextQuantity % (row.lotSize || 100) !== 0) throw new Error('订单数量不符合每手股数要求')
   if (row.side === 'sell' && nextQuantity > row.quantity) throw new Error('改单数量超出最大可卖')
-  if (!['DMA', 'POV', 'TWAP', 'VWAP', 'none'].includes(payload.algorithm) || (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && !validPov(payload.algorithmParams || {}))) throw new Error('执行算法参数无效')
+  if (!['DMA', 'POV', 'TWAP', 'VWAP', 'none'].includes(payload.algorithm) || (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && !validPov(payload.algorithmParams || {}, row, now))) throw new Error('执行算法参数无效')
   if (['POV', 'TWAP', 'VWAP'].includes(payload.algorithm) && payload.algorithmParams?.executionTime) {
     const executionTime = resolvePovExecutionTime(row, payload.algorithmParams.executionTime, now)
     if (!executionTime[0] || !executionTime[1] || executionTime[0] >= executionTime[1]) throw new Error('结束时间须晚于开始时间')

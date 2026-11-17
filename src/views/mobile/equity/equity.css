@@ -164,7 +164,7 @@
 .record-progress-bar::-webkit-progress-value { border-radius: 2px; background: var(--app-color-accent); }
 .record-progress-bar::-moz-progress-bar { border-radius: 2px; background: var(--app-color-accent); }
 .record-value { display: block; margin-left: auto; overflow-wrap: anywhere; font-family: var(--app-font-family-numeric); font-size: 15px; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 20px; text-align: right; }
-.record-position .record-value { font-size: 13px; }
+.record-position .record-value { font-size: 13px; font-weight: 400; }
 .record-context { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; color: var(--app-color-text-secondary); font-size: 11px; line-height: 18px; }
 .record-status { padding: 2px 7px; border-radius: 2px; background: var(--app-color-accent-soft); color: #dfc890; font-size: 12px; }
 .record-status.status-alert { background: var(--app-color-rise-soft); color: var(--app-color-rise); }
@@ -172,7 +172,7 @@
 .record-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--app-color-border); font-size: 12px; line-height: 18px; }
 .record-foot > span { min-width: 0; overflow-wrap: anywhere; }
 .record-foot > span:last-child { text-align: right; }
-.record-foot .app-numeric { display: block; font-size: 13px; }
+.record-foot .app-numeric { display: block; font-size: 13px; font-weight: 400; }
 .record-account { font-size: 11px; }
 .equity-empty { padding: 24px 16px 70px; color: var(--app-color-text-secondary); text-align: center; }
 .equity-icon-button { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--app-color-text-secondary); }

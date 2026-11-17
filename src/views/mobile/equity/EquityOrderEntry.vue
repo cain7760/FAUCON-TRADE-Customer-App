@@ -1,12 +1,13 @@
 <script setup>
+import { povParametersError, povExecutionTimeError, povParticipationError } from '../../../domain/orders/povSchedule.js'
 import { executionShortcut } from '../../../domain/orders/executionSchedule.js'
 import AppSelectField from '../../../components/ui/AppSelectField.vue'
 import EquitySheetClose from './EquitySheetClose.vue'
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, shallowRef, useId, watch } from 'vue'
 import { showSuccessToast } from 'vant'
 import { accounts, demoRecords, orderInstruments } from './fixtures.js'
 import { accountLabel, formatNumber } from './model.js'
-import { algorithmOptions, applyBookPrice, canPreviewOrder, changeOrderMode, changeOrderType, defaultOrderAlgorithm, demoOrderCash, largeOrderAmount, orderError, orderEstimates, resetOrderSize, validPov } from './orderModel.js'
+import { algorithmOptions, applyBookPrice, canPreviewOrder, changeOrderMode, changeOrderType, defaultOrderAlgorithm, demoOrderCash, largeOrderAmount, orderError, orderEstimates, resetOrderSize } from './orderModel.js'
 import { amendmentDraft, amendmentError, amendmentEstimate, amendmentFilledAmount, amendmentPayload } from './orderActions.js'
 import { orderAccountOverview } from './accountOverview.js'
 import { decimalProduct, decimalSum, quantityForAmount, truncateDecimal } from './decimalMath.js'
@@ -37,6 +38,10 @@ const executionTimeOptions = Array.from({ length: 1440 }, (_, minute) => {
   return { text: value, value }
 })
 const algorithmDraft = reactive({ executionTime: ['', ''], value: 'DMA', hours: 1, minutes: 0, participation: 25 })
+const algorithmConfigNow = ref(new Date())
+const algorithmParameterError = computed(() => algorithmDraft.value === 'DMA' ? '' : povParametersError(symbol.value, algorithmDraft, algorithmConfigNow.value, true))
+const algorithmTimeError = computed(() => algorithmDraft.value === 'DMA' ? '' : povExecutionTimeError(symbol.value, algorithmDraft.executionTime || ['', ''], algorithmConfigNow.value))
+const algorithmParticipationError = computed(() => algorithmDraft.value === 'DMA' ? '' : povParticipationError(algorithmDraft.participation))
 watch(() => algorithmDraft.hours, value => { if (Number(value) === 6 && Number(algorithmDraft.minutes) > 30) algorithmDraft.minutes = 30 })
 const customDraft = reactive({ name: '', code: '', market: 'A' })
 const instruments = orderInstruments
@@ -191,6 +196,7 @@ watch(() => [draft.value, draft.unit, draft.mode, estimate.value.maxSell, estima
 function navigate(next, event) {
   formReturnFocus = event?.currentTarget || formReturnFocus
   error.value = ''
+  if (next === 'algorithm') algorithmConfigNow.value = new Date()
   if (next === 'algorithm') Object.assign(algorithmDraft, { value: draft.algorithm, ...draft.pov, executionTime: draft.pov.executionTime?.slice() || ['', ''] })
   page.value = next
   if (next !== 'algorithm') nextTick(() => next === 'symbols' ? symbolPicker.value?.focusSearch() : heading.value?.focus())
@@ -300,7 +306,8 @@ function chooseExecutionTime(value) {
   if (range) algorithmDraft.executionTime = range
 }
 function applyAlgorithm() {
-  if (algorithmDraft.value !== 'DMA' && !validPov(algorithmDraft)) return
+  algorithmConfigNow.value = new Date()
+  if (algorithmParameterError.value) return
   draft.algorithm = algorithmDraft.value
   draft.pov = { executionTime: algorithmDraft.executionTime?.slice() || ['', ''], hours: Number(algorithmDraft.hours), minutes: Number(algorithmDraft.minutes), participation: Number(algorithmDraft.participation) }
   back()
@@ -481,10 +488,10 @@ function handleKeyboard(event) {
     <div class="order-entry-scroll ticket-settings">
       <van-tabs v-model:active="algorithmDraft.value" type="card" :ellipsis="false" :duration="0" class="ticket-algorithm-tabs" @keydown="handleAlgorithmKeydown">
         <van-tab v-for="option in algorithmDialogOptions" :key="option.value" :name="option.value" :title="option.label">
-          <div v-if="option.value !== 'DMA'" class="ticket-algorithm-params"><div class="ticket-time-caption"><label class="app-form-label">选择时间</label><small>建议执行时长：大于10m</small></div><div class="ticket-time-range"><AppSelectField v-model="algorithmDraft.executionTime[0]" label="开始时间" :options="[{ text: '系统提交时间', value: '' }, ...executionTimeOptions]" /><span>–</span><AppSelectField v-model="algorithmDraft.executionTime[1]" label="结束时间" :options="[{ text: '标的收盘', value: '' }, ...executionTimeOptions]" /></div><div class="ticket-time-shortcuts"><button v-for="shortcut in [[10, '10m'], [20, '20m'], [60, '1h'], ['morning', '到中午收盘'], ['close', '到下午收盘']]" :key="shortcut[0]" type="button" @click="chooseExecutionTime(shortcut[0])">{{ shortcut[1] }}</button></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model.number="algorithmDraft.participation" type="text" inputmode="numeric"><span>%</span></div><p v-if="!validPov(algorithmDraft)" class="ticket-error" role="alert">运行时间须大于 0 且不超过 6 小时 30 分钟，成交占比须为 1%–25%</p></div>
+          <div v-if="option.value !== 'DMA'" class="ticket-algorithm-params"><div class="ticket-time-caption"><label class="app-form-label">选择时间</label></div><div class="ticket-time-range"><AppSelectField v-model="algorithmDraft.executionTime[0]" label="开始时间" :options="[{ text: '系统提交时间', value: '' }, ...executionTimeOptions]" /><span>–</span><AppSelectField v-model="algorithmDraft.executionTime[1]" label="结束时间" :options="[{ text: '标的收盘', value: '' }, ...executionTimeOptions]" /></div><p v-if="algorithmTimeError" class="ticket-error" role="alert">{{ algorithmTimeError }}</p><div class="ticket-time-shortcuts"><button v-for="shortcut in [[10, '10m'], [20, '20m'], [60, '1h'], ['morning', '到中午收盘'], ['close', '到下午收盘']]" :key="shortcut[0]" type="button" @click="chooseExecutionTime(shortcut[0])">{{ shortcut[1] }}</button></div><label class="app-form-label" for="mobile-pov-participation">市场成交占比</label><div class="ticket-participation"><input id="mobile-pov-participation" v-model.number="algorithmDraft.participation" type="text" inputmode="numeric"><span>%</span></div><p v-if="algorithmParticipationError" class="ticket-error" role="alert">{{ algorithmParticipationError }}</p></div>
         </van-tab>
       </van-tabs>
     </div>
-    <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">取消</button><button type="button" class="ticket-primary" :disabled="algorithmDraft.value !== 'DMA' && !validPov(algorithmDraft)" @click="applyAlgorithm">确认配置</button></footer>
+    <footer class="ticket-footer ticket-secondary-actions"><button type="button" @click="back">取消</button><button type="button" class="ticket-primary" :disabled="!!algorithmParameterError" @click="applyAlgorithm">确认配置</button></footer>
   </van-popup>
 </template>

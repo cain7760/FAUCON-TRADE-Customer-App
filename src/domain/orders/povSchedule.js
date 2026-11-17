@@ -52,18 +52,27 @@ export function resolvePovExecutionTime(symbol, range, now = new Date()) {
     .map(value => value?.length === 5 ? value + ':00' : value)
 }
 
+export function povParticipationError(value) {
+  const participation = Number(value)
+  return Number.isInteger(participation) && participation >= 1 && participation <= 25 ? '' : '市场成交占比须为 1%–25%'
+}
+
+export function povExecutionTimeError(symbol, range, now = new Date()) {
+  if (!Array.isArray(range) || range.length !== 2 || range.some(value => value && !/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(value))) return '请输入有效时间'
+  const currentTime = marketClock(now, orderMarket(symbol) || 'A')?.time
+  const startTime = range[0]?.length === 5 ? range[0] + ':00' : range[0]
+  if (startTime && currentTime && startTime < currentTime) return '开始时间不能早于当前时间'
+  if (!range[0] || !range[1]) return ''
+  const [start, end] = range.map(value => seconds(value.length === 5 ? value + ':00' : value))
+  if (start >= end) return '结束时间须晚于开始时间'
+  if (end - start > MAX_POV_HOURS * 3600) return '有效运行时间须大于 0 且不超过 6 小时 30 分钟'
+  return ''
+}
+
 // 旧订单继续接受运行时长，新的起止时间可分别留空。
 export function povParametersError(symbol, params, now = new Date(), requireTime = false) {
-  const participation = Number(params.participation)
-  if (!Number.isInteger(participation) || participation < 1 || participation > 25) return '市场成交占比须为 1%–25%'
-  if (params.executionTime || requireTime) {
-    const range = params.executionTime || ['', '']
-    if (range.length !== 2 || range.some(value => value && !/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(value))) return '请输入有效时间'
-    if (!range[0] || !range[1]) return ''
-    const [start, end] = range.map(value => seconds(value.length === 5 ? value + ':00' : value))
-    if (start >= end) return '结束时间须晚于开始时间'
-    if (end - start > MAX_POV_HOURS * 3600) return '有效运行时间须大于 0 且不超过 6 小时 30 分钟'
-    return ''
-  }
+  const participationError = povParticipationError(params.participation)
+  if (participationError) return participationError
+  if (params.executionTime || requireTime) return povExecutionTimeError(symbol, params.executionTime || ['', ''], now)
   return isValidPovDuration(params.hours, params.minutes) ? '' : '运行时间须大于 0 且不超过 6 小时 30 分钟'
 }
