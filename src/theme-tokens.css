@@ -10,7 +10,7 @@
   --ft-color-down-surface: rgba(101, 196, 161, .12);
   --ft-color-up-border: #d97b83;
   --ft-color-down-border: #5eae90;
-  --ft-color-buy: #b55f6b;
+  --ft-color-buy: #AA4950;
   --ft-color-sell: #3d9275;
   --ft-dialog-top: clamp(56px, 10vh, 104px);
 }
