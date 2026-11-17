@@ -319,3 +319,5 @@
 .equity-algorithm-dialog.is-dma{height:auto;min-height:0}.equity-algorithm-dialog.is-dma .ticket-settings{min-height:0}
 
 .equity-algorithm-dialog .ticket-footer{display:flex;align-items:center;justify-content:center;padding-block:12px}
+
+.equity-order-sheet .ticket-algorithm-trigger{gap:8px}.equity-order-sheet .ticket-algorithm-tags{min-width:0}.equity-order-sheet .ticket-algorithm-tags>span{overflow:hidden;text-overflow:ellipsis}

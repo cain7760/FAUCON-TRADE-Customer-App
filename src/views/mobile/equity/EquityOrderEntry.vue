@@ -31,7 +31,7 @@ const isPaused = computed(() => props.fullCapabilities && props.systemRunning ==
 // 视图偏好不随下单子页面或账户切换重置，避免隐藏后的资金意外重新显示。
 const assetsVisible = ref(true), assetsCollapsed = ref(true)
 const accountId = ref(accounts[0].id), symbolCode = ref('000001'), manualSymbol = ref(null)
-const draft = reactive({ execution: 'lowTouch', type: 'limit', price: '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { hours: 1, minutes: 0, participation: 25 }, note: '' })
+const draft = reactive({ execution: 'lowTouch', type: 'limit', price: '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: 'DMA', pov: { executionTime: ['', ''], hours: 1, minutes: 0, participation: 25 }, note: '' })
 const executionTimeOptions = Array.from({ length: 1440 }, (_, minute) => {
   const value = `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
   return { text: value, value }
@@ -60,6 +60,12 @@ const positionCodes = computed(() => positions.value.filter(row => row.account =
 const accountOverview = computed(() => orderAccountOverview(props.fullCapabilities && props.overviewAccountIds?.length ? props.overviewAccountIds : accountId.value, positions.value, cashBalances.value))
 const algorithmLabel = computed(() => algorithmOptions.find(option => option.value === draft.algorithm)?.label)
 const algorithmDialogOptions = computed(() => algorithmOptions)
+const algorithmSummary = computed(() => {
+  if (!['POV', 'TWAP', 'VWAP'].includes(draft.algorithm)) return ''
+  const range = draft.pov.executionTime
+  const time = range ? `${range[0]?.slice(0, 5) || '即时'}–${range[1]?.slice(0, 5) || '收盘'}` : `${draft.pov.hours}h ${draft.pov.minutes}m`
+  return `${time} ${draft.pov.participation}%`
+})
 function selectAlgorithm(value, event) {
   if (!algorithmOptions.some(option => option.value === value)) return
   if (value !== 'DMA') {
@@ -155,7 +161,7 @@ function initialize() {
   accountId.value = record?.account || props.overviewAccountIds?.[0] || accounts[0].id
   symbolCode.value = record?.code || instruments[0].code
   manualSymbol.value = null
-  Object.assign(draft, { execution: 'lowTouch', type: 'limit', price: symbol.value?.price || '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: defaultOrderAlgorithm(symbol.value?.market), pov: { hours: 1, minutes: 0, participation: 25 }, note: '' })
+  Object.assign(draft, { execution: 'lowTouch', type: 'limit', price: symbol.value?.price || '', mode: 'quantity', value: '', unit: 'shares', amountUnit: 'yuan', fraction: 0, algorithm: defaultOrderAlgorithm(symbol.value?.market), pov: { executionTime: ['', ''], hours: 1, minutes: 0, participation: 25 }, note: '' })
   // PC 持仓点“下单”只继承明确执行类型，来源集合不等同于本次委托类型。
   if (props.fullCapabilities && props.context.action === 'new') {
     draft.execution = (record?.executionType || (record?.orderType === '手工单' ? 'highTouch' : 'lowTouch')) === 'highTouch' ? 'highTouch' : 'lowTouch'
@@ -429,7 +435,7 @@ function handleKeyboard(event) {
                 <div class="ticket-fraction-marks"><button v-for="value in [0, 25, 50, 75, 100]" :key="value" type="button" :disabled="!symbol" :aria-pressed="showsFraction && draft.fraction === value" @click="selectFraction(value)">{{ value }}%</button></div>
               </div>
               <div v-if="!isManual" class="ticket-algorithm-row">
-                <button type="button" class="ticket-algorithm-trigger" :aria-label="`执行算法：${algorithmLabel}，点击配置`" aria-haspopup="dialog" :aria-expanded="page === 'algorithm'" @click="navigate('algorithm', $event)"><span class="app-form-label">算法</span><span>{{ algorithmLabel }} <span aria-hidden="true">⌄</span></span></button>
+                <button type="button" class="ticket-algorithm-trigger" :aria-label="`执行算法：${algorithmLabel}，点击配置`" aria-haspopup="dialog" :aria-expanded="page === 'algorithm'" @click="navigate('algorithm', $event)"><span class="app-form-label">算法</span><span v-if="algorithmSummary" class="ticket-symbol-tags ticket-algorithm-tags"><span>{{ algorithmSummary }}</span></span><span>{{ algorithmLabel }} <span aria-hidden="true">⌄</span></span></button>
               </div>
               <label v-if="isManual" class="ticket-note"><span class="app-form-label">备注 <small>{{ draft.note.length }}/200</small></span><textarea v-model="draft.note" maxlength="200" rows="3" placeholder="请输入备注"></textarea></label>
               <dl v-if="!isManual" class="ticket-estimates ticket-capacity" aria-label="下单可用数量"><div v-if="showBuy"><dt>最大可买</dt><dd>{{ number(estimate.maxBuy) }} 股</dd></div><div v-if="showSell"><dt>最大可卖</dt><dd>{{ number(estimate.maxSell) }} 股</dd></div></dl>
